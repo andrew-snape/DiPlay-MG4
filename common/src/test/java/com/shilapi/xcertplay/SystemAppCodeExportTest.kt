@@ -14,6 +14,7 @@ class SystemAppCodeExportTest {
             File(dir, "oat/arm64").mkdirs()
             File(dir, "oat/arm64/RemoteUIMediaBrowserService.vdex").writeText("vdex")
             File(dir, "oat/arm64/RemoteUIMediaBrowserService.odex").writeText("odex")
+            File(dir, "oat/arm").mkdirs()
             File(dir, "oat/arm/RemoteUIMediaBrowserService.ODEX").writeText("odex32")
             File(dir, "lib/arm64").mkdirs()
             File(dir, "lib/arm64/libnative.so").writeText("so")
