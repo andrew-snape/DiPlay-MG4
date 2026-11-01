@@ -61,7 +61,7 @@ internal object SystemAppCodeExport {
         report.appendLine()
     }
 
-    /** Ahead-of-time code beside the APK: `oat/<abi>/*.vdex|odex|art`, plus any loose dex. */
+    /** Ahead-of-time code beside the APK (vdex, odex and art files under `oat`), plus any loose dex. */
     internal fun codeFiles(dir: File): List<File> =
         dir.walkTopDown().maxDepth(3)
             .filter { it.isFile && it.extension.lowercase() in EXTENSIONS }
