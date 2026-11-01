@@ -75,10 +75,34 @@ For BT, USB and online sources the cluster asks MediaService instead
    - updating the stock package, if it is installed and platform-signed (replaces part
      of the stock CarPlay stack: not recommended).
 
+   The package **is installed** (`RemoteUIMediaBrowserService_EH32.apk`), so the
+   companion route is out. See "The stock media browser" below.
+
    Still to check:
-   - Is `com.allgo.remoteui.mediabrowserservice` installed?
-     `adb shell pm list packages -f | grep -i allgo`
-   - If it is, export it: its own feed may accept data DiPlay can send.
    - A DiPlay `MediaSession` on Android 9 once made the car's Bluetooth stack pause the
      iPhone (see `CarPlayMediaKeys`). That was with A2DP still connected; now that
      DiPlay drops the Bluetooth music link, it needs a fresh car test.
+
+## The stock media browser
+
+`com.allgo.remoteui.mediabrowserservice` (`RemoteUIMediaBrowserService_EH32.apk`) is
+installed on the car. Its manifest:
+
+- Runs as `android.uid.system`, version 1.0, target SDK 28.
+- One service, `.RemoteUIMediaBrowserService`, in process `:RemoteUIMBSServer`,
+  **exported with no permission**. It answers three actions:
+  - `android.media.browse.MediaBrowserService` (what the cluster binds to);
+  - `com.allgo.remoteui.mediabrowserservice.RemoteUIMediaBrowserService`;
+  - `com.allgo.remoteui.mediabrowserservice.RemoteUIMediaBrowserServiceInterface`.
+    This looks like the feed: a binder interface the AllGo stack uses to push the song
+    and play state into the browser's media session.
+- A receiver, `.RemoteUIMediaBrowserServiceStarter`, for `BOOT_COMPLETED` and
+  `MEDIA_BUTTON`.
+
+Because the service is exported with no permission, DiPlay can bind it with the
+`...Interface` action. If that interface takes metadata, DiPlay can feed the stock
+browser directly and the cluster needs nothing else.
+
+The exported APK has **no `classes.dex`**: the code was compiled ahead of time, and the
+dex lives beside it on the car as `oat/arm64/*.vdex` (and `.odex`). The interface's
+descriptor and transaction codes are in there. Not guessed here.
