@@ -45,6 +45,7 @@ end, wait a few seconds, then copy it off.
 | C5 | End with the phone key | Hangs up | Same |
 | C6 | Music after the call | Resumes on its own | `audioType=media` restarts |
 | C7 | Call with music paused, then start music mid-call | Call keeps priority; music stays quiet | Focus lines |
+| C8 | mg4.93, Wi-Fi, fan on medium, windows up: call someone and talk normally for 30 s, then ask whether you sound clear, echoey or noisy. Repeat with Microphone (test) on each option, noting the time of each call | Calls work on every option; note which one the other person hears best | `Microphone telephony: started source=...` (`refused, MIC` means the car's call processing wasn't used), `Microphone telephony stats ... peakDb= rmsDb= clipped=`: speech around -20 to -6 dB with clipped=0 |
 
 ## D. Siri and Maps
 
@@ -106,9 +107,11 @@ end, wait a few seconds, then copy it off.
 | R4 | Call and Siri streams can't ask for resends | The iPhone doesn't send a control port for these streams | mg4.84 hides call gaps up to 200 ms (FEC, then concealment); check `call loss` at hang-up |
 | R5 | Bluetooth music doesn't come back after CarPlay | A2DP is released and not reconnected on close | E1: check whether Bluetooth music needs a manual reconnect |
 | R6 | Siri mishears | Microphone source or processing | D2 results per option |
+| R7 | Calls sound noisy or echoey | DiPlay adds no noise or echo processing of its own; that comes from the car when the call source (`VOICE_COMMUNICATION`) is used. If the car refuses it, or does no processing for it, the call uses the raw microphone | C8 results per option |
 
 ## What to send back
 
 - The diagnostic report.
 - The times of each step, with anything that failed.
 - For D2: what Siri heard each time, for each Microphone (test) option.
+- For C8: how the other person heard you on each Microphone (test) option.
