@@ -32,7 +32,6 @@ import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.PairingStore
 import com.shilapi.xcertplay.airplay.VideoInCar
-import com.shilapi.xcertplay.hud.BydNavigationOutputs
 import com.shilapi.xcertplay.iap2.session.Iap2Session
 import com.shilapi.xcertplay.media.AudioMode
 import com.shilapi.xcertplay.mfi.Iap2MfiAuthenticationClient
@@ -164,15 +163,11 @@ class CarPlayController(
 ) : Closeable {
     @Volatile private var handsFreeReleased = false
 
-    private val bydOutputsEnabled = !VehicleIntegration.isMg4(context.applicationContext)
+    private val isMg4 = VehicleIntegration.isMg4(context.applicationContext)
 
     init {
         require(!config.locationReportingEnabled || locationProvider != null) {
             "A location provider is required when location reporting is enabled"
-        }
-        if (bydOutputsEnabled) {
-            BydNavigationOutputs.start(context.applicationContext)
-            BydNavigationOutputs.setClusterStreamControl(::applyClusterUi)
         }
     }
 
@@ -216,9 +211,6 @@ class CarPlayController(
     @Volatile private var mux: Iap2UsbMuxHost? = null
     @Volatile private var csm: Iap2Session? = null
     @Volatile private var activeSession: AirPlaySession? = null
-    private val clusterUiLock = Any()
-    private var clusterUiStream: Pair<AirPlaySession, Int>? = null
-    private var clusterUiShown = true
     private val playbackStatus = com.shilapi.xcertplay.media.CarPlayPlaybackStatus()
 
     /** Told when the iPhone starts or stops playing media; may run on any thread. */
@@ -275,7 +267,6 @@ class CarPlayController(
     private val sessionListener = object : AirPlaySessionListener {
         override fun onSessionActive(session: AirPlaySession) {
             if (activeSession !== session) {
-                if (bydOutputsEnabled) BydNavigationOutputs.start(appContext)
                 if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.start(appContext) { debugLog(it) }
                 // The gear may have changed since /info.
                 if (videoListener != null) session.setVideoPlaybackAllowed(VideoInCar.allowed)
@@ -300,7 +291,6 @@ class CarPlayController(
                     activeSession = null
                     wirelessPerformanceLock.close()
                 }
-                if (bydOutputsEnabled) BydNavigationOutputs.endNow()
                 if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.stop(appContext)
                 videoListener?.onVideoSessionEnded()
                 synchronized(playbackStatus) { playbackStatus.clear() }?.let { playing -> playbackListener?.invoke(playing) }
@@ -519,10 +509,6 @@ class CarPlayController(
         stopWatchingHandsFree()
         reconnectHandsFree()
         if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.stop(appContext)
-        if (bydOutputsEnabled) {
-            BydNavigationOutputs.endNow()
-            BydNavigationOutputs.clearClusterStreamControl(::applyClusterUi)
-        }
         closeReceivers()
         availabilityPollGeneration.incrementAndGet()
         wirelessGeneration.incrementAndGet()
@@ -567,21 +553,6 @@ class CarPlayController(
         }
     }
 
-    // Each new cluster stream starts with the map drawn (its initialURL); send only real changes.
-    private fun applyClusterUi(shown: Boolean) = synchronized(clusterUiLock) {
-        val session = activeSession ?: return@synchronized
-        val stream = session.clusterStream.takeIf { it > 0 } ?: return@synchronized
-        if (clusterUiStream != session to stream) {
-            clusterUiStream = session to stream
-            clusterUiShown = true
-        }
-        if (shown == clusterUiShown) return@synchronized
-        if (session.setClusterUiShown(shown)) {
-            clusterUiShown = shown
-            debugLog("Cluster map: ${if (shown) "showUI, the cluster shows the map" else "stopUI, the cluster hides the map"}")
-        }
-    }
-
     /** Waits for USB, iAP2, MFi and VPN teardown; intended for a non-main lifecycle thread. */
     fun awaitClosed(timeoutMillis: Long): Boolean {
         require(timeoutMillis >= 0) { "timeoutMillis must not be negative" }
@@ -593,9 +564,8 @@ class CarPlayController(
         }
     }
 
-    // HUD (SOME/IP) and cluster (AMap broadcast) keep separate state so one failing cannot stall the other.
+    // Route guidance goes to the MG4 cluster; playback status to the host.
     private fun onRouteFrame(frame: com.shilapi.xcertplay.iap2.wire.Iap2Frame) {
-        if (bydOutputsEnabled) BydNavigationOutputs.onFrame(frame)
         if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.onFrame(frame)
         synchronized(playbackStatus) { playbackStatus.accept(frame) }?.let { playing -> playbackListener?.invoke(playing) }
     }
@@ -963,7 +933,7 @@ class CarPlayController(
         var bringUpStep = "initialization"
         try {
             debugLog("wireless bring-up generation=$generation starting")
-            if (!bydOutputsEnabled && audioMode == AudioMode.HYBRID_BLUETOOTH) {
+            if (isMg4 && audioMode == AudioMode.HYBRID_BLUETOOTH) {
                 // Bind the car's BT music service now so it is up by the time the Wi-Fi
                 // handoff completes and the source switch runs.
                 debugLog("car source: BT music service ${Mg4BluetoothSource.connect(appContext)}")
@@ -1355,7 +1325,7 @@ class CarPlayController(
                 onStatus(CarPlayStatus.WirelessActive)
                 if (audioMode == AudioMode.CARPLAY_WIFI) {
                     debugLog("car source: Wi-Fi audio mode; skipping the switch to BT Music")
-                    if (!bydOutputsEnabled) {
+                    if (isMg4) {
                         releaseCarBluetoothMusic()
                         Mg4BluetoothSource.connect(appContext)
                         Thread.sleep(SOURCE_SWITCH_SETTLE_MILLIS)

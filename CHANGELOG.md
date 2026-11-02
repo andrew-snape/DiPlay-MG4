@@ -1,3 +1,7 @@
+# Unreleased
+
+- **MG4 only.** Removed the code for other cars that came from upstream: the windshield HUD and cluster directions, the ADB battery, wheel-speed and parked readers, the cluster-map screen and its settings, and their steering-wheel key codes. MG4 cluster directions, battery, charging, wheel speed, gear and video while parked are unchanged. Saved battery, connector, low-charge and video choices carry over. Not yet tried in the car.
+
 # MG4CPlay 0.2.9-mg4.92 (SWI165 fork), 2026-11-03
 
 From the mg4.91 car report of 2026-11-03.
@@ -83,7 +87,7 @@ Fixes ported from upstream DiPlay 0.2.19–0.2.22 ([shihabal3amri/DiPlay](https:
 
 # MG4CPlay 0.2.9-mg4.79 (SWI165 fork), 2026-11-01
 
-- Log every Android display once per session (id, name, size, density, flags, whether it accepts presentations), to find out whether the SWI165 instrument cluster is an Android display. If it is, CarPlay's own instrument-cluster map could be shown there, as DiPlay already does on BYD.
+- Log every Android display once per session (id, name, size, density, flags, whether it accepts presentations), to find out whether the SWI165 instrument cluster is an Android display. If it is, CarPlay's own instrument-cluster map could be shown there, as upstream does on other cars.
 
 # MG4CPlay 0.2.9-mg4.78 (SWI165 fork), 2026-11-01
 

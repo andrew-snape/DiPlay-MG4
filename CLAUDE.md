@@ -8,7 +8,8 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
 ## Layout
 
 - `shared/`: CarPlay protocol (AirPlay, iAP2, transport, media, MFi) and vehicle code
-  (`vehicle/` for MG4, `hud/` for BYD).
+  (`vehicle/` for MG4). The app is MG4 only: upstream code for other cars has been removed,
+  so don't port it back.
 - `common/`: the app: `CarPlayHostActivity` (session), `DiPlayActivity` (settings and
   diagnostics), `AirPlayPersistence` (settings), `Mg4FirmwareProfile` (per-firmware
   defaults).
@@ -41,9 +42,10 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
   (`gh workflow run release.yml -R andrew-snape/DiPlay-MG4 --ref main -f tag=v0.2.9-mg4.N`).
   See [docs/RELEASING.md](docs/RELEASING.md).
 - MG4-only behaviour is gated on `Mg4FirmwareProfile.detect().isMg4` (or
-  `VehicleIntegration.isMg4`). Unknown firmware keeps upstream behaviour.
+  `VehicleIntegration.isMg4`). On unknown firmware the car features stay off.
 - MG4 defaults that a user can change use the "saved choice wins" pattern in
-  `AirPlayPersistence` (see `loadCallsOverCarPlayOnly`).
+  `AirPlayPersistence` (see `loadCallsOverCarPlayOnly`). Battery, connector, low-charge
+  and video-while-parked choices live in `VehicleSettings`.
 - Car reads are read-only and fail closed: a value that can't be read is null, never a guess.
 - Log what a car test needs to confirm a change (`appendLog` in the session, and the
   diagnostic report), and add a step to [docs/MG4_SWI165_TEST_PLAN.md](docs/MG4_SWI165_TEST_PLAN.md).
