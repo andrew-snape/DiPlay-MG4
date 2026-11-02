@@ -453,9 +453,18 @@ object AirPlayPersistence {
             .apply()
     }
 
-    fun loadLocationReportingEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_LOCATION_REPORTING_ENABLED, false)
+    /**
+     * On by default on MG4, where the car's own wheel speed goes with it for tunnels and needs no
+     * adb. A saved choice wins.
+     */
+    fun loadLocationReportingEnabled(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_LOCATION_REPORTING_ENABLED)) {
+            prefs.getBoolean(KEY_LOCATION_REPORTING_ENABLED, false)
+        } else {
+            Mg4FirmwareProfile.detect().isMg4
+        }
+    }
 
     fun saveLocationReportingEnabled(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()

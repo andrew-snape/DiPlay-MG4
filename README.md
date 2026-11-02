@@ -25,6 +25,9 @@ Run one at a time.
 | Siri and Maps voice prompts | Siri audio clean in mg4.71 test; Maps voice prompts not yet tested |
 | Instrument-cluster directions | Test build (mg4.80), not yet confirmed in the car |
 | Bluetooth Music mode (fallback) | Fix in mg4.66, awaiting a car test |
+| Car GPS and wheel speed to the iPhone | Test build: location on by default on MG4, with the car's own speed for tunnels (no adb) |
+| Charging shown in Apple Maps | Test build: uses the car's charging status (AC or DC session), not just the plug |
+| Day/night signal | Probe only: logs candidate settings so a dusk drive can find the car's signal. CarPlay still follows Android's dark mode |
 
 The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 
