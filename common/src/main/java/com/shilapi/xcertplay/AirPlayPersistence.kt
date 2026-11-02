@@ -81,6 +81,7 @@ object AirPlayPersistence {
     private const val KEY_AUTO_START_ON_BOOT = "auto_start_on_boot"
     private const val KEY_LOCATION_REPORTING_ENABLED = "location_reporting_enabled"
     private const val KEY_SUNSET_DARK_MODE = "sunset_dark_mode"
+    private const val KEY_WIFI_HIGH_PERFORMANCE_ENABLED = "wifi_high_performance_enabled"
     private const val KEY_SUN_LATITUDE = "sun_latitude"
     private const val KEY_SUN_LONGITUDE = "sun_longitude"
     private const val KEY_MFI_TARGET = "mfi_target"
@@ -188,6 +189,16 @@ object AirPlayPersistence {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putFloat(KEY_SUN_LATITUDE, rounded(latitude))
             .putFloat(KEY_SUN_LONGITUDE, rounded(longitude))
+            .apply()
+    }
+
+    fun loadWifiHighPerformanceEnabled(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_WIFI_HIGH_PERFORMANCE_ENABLED, true)
+
+    fun saveWifiHighPerformanceEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_WIFI_HIGH_PERFORMANCE_ENABLED, enabled)
             .apply()
     }
 

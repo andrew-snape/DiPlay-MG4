@@ -343,6 +343,10 @@ class DiPlayActivity : ComponentActivity() {
                 AirPlayPersistence.loadSurfaceVideoRenderer(this) ?: Mg4FirmwareProfile.detect().preferSurfaceVideo) {
                 AirPlayPersistence.saveSurfaceVideoRenderer(this, it)
             }
+            toggle(card, getString(R.string.wifi_high_performance), getString(R.string.wifi_high_performance_description),
+                AirPlayPersistence.loadWifiHighPerformanceEnabled(this)) {
+                AirPlayPersistence.saveWifiHighPerformanceEnabled(this, it)
+            }
             choice(card, getString(R.string.video_colour_range), listOf(
                 getString(R.string.video_colour_range_stream),
                 getString(R.string.video_colour_range_limited),

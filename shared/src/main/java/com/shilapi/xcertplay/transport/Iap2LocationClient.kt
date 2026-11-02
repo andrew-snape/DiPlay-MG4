@@ -142,6 +142,46 @@ object NmeaLocationEncoder {
 class Iap2LocationRequest {
     /** The 0xFFFA parameter ids while a request is running, otherwise null. */
     @Volatile var components: Set<Int>? = null
+
+    /** Minimum milliseconds between sentences of each type, from the request's 0x8001-0x8007 parameters. */
+    @Volatile var intervals: Map<Int, Long> = emptyMap()
+}
+
+/**
+ * Sends only the sentence types the iPhone asked for (1 GGA, 2 RMC, 4 PASCD), no more often than
+ * the interval it gave for each. Ported from upstream xcertplay 1.4.1. A request naming none of
+ * those types gets every sentence, as before.
+ */
+class NmeaSentenceSelector(private val nowMillis: () -> Long) {
+    private var components: Set<Int> = emptySet()
+    private var intervals: Map<Int, Long> = emptyMap()
+    private val lastSent = mutableMapOf<Int, Long>()
+
+    fun reset(components: Set<Int>, intervals: Map<Int, Long>) {
+        this.components = components
+        this.intervals = intervals
+        lastSent.clear()
+    }
+
+    fun select(nmea: String): String? {
+        if (components.none { it in SENTENCE_IDS.values }) return nmea
+        val now = nowMillis()
+        val selected = nmea.split("\r\n").filter { sentence ->
+            val id = SENTENCE_IDS.entries.firstOrNull { sentence.startsWith(it.key) }?.value ?: return@filter false
+            if (id !in components) return@filter false
+            val interval = intervals[id] ?: 0L
+            val last = lastSent[id]
+            // The caller already sends once a second; only a longer interval holds a sentence back.
+            if (last != null && interval > 1_000L && now - last < interval) return@filter false
+            lastSent[id] = now
+            true
+        }
+        return selected.takeIf { it.isNotEmpty() }?.joinToString("\r\n", postfix = "\r\n")
+    }
+
+    private companion object {
+        val SENTENCE_IDS = mapOf("\$GPGGA," to 1, "\$GPRMC," to 2, "\$PASCD," to 4)
+    }
 }
 
 /**
@@ -160,13 +200,17 @@ class Iap2LocationReporter(
     private var sentLogged = false
     private var continued = false
     private var lastAttemptNanos = 0L
+    private val selector = NmeaSentenceSelector { nanoTime() / 1_000_000 }
 
     /** Handles 0xFFFA/0xFFFC; returns false for any other message. */
     fun handle(frame: Iap2Frame, send: (Iap2Frame) -> Unit): Boolean = when (frame.messageId) {
         Iap2LocationMessages.START_LOCATION_INFORMATION -> {
             val components = Iap2LocationMessages.requestedComponents(frame)
-            onProgress("iap2 rx=0xfffa start-location-information components=$components")
+            val intervals = Iap2LocationMessages.requestedIntervals(frame)
+            onProgress("iap2 rx=0xfffa start-location-information components=$components intervals=$intervals")
+            request?.intervals = intervals
             request?.components = components
+            selector.reset(components, intervals)
             provider?.onRequested(components)
             start(send)
             true
@@ -174,6 +218,7 @@ class Iap2LocationReporter(
         Iap2LocationMessages.STOP_LOCATION_INFORMATION -> {
             onProgress("iap2 rx=0xfffc stop-location-information")
             request?.components = null
+            request?.intervals = emptyMap()
             active = false
             sentLogged = false
             provider?.stop()
@@ -200,6 +245,7 @@ class Iap2LocationReporter(
             if (components != null) {
                 continued = true
                 onProgress("iap2 location request continues from the Bluetooth link components=$components")
+                selector.reset(components, request.intervals)
                 provider?.onRequested(components)
                 start(send)
                 return
@@ -235,7 +281,7 @@ class Iap2LocationReporter(
 
     private fun sendLatest(send: (Iap2Frame) -> Unit) {
         lastAttemptNanos = nanoTime()
-        val sentence = provider?.latestNmea() ?: return
+        val sentence = provider?.latestNmea()?.let(selector::select) ?: return
         send(Iap2LocationMessages.locationInformation(sentence))
         if (!sentLogged) {
             sentLogged = true
@@ -259,6 +305,15 @@ object Iap2LocationMessages {
     /** The parameter ids of a 0xFFFA request (the sentence types asked for), or none if unreadable. */
     fun requestedComponents(frame: Iap2Frame): Set<Int> =
         runCatching { frame.body().asList().map { it.id }.toSortedSet() }.getOrDefault(emptySet())
+
+    /** The 0xFFFA minimum intervals in milliseconds, keyed by sentence type (0x8001 is GGA). */
+    fun requestedIntervals(frame: Iap2Frame): Map<Int, Long> = runCatching {
+        frame.body().asList()
+            .filter { it.id in 0x8001..0x8007 && it.payload.size == 4 }
+            .associate { parameter ->
+                parameter.id - 0x8000 to parameter.payload.fold(0L) { value, byte -> (value shl 8) or (byte.toLong() and 0xff) }
+            }
+    }.getOrDefault(emptyMap())
 
     fun locationInformation(nmeaSentence: String): Iap2Frame {
         require(nmeaSentence.isNotEmpty()) { "NMEA sentence must not be empty" }

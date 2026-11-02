@@ -162,6 +162,7 @@ class CarPlayHostActivity : ComponentActivity() {
         manualHotspotSecurity = manualHotspotSecurity,
         wifiDirectBand = wifiDirectBand,
         locationReportingEnabled = locationReportingEnabled,
+        wifiHighPerformanceEnabled = AirPlayPersistence.loadWifiHighPerformanceEnabled(this),
     )
 
     private val vpnConsent =
