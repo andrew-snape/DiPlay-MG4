@@ -23,10 +23,12 @@ class Mg4VehicleSignalsTest {
     }
 
     @Test
-    fun onlyParkIsConfirmedSoOtherGearsDrive() {
+    fun mapsTheGearsFoundInTheCar() {
         assertEquals(VehicleGear.PARK, Mg4WheelSpeed.gear(1))
-        assertEquals(VehicleGear.DRIVE, Mg4WheelSpeed.gear(2))
+        assertEquals(VehicleGear.REVERSE, Mg4WheelSpeed.gear(2))
+        assertEquals(VehicleGear.NEUTRAL, Mg4WheelSpeed.gear(3))
         assertEquals(VehicleGear.DRIVE, Mg4WheelSpeed.gear(4))
+        assertEquals(VehicleGear.DRIVE, Mg4WheelSpeed.gear(7))
         assertNull(Mg4WheelSpeed.gear(null))
         assertNull(Mg4WheelSpeed.gear(0))
         assertNull(Mg4WheelSpeed.gear(-1))

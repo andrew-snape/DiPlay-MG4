@@ -408,7 +408,7 @@ class DiPlayActivity : ComponentActivity() {
                 AirPlayPersistence.saveSunsetDarkMode(this, it)
                 if (CarPlayBackgroundSession.hasSession()) connect(AirPlayPersistence.loadWirelessEnabled(this))
             }
-            toggle(card, getString(R.string.car_battery_for_the_iphone),
+            toggle(card, getString(R.string.mg4_car_battery_for_the_iphone),
                 getString(R.string.mg4_battery_for_the_iphone_description),
                 VehicleSettings.batteryToIphone(this)) {
                 VehicleSettings.setBatteryToIphone(this, it)
