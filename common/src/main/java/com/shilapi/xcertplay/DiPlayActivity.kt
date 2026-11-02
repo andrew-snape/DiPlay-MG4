@@ -404,6 +404,11 @@ class DiPlayActivity : ComponentActivity() {
                     AirPlayPersistence.saveClusterDirections(this, it)
                 }
             }
+            toggle(card, getString(R.string.mg4_sunset_dark_mode), getString(R.string.mg4_sunset_dark_mode_description),
+                AirPlayPersistence.loadSunsetDarkMode(this)) {
+                AirPlayPersistence.saveSunsetDarkMode(this, it)
+                if (CarPlayBackgroundSession.hasSession()) connect(AirPlayPersistence.loadWirelessEnabled(this))
+            }
             toggle(card, getString(R.string.car_battery_for_the_iphone),
                 getString(R.string.mg4_battery_for_the_iphone_description),
                 BydOutputSettings.batteryToIphone(this)) {

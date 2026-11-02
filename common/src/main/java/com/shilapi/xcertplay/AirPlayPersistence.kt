@@ -80,6 +80,9 @@ object AirPlayPersistence {
     private const val KEY_SAFE_AREA_DRAW_OUTSIDE = "safe_area_draw_outside"
     private const val KEY_AUTO_START_ON_BOOT = "auto_start_on_boot"
     private const val KEY_LOCATION_REPORTING_ENABLED = "location_reporting_enabled"
+    private const val KEY_SUNSET_DARK_MODE = "sunset_dark_mode"
+    private const val KEY_SUN_LATITUDE = "sun_latitude"
+    private const val KEY_SUN_LONGITUDE = "sun_longitude"
     private const val KEY_MFI_TARGET = "mfi_target"
     private const val KEY_MFI_I2C_PATH = "mfi_i2c_path"
     private const val KEY_REMOTE_MFI_SERVER = "remote_mfi_server"
@@ -154,6 +157,40 @@ object AirPlayPersistence {
     }
 
     /** SWI165: send CarPlay turn-by-turn to the instrument cluster's navigation slot. */
+    /**
+     * CarPlay dark mode from sunset and sunrise at the car's position instead of Android's night
+     * mode. On by default on MG4, where no car day/night signal is known yet. A saved choice wins.
+     */
+    fun loadSunsetDarkMode(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_SUNSET_DARK_MODE)) {
+            prefs.getBoolean(KEY_SUNSET_DARK_MODE, false)
+        } else {
+            Mg4FirmwareProfile.detect().isMg4
+        }
+    }
+
+    fun saveSunsetDarkMode(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_SUNSET_DARK_MODE, enabled)
+            .apply()
+    }
+
+    /** Last place used for sunset, rounded to about 10 km: enough for the time, not for the address. */
+    fun loadSunPlace(context: Context): Pair<Double, Double>? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (!prefs.contains(KEY_SUN_LATITUDE) || !prefs.contains(KEY_SUN_LONGITUDE)) return null
+        return prefs.getFloat(KEY_SUN_LATITUDE, 0f).toDouble() to prefs.getFloat(KEY_SUN_LONGITUDE, 0f).toDouble()
+    }
+
+    fun saveSunPlace(context: Context, latitude: Double, longitude: Double) {
+        fun rounded(value: Double) = (Math.round(value * 10) / 10.0).toFloat()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putFloat(KEY_SUN_LATITUDE, rounded(latitude))
+            .putFloat(KEY_SUN_LONGITUDE, rounded(longitude))
+            .apply()
+    }
+
     fun loadClusterDirections(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CLUSTER_DIRECTIONS, false)
 

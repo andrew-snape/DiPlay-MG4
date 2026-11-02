@@ -27,7 +27,7 @@ Run one at a time.
 | Bluetooth Music mode (fallback) | Fix in mg4.66, awaiting a car test |
 | Car GPS and wheel speed to the iPhone | Test build: location on by default on MG4, with the car's own speed for tunnels (no adb) |
 | Charging shown in Apple Maps | Test build: uses the car's charging status (AC or DC session), not just the plug |
-| Day/night signal | Probe only: logs candidate settings so a dusk drive can find the car's signal. CarPlay still follows Android's dark mode |
+| Dark mode at sunset | Test build: CarPlay goes dark between sunset and sunrise at the car's GPS position. A probe also logs candidate car day/night settings |
 
 The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 
@@ -60,6 +60,7 @@ All in DiPlay's settings screen. Changes apply the next time CarPlay connects.
 | Colour range (test) | Display and performance | Video range. Limited (video) or full (PC) range can be chosen to compare washed-out whites. |
 | Music buffer | Display and performance | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. |
 | Directions on the dashboard (test) | MG4 vehicle | Off. Sends CarPlay directions to the instrument cluster (mg4.80). |
+| Dark mode at sunset | MG4 vehicle | On. Dark between sunset and sunrise at the car's position. Off follows the head unit's night mode. |
 
 Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, the music audio channel and in-app updates (which point at upstream builds).
 
