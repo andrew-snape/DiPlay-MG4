@@ -21,7 +21,7 @@ Key facts:
   app's report file (USB stick or Download to iPhone).
 - Car data comes from the EVHardware submodule (read-only). Gear is `vehiclecondition`
   code 5, where only 1 = P is confirmed. Charging status: 1 AC, 10 DC, 5 connecting,
-  7 connected not charging, 8 stopped. No car day/night signal is known yet.
+  7 connected not charging, 8 stopped. Day/night: `screen_day_night_mode` follows the headlights, and CarPlay dark mode follows it.
 - Open issues: stream freezes about every 160 s on the car hotspot; Wi-Fi Direct on
   Android 9 is being compared with the hotspot.
 

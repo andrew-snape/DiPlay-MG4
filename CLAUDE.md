@@ -57,5 +57,8 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
   the report file (USB or **Download to iPhone**).
 - Gear: `vehiclecondition` code 5; only 1 = P is confirmed.
 - Charging status: 1 AC, 10 DC, 5 connecting, 7 connected not charging, 8 stopped.
-- No car day/night or headlight signal is known yet; CarPlay dark mode uses sunset at
-  the car's GPS position (`SunPosition`), and `DayNightProbe` logs candidates.
+- Day/night: `Settings.System.screen_day_night_mode` (0 day, 1 night) switches with the
+  headlights, and Android's night mode follows it, so CarPlay dark mode follows the car.
+  Sunset mode (`SunPosition`) is optional; `DayNightProbe` still logs changes.
+- Vehicle code in `shared/` logs to logcat only unless it also calls the session log
+  (`VehicleIntegration.setReportLog`). The diagnostic report has no logcat.
