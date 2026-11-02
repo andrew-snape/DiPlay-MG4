@@ -1,0 +1,56 @@
+# MG4CPlay (DiPlay-MG4, SWI165 fork)
+
+Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
+(`SWI165-29176-1100R11`), Android 9, MediaTek MT2712, 1920x720 panel. Fork of
+`fatihdonmezdev/DiPlay-MG4`, which follows upstream `shihabal3amri/DiPlay`. Start with
+[README.md](README.md) and [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
+
+## Layout
+
+- `shared/`: CarPlay protocol (AirPlay, iAP2, transport, media, MFi) and vehicle code
+  (`vehicle/` for MG4, `hud/` for BYD).
+- `common/`: the app: `CarPlayHostActivity` (session), `DiPlayActivity` (settings and
+  diagnostics), `AirPlayPersistence` (settings), `Mg4FirmwareProfile` (per-firmware
+  defaults).
+- `mobile/`: the APK module; holds `versionName`.
+- `vendor/MG4ABRP/EVHardware`: git submodule with the MG4 car APIs (battery, speed, gear,
+  charging). Don't edit it here; its property accessors are private.
+
+## Building and testing
+
+- Java 21 (`brew install openjdk@21`). Same checks as CI:
+  `./gradlew :shared:testDebugUnitTest :common:testDebugUnitTest :mobile:lintDebug :mobile:assembleDebug`
+- Car builds: `./scripts/build_mg4.sh`, with `DIPLAY_AUTH_ASSETS_DIR=$PWD/.private/runtime-assets`.
+  The APK goes to `dist/`. Never commit `.private/`, keys or APKs.
+- The repo sits in iCloud-synced `~/Documents`. iCloud makes `name 2.kt` / `name 2.xml`
+  copies, which break the build with duplicate classes or resources. Move untracked
+  `* 2.*` files out of the tree (don't commit them), and clean before building:
+  `./gradlew --stop && rm -rf build */build vendor/MG4ABRP/EVHardware/lib/build .gradle`
+
+## Conventions
+
+- Always pass `-R andrew-snape/DiPlay-MG4` to `gh`. Its default repo is upstream.
+- Branch from `main`; open PRs against `main` on `andrew-snape/DiPlay-MG4`.
+- Commit subjects: `feat:`, `fix:`, `docs:`, `build:`, `ci:`, `test:`, `chore:`, and
+  `port: <what> (upstream DiPlay #N)` for upstream fixes.
+- Each car-test build bumps `0.2.9-mg4.N` in both `mobile/build.gradle.kts` and
+  `scripts/build_mg4.sh`, and gets a `CHANGELOG.md` entry.
+- MG4-only behaviour is gated on `Mg4FirmwareProfile.detect().isMg4` (or
+  `VehicleIntegration.isMg4`). Unknown firmware keeps upstream behaviour.
+- MG4 defaults that a user can change use the "saved choice wins" pattern in
+  `AirPlayPersistence` (see `loadCallsOverCarPlayOnly`).
+- Car reads are read-only and fail closed: a value that can't be read is null, never a guess.
+- Log what a car test needs to confirm a change (`appendLog` in the session, and the
+  diagnostic report), and add a step to [docs/MG4_SWI165_TEST_PLAN.md](docs/MG4_SWI165_TEST_PLAN.md).
+- Docs are plain and short, in Australian English. Keep the README "What works" and
+  settings tables, `docs/MG4_SWI165.md` status table and `CHANGELOG.md` up to date with
+  each feature, and mark anything not yet tried in the car as such.
+
+## Car facts worth knowing
+
+- No ADB on this car: builds are installed from a USB stick. Diagnostics come back as
+  the report file (USB or **Download to iPhone**).
+- Gear: `vehiclecondition` code 5; only 1 = P is confirmed.
+- Charging status: 1 AC, 10 DC, 5 connecting, 7 connected not charging, 8 stopped.
+- No car day/night or headlight signal is known yet; CarPlay dark mode uses sunset at
+  the car's GPS position (`SunPosition`), and `DayNightProbe` logs candidates.

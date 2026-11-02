@@ -1,3 +1,12 @@
+# MG4CPlay 0.2.9-mg4.90 (SWI165 fork), 2026-11-02
+
+Not yet tested in the car. Test plan steps D5–D8 cover it.
+
+- **Car GPS and wheel speed to the iPhone.** **Report location to iPhone** is now on by default on MG4 (a saved choice wins), and asks for location permission once. With it, MG4CPlay sends the car's own wheel speed and gear with the GPS fix, read directly from the car without adb, so Apple Maps keeps moving in tunnels and car parks. Only gear 1 = P is known on SWI165; other gears are sent as D, and the log shows `gear raw=<n>` so a test can identify R.
+- **Charging in Apple Maps.** The "charging" flag now comes from the car's charging status: AC (1) or DC (10) is charging; connecting, connected-but-waiting and stopped are not. Without a status it falls back to the plug or power flowing into the pack. The battery log line shows `chargeStatus=` and `charging=`.
+- **Dark mode at sunset.** New **Dark mode at sunset** setting in **MG4 vehicle**, on by default. CarPlay goes dark between sunset and sunrise at the car's position, checked every minute and at each connection. The last place is kept, rounded to about 10 km, for start-up before a GPS fix. With no place, or the setting off, it follows the head unit's night mode as before. The log shows `Dark mode on (sunset)`.
+- **Day/night probe.** No car day/night signal is known yet. On MG4 the log records Android's night mode, the screen brightness and any setting whose name suggests day/night, and every change to one while CarPlay runs (`Day/night probe:`). The diagnostic report has a `Day/night:` line.
+
 # MG4CPlay 0.2.9-mg4.89 (SWI165 fork), 2026-11-02
 
 Fixes ported from upstream DiPlay 0.2.19–0.2.22 ([shihabal3amri/DiPlay](https://github.com/shihabal3amri/DiPlay)).
