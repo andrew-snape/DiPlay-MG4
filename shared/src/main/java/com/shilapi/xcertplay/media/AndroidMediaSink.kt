@@ -301,7 +301,8 @@ class AndroidMediaSink(
         val started = uplink.start()
         onAudioDiagnostic(
             "Microphone ${config.audioType}: ${if (started) "started" else "failed"} " +
-                "source=${uplink.sourceUsed} rate=${config.sampleRate} channels=${config.channels}",
+                "source=${uplink.sourceUsed} codec=${config.codec} rate=${config.sampleRate} " +
+                "channels=${config.channels} frameMs=${config.frameMillis}",
         )
         if (!started) microphoneUplinks.remove(id, uplink)
     }

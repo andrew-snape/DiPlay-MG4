@@ -6,8 +6,25 @@ import com.shilapi.xcertplay.airplay.AirPlayIdentity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
+import java.net.Inet6Address
+import java.net.InetAddress
 
 class CarPlayBonjourTest {
+    @Test fun mdnsAddressCarriesItsNameSoJmdnsNeedNotLookItUp() {
+        val ipv4 = InetAddress.getByAddress(byteArrayOf(192.toByte(), 168.toByte(), 43, 1))
+        val named4 = namedForMdns(ipv4, "carplay-020000000002")
+        // toString shows a cached name without asking DNS.
+        assertEquals("carplay-020000000002/192.168.43.1", named4.toString())
+        assertEquals(ipv4, named4)
+
+        val ipv6 = Inet6Address.getByAddress(null,
+            byteArrayOf(0xfe.toByte(), 0x80.toByte(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2), 7)
+        val named6 = namedForMdns(ipv6, "carplay-020000000002") as Inet6Address
+        assertEquals("carplay-020000000002/${ipv6.hostAddress}", named6.toString())
+        assertEquals(7, named6.scopeId)
+        assertEquals(ipv6, named6)
+    }
+
     @Test fun discoveryDiagnosticsKeepOutcomeWithoutPhoneIdentifiers() {
         val endpoint = CarPlayBonjourEndpoint("Private phone", "192.168.43.25", 7000, "AA:BB:CC:DD:EE:FF")
         assertEquals("control resolved family=IPv4 port=7000", CarPlayBonjourEvent.Resolved(endpoint).diagnosticSummary())

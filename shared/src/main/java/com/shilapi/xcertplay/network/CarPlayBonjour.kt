@@ -241,7 +241,8 @@ class CarPlayBonjour(
                     val address = requireNotNull(localAdvertisedAddress) {
                         "Interface mDNS requires a local advertised address"
                     }
-                    val dns = JmDNS.create(address, "carplay-${config.deviceId.replace(":", "")}")
+                    val hostName = "carplay-${config.deviceId.replace(":", "")}"
+                    val dns = JmDNS.create(namedForMdns(address, hostName), hostName)
                     interfaceMdns = dns
                     dns.addServiceListener("$CARPLAY_CONTROL_SERVICE_TYPE.local.", interfaceListener)
                     dns.registerService(ServiceInfo.create(
@@ -594,3 +595,15 @@ class CarPlayBonjour(
         const val FAILURE_NONE = -1
     }
 }
+
+/**
+ * The same address with [hostName] already attached. JmDNS reads `getHostName()` from the address it is
+ * given even when it is also given a name, and an unnamed address can send that to the system resolver
+ * and hold up wireless start (upstream DiPlay #972). The IPv6 scope is kept.
+ */
+internal fun namedForMdns(address: InetAddress, hostName: String): InetAddress =
+    if (address is Inet6Address) {
+        Inet6Address.getByAddress(hostName, address.address, address.scopeId)
+    } else {
+        InetAddress.getByAddress(hostName, address.address)
+    }

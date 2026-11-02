@@ -25,8 +25,23 @@ data class MicrophoneConfig(
     val frameBytes: Int
         get() = samplesPerPacket * channels * 2
 
-    private companion object {
-        const val OPUS_SAMPLES_PER_PACKET = 960
+    companion object {
+        private const val OPUS_SAMPLES_PER_PACKET = 960
+
+        /**
+         * Milliseconds of PCM per packet when the iPhone names no framesPerPacket: the longest of 20, 10 and 5 ms
+         * whose sealed packet still fits one 1,500-byte link MTU with its IPv6 and UDP headers. 20 ms of 48 kHz mono
+         * seals to 1,956 bytes, which leaves as two IP fragments, and upstream USB reports (DiPlay #1094) recorded
+         * silence at 48 kHz while 24 kHz Siri packets worked. 48 kHz mono therefore sends 10 ms.
+         */
+        fun pcmFrameMillis(sampleRate: Int, channels: Int): Int = PCM_FRAME_MILLIS.firstOrNull { millis ->
+            MicrophonePacketizer.SEAL_OVERHEAD + sampleRate * millis / 1000 * channels * 2 <= MAX_UDP_PAYLOAD
+        } ?: PCM_FRAME_MILLIS.last()
+
+        private val PCM_FRAME_MILLIS = listOf(20, 10, 5)
+
+        /** A 1,500-byte link MTU less the 40-byte IPv6 and 8-byte UDP headers. */
+        private const val MAX_UDP_PAYLOAD = 1500 - 40 - 8
     }
 }
 
@@ -47,6 +62,9 @@ object MicrophonePacketizer {
     const val RTP_HEADER_LEN = 12
     const val TAG_LEN = 16
     const val NONCE_LEN = 8
+
+    /** Bytes a sealed packet adds to its samples: the RTP header, the Poly1305 tag and the nonce. */
+    const val SEAL_OVERHEAD = RTP_HEADER_LEN + TAG_LEN + NONCE_LEN
 
     fun sealPacket(
         key: ByteArray,
