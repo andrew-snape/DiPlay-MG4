@@ -72,7 +72,7 @@ All in DiPlay's settings screen. Changes apply the next time CarPlay connects.
 | Video while parked | MG4 vehicle | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P (read directly, no ADB). Leaving P closes the player. DRM video such as Apple TV+ won't play. |
 | Dark mode at sunset | MG4 vehicle | Off (mg4.92). Off follows the car's day/night, which changes with the headlights. On uses sunset and sunrise at the car's position, once a position is known. |
 
-Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, the music audio channel and in-app updates (which point at upstream builds).
+Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, and the music audio channel.
 
 ## Building on a Mac
 
@@ -147,8 +147,14 @@ off; some uploads have arrived empty when copied straight away.
 
 ## Updates
 
-The in-app update check still looks at the **upstream** repository, so it can offer
-builds without this fork's SWI165 changes. Build from this repo instead.
+The in-app update check looks at **this fork's** releases (`andrew-snape/DiPlay-MG4`),
+when the app opens and from the ↻ button on the home screen. It offers the highest
+published release newer than the installed version, comparing only the numbers (so
+`0.2.9-mg4.92` is newer than `0.2.9-mg4.91-hud-test`), and only an `MG4CPlay-…apk` with a
+GitHub SHA-256 digest. After download it checks the digest, package name and signing key,
+then installs, or opens Downloads if the head unit refuses. It needs the head unit online
+and the repo public. The diagnostic report shows the last check (`Update check:`). See
+[docs/OTA.md](docs/OTA.md).
 
 ## Caveats
 
