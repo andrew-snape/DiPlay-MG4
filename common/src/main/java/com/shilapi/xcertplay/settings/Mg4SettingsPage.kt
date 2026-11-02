@@ -192,7 +192,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
             minimumHeight = ui.dp(76)
             setOnClickListener { open(SettingsCategory.CONNECTION) }
         }
-        card.addView(ui.iconTile(R.drawable.ic_carplay, Colors.SELECTED), LinearLayout.LayoutParams(ui.dp(44), ui.dp(44)))
+        card.addView(ui.iconTile(R.drawable.ic_carplay, Colors.SURFACE, tint = false), LinearLayout.LayoutParams(ui.dp(44), ui.dp(44)))
         val text = ui.column()
         val phone = if (DiPlayPreferences.phoneAddress(activity) != null) DiPlayPreferences.phoneName(activity)
             else activity.getString(R.string.settings_no_iphone)

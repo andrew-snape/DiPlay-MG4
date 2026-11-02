@@ -179,10 +179,11 @@ internal class SettingsUi(private val context: Context) {
         return line
     }
 
-    fun iconTile(icon: Int, tile: Int) = FrameLayout(context).apply {
+    /** [tint] whitens a one-colour glyph; pass false for an icon that has its own colours. */
+    fun iconTile(icon: Int, tile: Int, tint: Boolean = true) = FrameLayout(context).apply {
         background = rounded(tile, 9)
         addView(ImageView(context).apply {
-            setImageResource(icon); imageTintList = ColorStateList.valueOf(Color.WHITE)
+            setImageResource(icon); if (tint) imageTintList = ColorStateList.valueOf(Color.WHITE)
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
     }

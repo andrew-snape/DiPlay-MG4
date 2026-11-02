@@ -99,7 +99,7 @@ end, wait a few seconds, then copy it off.
 
 ## H. Settings screen
 
-Not yet tried in the car. The first build with the two-pane Settings screen is mg4.93.
+Not yet tried in the car. It applies from the first build with the two-pane Settings screen.
 
 | # | Step | Pass | Log lines |
 |---|---|---|---|
