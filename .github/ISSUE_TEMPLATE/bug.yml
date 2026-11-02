@@ -11,7 +11,7 @@ body:
     validations: {required: true}
   - type: input
     id: car
-    attributes: {label: Car and head-unit model, placeholder: 'Car model/year, DiLink version, Android version'}
+    attributes: {label: Car and head-unit model, placeholder: 'MG4 year, head-unit firmware (e.g. SWI165-29176-1100R11), Android version'}
     validations: {required: true}
   - type: input
     id: phone

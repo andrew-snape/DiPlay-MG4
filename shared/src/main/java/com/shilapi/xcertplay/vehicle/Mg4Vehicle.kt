@@ -7,7 +7,6 @@ import com.evsuite.hardware.EVHardware
 import com.evsuite.hardware.FirmwareInfo
 import com.evsuite.hardware.saic.SaicVehicleCondition
 import com.evsuite.hardware.telemetry.EnergyTelemetryReader
-import com.shilapi.xcertplay.hud.BydOutputSettings
 import com.shilapi.xcertplay.transport.VehicleStatusProvider
 import com.shilapi.xcertplay.transport.VehicleStatusSnapshot
 import java.util.concurrent.CountDownLatch
@@ -135,7 +134,7 @@ object Mg4Vehicle : VehicleStatusProvider {
         val reportedCurrentKwh = currentKwh ?: reportedCapacityKwh * fraction
         latest = VehicleStatusSnapshot(
             rangeKm = range,
-            rangeWarning = percent <= BydOutputSettings.lowChargePercent(context),
+            rangeWarning = percent <= VehicleSettings.lowChargePercent(context),
             batteryPercent = percent,
             currentChargeWh = (reportedCurrentKwh * 1000).roundToLong(),
             maxChargeWh = (reportedCapacityKwh * 1000).roundToLong(),

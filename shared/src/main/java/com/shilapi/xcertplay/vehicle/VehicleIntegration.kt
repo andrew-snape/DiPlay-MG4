@@ -1,46 +1,36 @@
 package com.shilapi.xcertplay.vehicle
 
 import android.content.Context
-import com.shilapi.xcertplay.hud.BydNavigationOutputs
 import com.shilapi.xcertplay.transport.VehicleSpeedSource
 import com.shilapi.xcertplay.transport.VehicleStatusProvider
 
-/** Selects the vehicle-specific read path without exposing vendor details to the CarPlay host. */
+/** The MG4 read path, kept apart from the CarPlay host. On other firmware there is no car data. */
 object VehicleIntegration {
     fun isMg4(context: Context): Boolean = Mg4Vehicle.available(context)
 
-    /** MG4 has a native read-only telemetry source, so EV routing must not depend on a legacy pref. */
-    fun vehicleStatusEnabled(context: Context): Boolean =
-        if (isMg4(context)) {
-            Mg4Vehicle.start(context)
-            true
-        } else {
-            com.shilapi.xcertplay.hud.BydOutputSettings.batteryToIphone(context)
-        }
+    /** MG4 has a native read-only telemetry source, so EV routing is always on there. */
+    fun vehicleStatusEnabled(context: Context): Boolean {
+        if (!isMg4(context)) return false
+        Mg4Vehicle.start(context)
+        return true
+    }
 
     fun onAppOpened(context: Context) {
         runCatching {
             if (isMg4(context)) {
-                // Supported MG firmware exposes battery and range without the BYD-only ADB bridge. Advertise the
-                // MG4 as an EV by default so Apple Maps can request live vehicle-status updates.
-                com.shilapi.xcertplay.hud.BydOutputSettings.enableBatteryToIphoneByDefault(context)
+                // Advertise the MG4 as an EV by default so Apple Maps can ask for live vehicle status.
+                VehicleSettings.enableBatteryToIphoneByDefault(context)
                 Mg4Vehicle.start(context)
-            } else {
-                BydNavigationOutputs.onAppOpened(context)
             }
         }
     }
 
-    fun batteryStatus(context: Context): VehicleStatusProvider =
-        if (isMg4(context)) Mg4Vehicle.also { it.start(context) }
-        else BydNavigationOutputs.batteryStatus(context)
+    fun batteryStatus(context: Context): VehicleStatusProvider = Mg4Vehicle.also { it.start(context) }
 
-    /** MG4 reads speed directly, so it always goes with location; BYD needs adb and its own switch. */
-    fun wheelSpeedEnabled(context: Context): Boolean =
-        isMg4(context) || com.shilapi.xcertplay.hud.BydOutputSettings.wheelSpeedToIphone(context)
+    /** MG4 reads speed directly, so it always goes with location. */
+    fun wheelSpeedEnabled(context: Context): Boolean = isMg4(context)
 
-    fun wheelSpeed(context: Context): VehicleSpeedSource =
-        if (isMg4(context)) Mg4WheelSpeedSource else BydNavigationOutputs.wheelSpeed(context)
+    fun wheelSpeed(context: Context): VehicleSpeedSource = Mg4WheelSpeedSource
 
     /** Sends MG4 wheel-speed, gear and charging lines to [log] (the session log), or stops with null. */
     fun setReportLog(log: ((String) -> Unit)?) {
@@ -48,6 +38,5 @@ object VehicleIntegration {
         Mg4Vehicle.reportLog = log ?: {}
     }
 
-    fun parked(context: Context): Boolean? =
-        if (isMg4(context)) Mg4Vehicle.parked(context) else BydNavigationOutputs.parked(context)
+    fun parked(context: Context): Boolean? = if (isMg4(context)) Mg4Vehicle.parked(context) else null
 }

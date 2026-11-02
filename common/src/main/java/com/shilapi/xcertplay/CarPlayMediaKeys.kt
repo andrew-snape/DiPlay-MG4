@@ -20,7 +20,7 @@ import com.shilapi.xcertplay.orchestration.CarPlayController
 /**
  * Steering-wheel and other hardware media buttons for CarPlay.
  *
- * Android delivers media keys to a media session; BYD picks the session of the audio-focus
+ * Android delivers media keys to a media session; the firmware picks the session of the audio-focus
  * owner. Once CarPlay plays music, DiPlay holds audio focus and an active session until the
  * CarPlay session ends, so play also works after a pause. Keys go to the iPhone as CarPlay media
  * HID presses ([CarPlayMediaButton]).
