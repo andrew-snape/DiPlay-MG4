@@ -1,6 +1,7 @@
 package com.shilapi.xcertplay
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -146,7 +147,7 @@ class CarPlayHostActivity : ComponentActivity() {
             locationInformationEnabled = locationReportingEnabled,
             vehicleStatusEnabled = com.shilapi.xcertplay.vehicle.VehicleIntegration.vehicleStatusEnabled(this),
             chargingConnectors = com.shilapi.xcertplay.hud.BydOutputSettings.chargingConnectors(this),
-            vehicleSpeedEnabled = locationReportingEnabled && com.shilapi.xcertplay.hud.BydOutputSettings.wheelSpeedToIphone(this),
+            vehicleSpeedEnabled = locationReportingEnabled && com.shilapi.xcertplay.vehicle.VehicleIntegration.wheelSpeedEnabled(this),
         ),
         label = "MG4CPlay",
         hostName = "diplay-" + DiPlayBootstrap.deviceId(airPlayIdentity).replace(":", "").lowercase(),
@@ -334,6 +335,15 @@ class CarPlayHostActivity : ComponentActivity() {
     private var menuOpen = false
     private var latestStage = "Preparing CarPlay"
     private var darkMode = false
+    private var androidDarkMode = false
+    private var sunsetDarkMode = false
+    private val refreshSunsetDarkMode = object : Runnable {
+        override fun run() {
+            updateDarkMode()
+            mainHandler.postDelayed(this, SUNSET_CHECK_MILLIS)
+        }
+    }
+    private var dayNightProbe: DayNightProbe? = null
     private var activeAirPlaySession: AirPlaySession? = null
     private val activeScreenStreamTypes = mutableSetOf<Int>()
     private var handshakeResetInProgress = false
@@ -437,7 +447,13 @@ class CarPlayHostActivity : ComponentActivity() {
         }
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         initializeSessionLog()
-        darkMode = isDarkMode(resources.configuration.uiMode)
+        androidDarkMode = isDarkMode(resources.configuration.uiMode)
+        sunsetDarkMode = AirPlayPersistence.loadSunsetDarkMode(this)
+        darkMode = currentDarkMode()
+        if (sunsetDarkMode) mainHandler.postDelayed(refreshSunsetDarkMode, SUNSET_CHECK_MILLIS)
+        if (Mg4FirmwareProfile.detect().isMg4) {
+            dayNightProbe = DayNightProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
+        }
         advancedAudioChannelMappingSupported =
             resources.getBoolean(R.bool.config_advanced_audio_channel_mapping)
         airPlayIdentity = AirPlayPersistence.loadIdentity(this)
@@ -788,11 +804,8 @@ class CarPlayHostActivity : ComponentActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val nextDarkMode = isDarkMode(newConfig.uiMode)
-        if (nextDarkMode != darkMode) {
-            darkMode = nextDarkMode
-            syncAirPlayDarkMode()
-        }
+        androidDarkMode = isDarkMode(newConfig.uiMode)
+        updateDarkMode()
         applyFullscreenMode()
         stageStatusView?.maxWidth = (resources.displayMetrics.widthPixels * 0.78f).toInt()
         scrollLogsToBottom()
@@ -803,6 +816,9 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        mainHandler.removeCallbacks(refreshSunsetDarkMode)
+        dayNightProbe?.stop()
+        dayNightProbe = null
         clusterMonitor?.stop()
         dismissClusterPresentation()
         mainHandler.removeCallbacks(applyDisplaySize)
@@ -3076,6 +3092,7 @@ class CarPlayHostActivity : ComponentActivity() {
                     armVideoStallWatchdog()
                     CarPlayBackgroundSession.active = true
                     reconnectAttempts = 0
+                    darkMode = currentDarkMode()
                     syncAirPlayDarkMode()
                     if (menuOpen) return@runOnUiThread
                     appendLog("AirPlay session active")
@@ -3211,7 +3228,7 @@ class CarPlayHostActivity : ComponentActivity() {
                 !config.locationReportingEnabled -> null
                 config.identification.vehicleSpeedEnabled -> VehicleSpeedLocationProvider(
                     AndroidCarPlayLocationProvider(this),
-                    com.shilapi.xcertplay.hud.BydNavigationOutputs.wheelSpeed(applicationContext),
+                    com.shilapi.xcertplay.vehicle.VehicleIntegration.wheelSpeed(applicationContext),
                 )
                 else -> AndroidCarPlayLocationProvider(this)
             }
@@ -3306,6 +3323,39 @@ class CarPlayHostActivity : ComponentActivity() {
             shutdown(false, "foreground service could not start")
             setConnectionStage(getString(R.string.could_not_start_carplay_return_to_diplay_and_check_app_per))
         }
+    }
+
+    private fun updateDarkMode() {
+        val next = currentDarkMode()
+        if (next == darkMode) return
+        darkMode = next
+        appendLog("Dark mode ${if (next) "on" else "off"} (${if (sunsetDarkMode) "sunset" else "Android"})")
+        syncAirPlayDarkMode()
+    }
+
+    /** Dark between sunset and sunrise when that is on and the place is known, else Android's night mode. */
+    private fun currentDarkMode(): Boolean {
+        if (!sunsetDarkMode) return androidDarkMode
+        val (latitude, longitude) = sunPlace() ?: return androidDarkMode
+        return SunPosition.isNight(latitude, longitude, System.currentTimeMillis())
+    }
+
+    /** The newest location fix Android holds, else the last place saved; only the rough position is kept. */
+    @SuppressLint("MissingPermission")
+    private fun sunPlace(): Pair<Double, Double>? {
+        if (hasFineLocationPermission()) {
+            val locationManager = getSystemService(android.location.LocationManager::class.java)
+            val fix = runCatching {
+                locationManager?.getProviders(true).orEmpty()
+                    .mapNotNull { locationManager?.getLastKnownLocation(it) }
+                    .maxByOrNull { it.time }
+            }.getOrNull()
+            if (fix != null) {
+                AirPlayPersistence.saveSunPlace(this, fix.latitude, fix.longitude)
+                return fix.latitude to fix.longitude
+            }
+        }
+        return AirPlayPersistence.loadSunPlace(this)
     }
 
     private fun syncAirPlayDarkMode() {
@@ -3873,6 +3923,7 @@ class CarPlayHostActivity : ComponentActivity() {
         const val SCREEN_TYPE_MAIN = 110
         const val SCREEN_TYPE_ALT = 111
         const val LOG_RETENTION_MILLIS = 5 * 60_000L
+        const val SUNSET_CHECK_MILLIS = 60_000L
         const val DISPLAY_CHANGE_DEBOUNCE_MILLIS = 500L
         const val RECONNECT_DELAY_MILLIS = 2_000L
         const val IAP_TUNNEL_RECONNECT_DELAY_MILLIS = 15_000L

@@ -2,6 +2,7 @@ package com.shilapi.xcertplay.vehicle
 
 import android.content.Context
 import com.shilapi.xcertplay.hud.BydNavigationOutputs
+import com.shilapi.xcertplay.transport.VehicleSpeedSource
 import com.shilapi.xcertplay.transport.VehicleStatusProvider
 
 /** Selects the vehicle-specific read path without exposing vendor details to the CarPlay host. */
@@ -33,6 +34,13 @@ object VehicleIntegration {
     fun batteryStatus(context: Context): VehicleStatusProvider =
         if (isMg4(context)) Mg4Vehicle.also { it.start(context) }
         else BydNavigationOutputs.batteryStatus(context)
+
+    /** MG4 reads speed directly, so it always goes with location; BYD needs adb and its own switch. */
+    fun wheelSpeedEnabled(context: Context): Boolean =
+        isMg4(context) || com.shilapi.xcertplay.hud.BydOutputSettings.wheelSpeedToIphone(context)
+
+    fun wheelSpeed(context: Context): VehicleSpeedSource =
+        if (isMg4(context)) Mg4WheelSpeedSource else BydNavigationOutputs.wheelSpeed(context)
 
     fun parked(context: Context): Boolean? =
         if (isMg4(context)) Mg4Vehicle.parked(context) else BydNavigationOutputs.parked(context)

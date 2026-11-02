@@ -404,6 +404,11 @@ class DiPlayActivity : ComponentActivity() {
                     AirPlayPersistence.saveClusterDirections(this, it)
                 }
             }
+            toggle(card, getString(R.string.mg4_sunset_dark_mode), getString(R.string.mg4_sunset_dark_mode_description),
+                AirPlayPersistence.loadSunsetDarkMode(this)) {
+                AirPlayPersistence.saveSunsetDarkMode(this, it)
+                if (CarPlayBackgroundSession.hasSession()) connect(AirPlayPersistence.loadWirelessEnabled(this))
+            }
             toggle(card, getString(R.string.car_battery_for_the_iphone),
                 getString(R.string.mg4_battery_for_the_iphone_description),
                 BydOutputSettings.batteryToIphone(this)) {
@@ -1347,6 +1352,7 @@ class DiPlayActivity : ComponentActivity() {
         appendLine("Saved resolution preference (may differ from active session): ${AirPlayPersistence.loadDisplayScaleTenths(appContext) * 10}%")
         appendLine("Session: ${if (CarPlayBackgroundSession.active) "active" else if (CarPlayBackgroundSession.hasSession()) "connecting" else "stopped"}")
         appendLine("Head-unit board: ${Build.BOARD}; hardware: ${Build.HARDWARE}; build: ${Build.DISPLAY}")
+        if (Mg4FirmwareProfile.detect().isMg4) appendLine("Day/night: ${DayNightProbe.snapshot(appContext)}")
         appendLine()
         appendLine("--- Last display negotiation (timestamps distinguish it from current settings) ---")
         appendLine(DisplayDiagnosticSnapshot.report(appContext))

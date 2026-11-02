@@ -5,7 +5,7 @@ Wireless CarPlay for the MG4 head unit. This is a personal fork of
 for an Australian **MG4 on SWI165 firmware** (`SWI165-29176-1100R11`, Android 9,
 AUTUS SAIC MT2712, 1920x720 panel). Upstream is tested on SWI69.
 
-Current build: **0.2.9-mg4.89**. Car-test builds install as
+Current build: **0.2.9-mg4.90**. Car-test builds install as
 `com.shihab.diplay.hudtest`, alongside any upstream `com.shihab.diplay` install.
 Run one at a time.
 
@@ -25,6 +25,9 @@ Run one at a time.
 | Siri and Maps voice prompts | Siri audio clean in mg4.71 test; Maps voice prompts not yet tested |
 | Instrument-cluster directions | Test build (mg4.80), not yet confirmed in the car |
 | Bluetooth Music mode (fallback) | Fix in mg4.66, awaiting a car test |
+| Car GPS and wheel speed to the iPhone | Test build (mg4.90): location on by default on MG4, with the car's own speed for tunnels (no adb). Not yet tested in the car |
+| Charging shown in Apple Maps | Test build (mg4.90): uses the car's charging status (AC or DC session), not just the plug. Not yet tested in the car |
+| Dark mode at sunset | Test build (mg4.90): CarPlay goes dark between sunset and sunrise at the car's GPS position. Not yet tested in the car |
 
 The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 
@@ -39,6 +42,9 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 | Steering wheel | SWI165 sends wheel keys as a SystemUI broadcast, not Android media keys. DiPlay listens for it in Wi-Fi mode and sends next and previous to CarPlay. Volume and mute stay with the car. |
 | Instrument cluster | Test only (mg4.80): sends CarPlay's next turn, distance and street to the cluster's navigation area through the car's `MapService`. |
 | Bluetooth Music mode | Kept as a fallback. Switches the car to Bluetooth Music with the media service's `play` command, as read from the car's own MediaService. |
+| Location | On by default on MG4 (mg4.90). Sends the car's GPS with its own wheel speed and gear (`$PASCD`), read directly from the car, so Apple Maps keeps moving in tunnels. Only gear P is confirmed; others are sent as D. |
+| Charging | Apple Maps' "charging" comes from the car's charging status (1 AC, 10 DC) (mg4.90). Plugged in but stopped or finished is not charging. |
+| Dark mode | CarPlay goes dark between sunset and sunrise at the car's position (mg4.90), since no car day/night signal is known. A probe logs candidate system settings so a dusk drive can find one. |
 | Build fixes | Replaces upstream calls to Bluetooth functions that were never published in the EVHardware submodule, so the tree compiles. The build script finds the Android SDK and writes the APK to `dist/`. |
 | Diagnostics | Reports record the firmware profile, video renderer, audio mode, car audio source, microphone source and every wheel key. |
 
@@ -56,7 +62,9 @@ All in DiPlay's settings screen. Changes apply the next time CarPlay connects.
 | Efficient video (HEVC) | Display and performance | On. Half the Wi-Fi data of H.264. The stock CarPlay app uses H.264; turn off to compare colours. |
 | Colour range (test) | Display and performance | Video range. Limited (video) or full (PC) range can be chosen to compare washed-out whites. |
 | Music buffer | Display and performance | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. |
+| Report location to iPhone | Location | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it on MG4. |
 | Directions on the dashboard (test) | MG4 vehicle | Off. Sends CarPlay directions to the instrument cluster (mg4.80). |
+| Dark mode at sunset | MG4 vehicle | On. Dark between sunset and sunrise at the car's position. Off follows the head unit's night mode. |
 
 Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, the music audio channel and in-app updates (which point at upstream builds).
 
@@ -125,8 +133,10 @@ matters.
 
 ## Diagnostics
 
-In DiPlay: **Diagnostics > Save diagnostic report**. Reports stay on the car
-unless you share them. Wait a few seconds after saving before copying the file
+In DiPlay: **Diagnostics > Save diagnostic report**, or **Download to iPhone**
+during wireless CarPlay. Reports stay on the car unless you share them. On MG4 the
+report has a `Day/night:` line, and the log has `Dark mode on (sunset)`,
+`gear raw=` and `chargeStatus=` lines for the mg4.90 features. Wait a few seconds after saving before copying the file
 off; some uploads have arrived empty when copied straight away.
 
 ## Updates
@@ -151,6 +161,7 @@ FairPlay receiver.
 - [Stock AllGo CarPlay app notes](docs/MG4_SWI165_ALLGO_NOTES.md): how the car's own CarPlay app handles calls and audio
 - [Release test plan: calls, music, Bluetooth and Wi-Fi](docs/MG4_SWI165_TEST_PLAN.md)
 - [Release notes](CHANGELOG.md)
+- [Instructions for Claude](CLAUDE.md), and the [claude.ai Project instructions](docs/claude-project-instructions.md)
 - [Platform-signed builds](docs/MG4_PLATFORM_BUILD.md)
 - [Installing over ADB](docs/MG4_PLATFORM_INSTALL.md)
 - [Upstream build, release and OTA notes](docs/RELEASING.md), [OTA](docs/OTA.md)

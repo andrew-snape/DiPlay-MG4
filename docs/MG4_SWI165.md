@@ -49,6 +49,9 @@ screen such as MG4Dash never show the stock card, so they don't need it.
 | Wi-Fi audio instead of Bluetooth | Music plays on the car (mg4.65). Default on SWI165 from mg4.66, with the car’s Bluetooth music disconnected while CarPlay runs. mg4.67 and mg4.68 lost all CarPlay audio (Opus microphone input no longer offered); mg4.69 restores it and encodes the call microphone in software. Calls not yet confirmed. See [MG4_SWI165_WIFI_AUDIO_PLAN.md](./MG4_SWI165_WIFI_AUDIO_PLAN.md) |
 | Battery and range to the iPhone | Confirmed on the car, 2026-11-01 |
 | Switch to Bluetooth Music on connect | mg4.65 stayed on radio: command 15 does not exist on SWI165. Fixed in mg4.66 to send `play` (2), which requests the car’s Bluetooth source. Awaiting a car test |
+| Car GPS and wheel speed to the iPhone | mg4.90: location on by default on MG4. Speed is the AOSP vehicle-speed property (EVHardware scales it per firmware); gear is `vehiclecondition` code 5, where only 1 = P is known, so other gears are sent as D. Awaiting a car test (test plan D5, D6) |
+| Charging in Apple Maps | mg4.90: `isCharging` from the car's charging status (1 AC, 10 DC; 5 connecting, 7 connected, 8 stopped are not charging), falling back to the plug or pack power. Awaiting a car test (D7) |
+| Dark mode | mg4.90: no car day/night or headlight signal is known on SWI165, and no EVHardware call reads one. CarPlay goes dark when the sun is below -0.833° at the car's position (checked every minute), else follows Android's night mode. `DayNightProbe` logs every system, secure and global setting whose name suggests day/night, and their changes. Awaiting a dusk drive (D8) |
 
 ## Signing note
 

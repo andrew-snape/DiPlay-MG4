@@ -54,6 +54,10 @@ end, wait a few seconds, then copy it off.
 | D2 | "What's the weather in Geelong", three times per Microphone (test) option | Siri hears it correctly | `Microphone speechrecognition: started source=...` |
 | D3 | Start an Apple Maps route; wait for a spoken prompt | Prompt is heard; music lowers, then comes back | `audioType=default` or `alert` stream, and whether it played (see risk R1) |
 | D4 | Dashboard (Directions on the dashboard on) | Next turn, distance, street on the cluster | `Cluster nav: guidance started`, `Cluster nav: apple=...` |
+| D5 | Report location to iPhone (now on by default on MG4). Accept the location prompt once, then drive with Apple Maps open | Maps follows the car; through a tunnel or car park it keeps moving | `wheel speed started`, `first wheel speed`, `gear raw=` lines |
+| D6 | Select R, N and D in turn while parked | Note each gear's raw number | `gear raw=<n> sent=...` (only 1 = P is known; others are sent as D) |
+| D7 | Plug in to charge with CarPlay running, then unplug | Apple Maps shows charging while charging, not once it stops | `chargeStatus=` and `charging=` on the MG4 battery line |
+| D8 | Drive from daylight into dusk, and switch the headlights on and off | CarPlay turns dark within a minute or two of sunset; note any probe line that changes | `Dark mode on (sunset)`, `AirPlay dark mode=dark`, `Day/night probe:` lines; also the `Day/night:` line in the report |
 
 ## E. Bluetooth fall-backs and recovery
 

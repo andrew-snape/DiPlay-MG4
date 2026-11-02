@@ -129,13 +129,32 @@ object Mg4Vehicle : VehicleStatusProvider {
             currentChargeWh = (reportedCurrentKwh * 1000).roundToLong(),
             maxChargeWh = (reportedCapacityKwh * 1000).roundToLong(),
             maxRangeKm = maxRange,
-            charging = vehicle.chargePortConnected == true ||
-                (vehicle.batteryPowerKw?.let { it < -0.3f } == true),
+            charging = Mg4Charging.isCharging(
+                vehicle.chargingStatus,
+                vehicle.chargePortConnected,
+                vehicle.batteryPowerKw,
+            ),
         )
         latestMillis = SystemClock.elapsedRealtime()
         Log.i(
             TAG,
-            "${FirmwareInfo.getDetectedString()} battery ${percent.roundToInt()}% range ${range}km",
+            "${FirmwareInfo.getDetectedString()} battery ${percent.roundToInt()}% range ${range}km " +
+                "chargeStatus=${vehicle.chargingStatus} charging=${latest?.charging}",
         )
     }
+}
+
+/** Whether the MG4 is charging, as Apple Maps' isCharging wants it. */
+internal object Mg4Charging {
+    // The car's own charging-session values (EVHardware PROP_VENDOR_CHARGE_STATUS): 1 AC, 10 DC.
+    private val CHARGING_STATUSES = setOf(1, 10)
+    private const val CHARGING_POWER_KW = -0.3f
+
+    /**
+     * The car's charging status decides when it reports one: plugged in but stopped or finished is
+     * not charging. Without it, falls back to the plug or power flowing into the pack.
+     */
+    fun isCharging(status: Int?, portConnected: Boolean?, batteryPowerKw: Float?): Boolean =
+        if (status != null) status in CHARGING_STATUSES
+        else portConnected == true || (batteryPowerKw?.let { it < CHARGING_POWER_KW } == true)
 }
