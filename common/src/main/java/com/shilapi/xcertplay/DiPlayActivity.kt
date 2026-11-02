@@ -455,7 +455,7 @@ class DiPlayActivity : ComponentActivity() {
                 ),
                 false,
             ) { showAbrpCredentialsDialog() }, matchButton(10, 56))
-            toggle(card, getString(R.string.video_while_parked),
+            toggle(card, getString(R.string.mg4_video_while_parked),
                 getString(R.string.mg4_video_while_parked_description),
                 BydOutputSettings.videoWhileParked(this)) {
                 BydOutputSettings.setVideoWhileParked(this, it)

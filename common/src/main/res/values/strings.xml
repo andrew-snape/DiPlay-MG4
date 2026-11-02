@@ -134,6 +134,7 @@
     <string name="abrp_paste_token">Paste token from clipboard</string>
     <string name="abrp_clipboard_empty">The clipboard does not contain text.</string>
     <string name="abrp_credentials_required">API key and user token are required.</string>
+    <string name="mg4_video_while_parked">Video while parked</string>
     <string name="mg4_video_while_parked_description">Allows supported iPhone video only while the MG4 reports gear P. An unreadable gear keeps video disabled. Reconnects CarPlay.</string>
     <string name="cancel">Cancel</string>
     <string name="car_home">Car home</string>
