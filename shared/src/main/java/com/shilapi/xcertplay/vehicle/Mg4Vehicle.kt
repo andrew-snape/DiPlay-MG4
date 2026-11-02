@@ -30,6 +30,17 @@ object Mg4Vehicle : VehicleStatusProvider {
     @Volatile private var started = false
     @Volatile private var initialized = false
     @Volatile private var reader: EnergyTelemetryReader? = null
+    @Volatile private var reportedCharge: Pair<Int?, Boolean>? = null
+
+    /**
+     * The session log, so charging changes reach the diagnostic report; logcat alone does not. Setting
+     * it logs the next reading even if unchanged, so each session starts with the current state.
+     */
+    @Volatile var reportLog: (String) -> Unit = {}
+        set(value) {
+            field = value
+            reportedCharge = null
+        }
     private val firstReading = CountDownLatch(1)
     private val executor = Executors.newSingleThreadScheduledExecutor { runnable ->
         Thread(runnable, "diplay-mg4-vehicle").apply { isDaemon = true }
@@ -136,11 +147,15 @@ object Mg4Vehicle : VehicleStatusProvider {
             ),
         )
         latestMillis = SystemClock.elapsedRealtime()
-        Log.i(
-            TAG,
-            "${FirmwareInfo.getDetectedString()} battery ${percent.roundToInt()}% range ${range}km " +
-                "chargeStatus=${vehicle.chargingStatus} charging=${latest?.charging}",
-        )
+        val line = "battery ${percent.roundToInt()}% range ${range}km " +
+            "chargeStatus=${vehicle.chargingStatus} charging=${latest?.charging}"
+        Log.i(TAG, "${FirmwareInfo.getDetectedString()} $line")
+        // Only changes go to the report: this runs every 30 s.
+        val charge = vehicle.chargingStatus to (latest?.charging == true)
+        if (charge != reportedCharge) {
+            reportedCharge = charge
+            reportLog("MG4 $line")
+        }
     }
 }
 

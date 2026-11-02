@@ -160,16 +160,11 @@ object AirPlayPersistence {
     /** SWI165: send CarPlay turn-by-turn to the instrument cluster's navigation slot. */
     /**
      * CarPlay dark mode from sunset and sunrise at the car's position instead of Android's night
-     * mode. On by default on MG4, where no car day/night signal is known yet. A saved choice wins.
+     * mode. Off by default: on SWI165 Android's night mode follows the car's own day/night
+     * (`screen_day_night_mode`), which switches with the headlights (car test 2026-11-03).
      */
-    fun loadSunsetDarkMode(context: Context): Boolean {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        return if (prefs.contains(KEY_SUNSET_DARK_MODE)) {
-            prefs.getBoolean(KEY_SUNSET_DARK_MODE, false)
-        } else {
-            Mg4FirmwareProfile.detect().isMg4
-        }
-    }
+    fun loadSunsetDarkMode(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_SUNSET_DARK_MODE, false)
 
     fun saveSunsetDarkMode(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()

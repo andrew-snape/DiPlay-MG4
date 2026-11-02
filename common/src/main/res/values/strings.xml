@@ -226,7 +226,7 @@
     <string name="microphone_source_plain">Plain microphone</string>
     <string name="mg4_cluster_directions">Directions on the dashboard (test)</string>
     <string name="mg4_sunset_dark_mode">Dark mode at sunset</string>
-    <string name="mg4_sunset_dark_mode_description">Switches CarPlay to dark between sunset and sunrise, worked out from the car’s position and the clock. Off follows the head unit’s own night mode.</string>
+    <string name="mg4_sunset_dark_mode_description">Switches CarPlay to dark between sunset and sunrise, worked out from the car’s position and the clock. Off (the default) follows the car’s own day/night, which changes with the headlights.</string>
     <string name="mg4_cluster_directions_description">Shows CarPlay’s next turn, distance and street in the instrument cluster’s navigation area, the way the car’s own sat-nav does. Applies next time CarPlay connects.</string>
     <string name="calls_over_carplay_only">Calls over CarPlay only</string>
     <string name="calls_over_carplay_only_description">With CarPlay audio over Wi-Fi, also disconnects the car’s hands-free Bluetooth while CarPlay runs, so the iPhone keeps calls on CarPlay. The car’s own phone screen and call button don’t work during that time. Hands-free reconnects when CarPlay closes. On by default on MG4. Applies next time CarPlay connects.</string>
