@@ -56,9 +56,7 @@ If your keys are stored in a custom directory, set the `MG4_PLATFORM_KEYS_DIR` e
 
 ## Build Commands
 
-### macOS / Linux (bash/zsh)
-
-Run from the repository root:
+Run from the repository root (macOS or Linux):
 
 ```bash
 # Optional: specify custom paths if not using default SDK locations
@@ -68,18 +66,9 @@ export MG4_PLATFORM_KEYS_DIR="./tools"          # Defaults to ./tools automatica
 ./scripts/build_mg4.sh
 ```
 
-### Windows (PowerShell)
-
-Run from the repository root:
-
-```powershell
-$env:MG4_PLATFORM_KEYS_DIR = "tools"
-powershell -File scripts\build_mg4.ps1
-```
-
 ## Build Workflow Summary
 
-The build script (`scripts/build_mg4.sh` / `build_mg4.ps1`) performs the following steps:
+The build script (`scripts/build_mg4.sh`) performs the following steps:
 
 1. **Compiles the APK**: Builds the `githubCar` / `standalone` variant targeting system UID on Android 9.
 2. **Aligns Zip Structure**: Runs `zipalign -f 4` on the generated APK.

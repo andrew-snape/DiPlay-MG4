@@ -5,8 +5,9 @@ published release. Written for the MG4 Comfort / SWI69 / Android 9 target.
 
 > **This fork (SWI165):** the short Mac build path, including where to get the
 > identity files and how to install from a USB stick without ADB, is in the
-> [README](../README.md#building-on-a-mac). Releases and OTA below describe the
-> upstream repository; this fork doesn't publish releases.
+> [README](../README.md#building-on-a-mac). Releases are published from
+> `andrew-snape/DiPlay-MG4` by the `Release` workflow (`.github/workflows/release.yml`).
+> The remotes and some commands below are inherited from upstream and may be out of date.
 
 ## Repository layout
 
@@ -20,11 +21,9 @@ published release. Written for the MG4 Comfort / SWI69 / Android 9 target.
 | `tools/` | Platform signing keys: `platform.pk8`, `platform.x509.pem`, `platform.key`, `platform.p12`. |
 | `.private/` | Local-only inputs: `runtime-assets/offline-mfi/` (CarPlay identity) and `prebuilt-jni/`. Never committed. |
 
-Two GitHub remotes exist:
-
-- **`mg4`** → `fatihdonmezdev/DiPlay-MG4` — the source repo *and* where releases go.
-- **`mg4-public`** → `fatihdonmezdev/MG4-Wireless-Carplay` — older public mirror. The
-  OTA updater no longer reads it.
+Upstream used two remotes (`fatihdonmezdev/DiPlay-MG4` and the older public mirror
+`fatihdonmezdev/MG4-Wireless-Carplay`). This fork only uses `origin`
+(`andrew-snape/DiPlay-MG4`), which is also where releases go.
 
 ## One-time setup
 
@@ -192,13 +191,13 @@ the message to a file and use `git commit -F`.
 ## Pushing
 
 ```bash
-git push mg4 main
+git push origin main
 ```
 
 > The `tools/` directory contains the platform **private key**. That is deliberate
 > for this repo, but it means anyone with read access can sign system-privileged
 > APKs for the car. Keep that in mind before widening access or mirroring to
-> `mg4-public`.
+> a public mirror.
 
 ## Release checklist
 
@@ -210,7 +209,7 @@ git push mg4 main
 [ ] apksigner verify shows c8a2e9bc…
 [ ] aapt dump badging shows the expected package + version
 [ ] installed and smoke-tested on the car
-[ ] committed and pushed to mg4/main
+[ ] committed and pushed to origin/main
 [ ] gh release create on andrew-snape/DiPlay-MG4
 [ ] release digest matches the local shasum
 ```
