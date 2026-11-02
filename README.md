@@ -5,7 +5,7 @@ Wireless CarPlay for the MG4 head unit. This is a personal fork of
 for an Australian **MG4 on SWI165 firmware** (`SWI165-29176-1100R11`, Android 9,
 AUTUS SAIC MT2712, 1920x720 panel). Upstream is tested on SWI69.
 
-Current build: **0.2.9-mg4.92**. Car-test builds install as
+Current build: **0.2.9-mg4.93**. Car-test builds install as
 `com.shihab.diplay.hudtest`, alongside any upstream `com.shihab.diplay` install.
 Run one at a time.
 
@@ -19,7 +19,7 @@ Run one at a time.
 | Music over Wi-Fi (CarPlay audio) | Working. Broken in mg4.67 and mg4.68 (no CarPlay audio at all); fixed in mg4.69 and confirmed in the car in mg4.71 |
 | Phone calls over Wi-Fi | Working in mg4.83: the call played through the car's phone audio path. Some static occurs when Wi-Fi drops call packets (30–60% loss in one car test); the cause is the Wi-Fi link, not the routing |
 | Call microphone | Working. Software Opus encoder on Android 9 (mg4.69), about 5 ms per frame (mg4.83) |
-| Wheel voice button opens Siri | mg4.92: raw key 287, found in the car 2026-11-03. Not yet tested |
+| Wheel voice button opens Siri | Works (mg4.92, 2026-11-03), but only on release. mg4.93: holding the button opens Siri straight away; a short press still opens it on release |
 | Steering-wheel next and previous | Working (mg4.66, re-confirmed mg4.80) |
 | Hands-free released during CarPlay | Working (mg4.80); released again on each reconnect (mg4.81) |
 | Square corners | Confirmed in the car (mg4.70), default since mg4.75 |

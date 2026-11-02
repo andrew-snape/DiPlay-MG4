@@ -1,3 +1,10 @@
+# MG4CPlay 0.2.9-mg4.93 (SWI165 fork), 2026-11-03
+
+From the mg4.92 car test.
+
+- **Siri on hold.** Holding the wheel voice button now opens Siri as soon as the car reports it held (about half a second), instead of on release; letting go afterwards does nothing. A short press still opens Siri on release. The log shows `Wheel raw key: code=287 down=true long=true -> Siri sent=true`.
+- **HEVC colour.** Colour range set to Limited still looks washed out with HEVC (test F11), so the car's video plane ignores the range hint. H.264 shows the right colours. No code change yet.
+
 # MG4CPlay 0.2.9-mg4.92 (SWI165 fork), 2026-11-03
 
 From the mg4.91 car report of 2026-11-03.
