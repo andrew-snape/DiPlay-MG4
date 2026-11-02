@@ -54,23 +54,26 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 
 ## Settings
 
-All in DiPlay's settings screen. Changes apply the next time CarPlay connects.
+On MG4, **Settings** is a two-pane screen like iOS Settings: a list of categories on the left and the chosen category on the right. It has Connection, Display, Sound, Car, Apps, General, Help and About; every setting is two taps from Home. The screen is built but not yet tried in the car. Other head units keep the upstream settings page.
+
+Some settings only reach a running CarPlay session after it reconnects. Those rows carry a **Reconnect** tag, and changing one while connected shows **Some changes apply after CarPlay reconnects. Reconnect now**. Dark mode at sunset, Car battery on iPhone and Video while parked take effect straight away.
 
 | Setting | Where | Default on SWI165 |
 |---|---|---|
-| CarPlay audio over Wi-Fi | Audio routing | On. Off uses the car's Bluetooth Music instead. |
-| Calls over CarPlay only | Audio routing | On. Disconnects the car's hands-free while CarPlay runs, so calls can't fall back to Bluetooth. A saved choice still wins. |
-| Microphone (test) | Audio routing | Automatic. Call processing for calls, voice recognition for Siri. Plain microphone or call processing can be chosen to compare. |
-| Overlay video renderer | Display and performance | On. Turn off if the picture flickers or stays black. |
-| Square corners | Display and performance | On. Describes the screen like the stock CarPlay app, so iOS doesn't draw rounded corners. |
-| Efficient video (HEVC) | Display and performance | On. Half the Wi-Fi data of H.264. The stock CarPlay app uses H.264; turn off to compare colours. |
-| Colour range (test) | Display and performance | Video range. Limited (video) or full (PC) range can be chosen to compare washed-out whites. |
-| Wi-Fi high performance | Display and performance | On (mg4.91). Turn off to compare freezes and skips. |
-| Music buffer | Display and performance | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. |
-| Report location to iPhone | Location | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it on MG4. |
-| Directions on the dashboard (test) | MG4 vehicle | Off. Sends CarPlay directions to the instrument cluster (mg4.80). |
-| Video while parked | MG4 vehicle | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P (read directly, no ADB). Leaving P closes the player. DRM video such as Apple TV+ won't play. |
-| Dark mode at sunset | MG4 vehicle | Off (mg4.92). Off follows the car's day/night, which changes with the headlights. On uses sunset and sunrise at the car's position, once a position is known. |
+| Connection type, hotspot details, iPhone, Wi-Fi Direct band | Connection | Car hotspot. Replaces the old Connection setup page. |
+| Connect when MG4CPlay opens, Open after the car starts | Connection | As before. |
+| Wi-Fi high performance | Connection | On (mg4.91). Turn off to compare freezes and skips. |
+| CarPlay size, Right-hand drive, Full screen | Display | As before. |
+| Resolution, Frame rate, Efficient video (HEVC) | Display | Native, 60 fps, on. HEVC is half the Wi-Fi data of H.264; turn off to compare colours. |
+| Overlay video renderer, Square corners, Colour range (test) | Display > Advanced | On, on, from the video. |
+| CarPlay audio over Wi-Fi, Calls over CarPlay only | Sound | On, on. Off uses the car's Bluetooth Music; calls-only disconnects the car's hands-free while CarPlay runs. A saved choice still wins. |
+| Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. |
+| Microphone (test) | Sound | Automatic. Plain microphone or call processing can be chosen to compare. |
+| Send location to iPhone | Car > Driving | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it. |
+| Video while parked | Car > Driving | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P. DRM video such as Apple TV+ won't play. |
+| Dark mode at sunset | Car > Appearance | Off (mg4.92). Off follows the car's day/night, which changes with the headlights. On uses sunset and sunrise at the car's position. |
+| Car battery on iPhone, Directions on the dashboard (test) | Car | As before. |
+| Diagnostics, updates, language, permissions | General, Help, About | Settings changes are listed in the diagnostic report. |
 
 Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, and the music audio channel.
 

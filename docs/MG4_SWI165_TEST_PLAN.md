@@ -97,6 +97,19 @@ end, wait a few seconds, then copy it off.
 | G2 | Open the same link again, or wait 5 minutes without scanning | The link no longer loads; after 5 minutes the dialog says the link expired | `Report download expired` |
 | G3 | Switch to USB CarPlay (or disconnect) and open Diagnostics | **Download to iPhone** is greyed out with a short explanation | n/a |
 
+## H. Settings screen
+
+Not yet tried in the car. It applies from the first build with the two-pane Settings screen.
+
+| # | Step | Pass | Log lines |
+|---|---|---|---|
+| H1 | Install over the last build, open MG4CPlay > Settings | Connection type, iPhone, hotspot details, display, sound and location choices all keep their values | n/a |
+| H2 | From Home, open each category (Connection, Display, Sound, Car, Apps, General, Help, About) | Each is reachable in two taps; nothing is clipped at 1920x720 and the list scrolls | n/a |
+| H3 | Connected, change **Frame rate** (a Reconnect row) | A **Reconnect** tag shows on the row and the bar appears. **Reconnect now** reconnects, the bar goes, and the new rate is in use | report lines like `FRAME_RATE = 30` and `Reconnect now after FRAME_RATE` |
+| H4 | Connected, change **Dark mode at sunset**, **Car battery on iPhone** or **Video while parked** | Takes effect with no reconnect and no bar | Settings changes list |
+| H5 | Read Settings in daylight and at night | Text and rows are readable in both | n/a |
+| H6 | Save the report | The **Settings changes (newest last)** section lists the changes from H3 and H4 | `--- Settings changes (newest last) ---` |
+
 ## Known risks to check in code before release
 
 | # | Risk | Why | What to check |
