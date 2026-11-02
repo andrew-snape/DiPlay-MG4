@@ -48,6 +48,7 @@ import com.shilapi.xcertplay.network.WifiP2pGroupManager
 import com.shilapi.xcertplay.network.WirelessHotspotInfo
 import com.shilapi.xcertplay.network.WirelessHotspotBackend
 import com.shilapi.xcertplay.network.WirelessHotspotManager
+import com.shilapi.xcertplay.network.WirelessPerformanceLock
 import com.shilapi.xcertplay.transport.BlockingDuplexByteStream
 import com.shilapi.xcertplay.transport.BluetoothRfcommDuplexStream
 import com.shilapi.xcertplay.transport.Ch341DeviceMatcher
@@ -197,6 +198,8 @@ class CarPlayController(
     private val hostId = UUID.randomUUID().toString().uppercase(Locale.US)
     private val systemBuid = UUID.randomUUID().toString().uppercase(Locale.US)
     private val lifecycleLock = Any()
+    private val performanceLockLifecycle = Any()
+    private val wirelessPerformanceLock = WirelessPerformanceLock(appContext) { debugLog(it) }
     @Volatile private var uiListener: AirPlaySessionListener? = listener
     @Volatile private var uiStatusReporter: ((CarPlayStatus) -> Unit)? = reportStatus
     private val permissionGrant = AtomicBoolean(false)
@@ -277,7 +280,13 @@ class CarPlayController(
                 // The gear may have changed since /info.
                 if (videoListener != null) session.setVideoPlaybackAllowed(VideoInCar.allowed)
             }
-            activeSession = session
+            synchronized(performanceLockLifecycle) {
+                if (closed) return
+                activeSession = session
+                if (config.transport == CarPlayTransport.WIRELESS && config.wifiHighPerformanceEnabled) {
+                    wirelessPerformanceLock.acquire()
+                }
+            }
             debugLog(
                 "AirPlay session active controller=${session.controllerId ?: "unknown"} " +
                     "peer=${session.host}",
@@ -287,7 +296,10 @@ class CarPlayController(
 
         override fun onSessionEnded(session: AirPlaySession) {
             if (activeSession === session) {
-                activeSession = null
+                synchronized(performanceLockLifecycle) {
+                    activeSession = null
+                    wirelessPerformanceLock.close()
+                }
                 if (bydOutputsEnabled) BydNavigationOutputs.endNow()
                 if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.stop(appContext)
                 videoListener?.onVideoSessionEnded()
@@ -498,6 +510,9 @@ class CarPlayController(
         synchronized(this) {
             if (closed) return
             closed = true
+        }
+        synchronized(performanceLockLifecycle) {
+            wirelessPerformanceLock.close()
         }
         videoGate?.close()
         restoreBluetoothAfterWirelessCarPlay()

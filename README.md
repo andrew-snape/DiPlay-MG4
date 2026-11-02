@@ -5,7 +5,7 @@ Wireless CarPlay for the MG4 head unit. This is a personal fork of
 for an Australian **MG4 on SWI165 firmware** (`SWI165-29176-1100R11`, Android 9,
 AUTUS SAIC MT2712, 1920x720 panel). Upstream is tested on SWI69.
 
-Current build: **0.2.9-mg4.90**. Car-test builds install as
+Current build: **0.2.9-mg4.91**. Car-test builds install as
 `com.shihab.diplay.hudtest`, alongside any upstream `com.shihab.diplay` install.
 Run one at a time.
 
@@ -27,6 +27,7 @@ Run one at a time.
 | Bluetooth Music mode (fallback) | Fix in mg4.66, awaiting a car test |
 | Car GPS and wheel speed to the iPhone | Test build (mg4.90): location on by default on MG4, with the car's own speed for tunnels (no adb). Not yet tested in the car |
 | Charging shown in Apple Maps | Test build (mg4.90): uses the car's charging status (AC or DC session), not just the plug. Not yet tested in the car |
+| Wi-Fi high performance | Test build (mg4.91): keeps the car's Wi-Fi out of power saving during CarPlay (from xcertplay 1.4.1). Being tested against the 160 s freezes |
 | Dark mode at sunset | Test build (mg4.90): CarPlay goes dark between sunset and sunrise at the car's GPS position. Not yet tested in the car |
 
 The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
@@ -43,6 +44,7 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 | Instrument cluster | Test only (mg4.80): sends CarPlay's next turn, distance and street to the cluster's navigation area through the car's `MapService`. |
 | Bluetooth Music mode | Kept as a fallback. Switches the car to Bluetooth Music with the media service's `play` command, as read from the car's own MediaService. |
 | Location | On by default on MG4 (mg4.90). Sends the car's GPS with its own wheel speed and gear (`$PASCD`), read directly from the car, so Apple Maps keeps moving in tunnels. Only gear P is confirmed; others are sent as D. |
+| Wi-Fi | Holds Android's high-performance Wi-Fi lock during wireless CarPlay (mg4.91, from xcertplay 1.4.1). Location sends each NMEA sentence as its own parameter, only the types the iPhone asked for, at its intervals (mg4.91, from xcertplay 1.4.1). |
 | Charging | Apple Maps' "charging" comes from the car's charging status (1 AC, 10 DC) (mg4.90). Plugged in but stopped or finished is not charging. |
 | Dark mode | CarPlay goes dark between sunset and sunrise at the car's position (mg4.90), since no car day/night signal is known. A probe logs candidate system settings so a dusk drive can find one. |
 | Build fixes | Replaces upstream calls to Bluetooth functions that were never published in the EVHardware submodule, so the tree compiles. The build script finds the Android SDK and writes the APK to `dist/`. |
@@ -61,6 +63,7 @@ All in DiPlay's settings screen. Changes apply the next time CarPlay connects.
 | Square corners | Display and performance | On. Describes the screen like the stock CarPlay app, so iOS doesn't draw rounded corners. |
 | Efficient video (HEVC) | Display and performance | On. Half the Wi-Fi data of H.264. The stock CarPlay app uses H.264; turn off to compare colours. |
 | Colour range (test) | Display and performance | Video range. Limited (video) or full (PC) range can be chosen to compare washed-out whites. |
+| Wi-Fi high performance | Display and performance | On (mg4.91). Turn off to compare freezes and skips. |
 | Music buffer | Display and performance | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. |
 | Report location to iPhone | Location | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it on MG4. |
 | Directions on the dashboard (test) | MG4 vehicle | Off. Sends CarPlay directions to the instrument cluster (mg4.80). |

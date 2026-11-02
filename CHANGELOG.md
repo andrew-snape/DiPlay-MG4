@@ -1,3 +1,10 @@
+# MG4CPlay 0.2.9-mg4.91 (SWI165 fork), 2026-11-02
+
+Two fixes from upstream [xcertplay](https://github.com/shilapi/xcertplay) 1.4.1. Not yet tested in the car.
+
+- **Wi-Fi high performance.** While wireless CarPlay runs, MG4CPlay holds Android's high-performance Wi-Fi lock, which keeps the car's Wi-Fi out of power saving. It is aimed at the stream freezes about every 160 s (test F10). New switch in **Display and performance**, on by default; turn it off to compare. The log shows `Wireless Wi-Fi lock acquired: mg4cplay:high-performance` (or `unavailable` if the car refuses it).
+- **Location sent as the iPhone asks.** Each NMEA sentence (position, course, wheel speed) now goes in its own field, only the types the iPhone requested are sent, and an interval longer than a second is honoured. Before, all of them went in one field every second. The log's `start-location-information` line now shows the intervals too. A request naming no known type still gets everything.
+
 # MG4CPlay 0.2.9-mg4.90 (SWI165 fork), 2026-11-02
 
 Not yet tested in the car. Test plan steps D5–D8 cover it.

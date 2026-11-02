@@ -65,6 +65,8 @@ class CarPlayRuntimeConfig(
     val wifiDirectBand: ManualHotspotBand = ManualHotspotBand.AUTO,
     val wirelessBluetoothDeviceAddress: String? = null,
     val locationReportingEnabled: Boolean = false,
+    /** Hold Wi-Fi high-performance (and, on Android 10+, low-latency) locks during wireless CarPlay. */
+    val wifiHighPerformanceEnabled: Boolean = true,
 ) {
     init {
         require(iphoneDevices.all { it.vendorId == APPLE_VENDOR_ID }) {

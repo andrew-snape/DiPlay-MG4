@@ -55,6 +55,7 @@ end, wait a few seconds, then copy it off.
 | D3 | Start an Apple Maps route; wait for a spoken prompt | Prompt is heard; music lowers, then comes back | `audioType=default` or `alert` stream, and whether it played (see risk R1) |
 | D4 | Dashboard (Directions on the dashboard on) | Next turn, distance, street on the cluster | `Cluster nav: guidance started`, `Cluster nav: apple=...` |
 | D5 | Report location to iPhone (now on by default on MG4). Accept the location prompt once, then drive with Apple Maps open | Maps follows the car; through a tunnel or car park it keeps moving | `wheel speed started`, `first wheel speed`, `gear raw=` lines |
+| D5a | mg4.91: same drive as D5 | Maps still follows the car and tunnels | `start-location-information components=[...] intervals={...}`, then `tx=0xfffb` |
 | D6 | Select R, N and D in turn while parked | Note each gear's raw number | `gear raw=<n> sent=...` (only 1 = P is known; others are sent as D) |
 | D7 | Plug in to charge with CarPlay running, then unplug | Apple Maps shows charging while charging, not once it stops | `chargeStatus=` and `charging=` on the MG4 battery line |
 | D8 | Drive from daylight into dusk, and switch the headlights on and off | CarPlay turns dark within a minute or two of sunset; note any probe line that changes | `Dark mode on (sunset)`, `AirPlay dark mode=dark`, `Day/night probe:` lines; also the `Day/night:` line in the report |
@@ -82,6 +83,7 @@ end, wait a few seconds, then copy it off.
 | F7 | Repeat B (music) and C (calls) on Wi-Fi Direct and compare with the car hotspot | Fewer skips and less call static than the hotspot | `Audio loss` lines and `call loss packets=` at hang-up, for both modes |
 | F8 | mg4.86 log: with the car hotspot, video and music froze for 1 to 5 s about every 160 s (Android 9's longest gap between Wi-Fi scans while not joined to a network). Car hotspot on, **car Wi-Fi off**, play music with the map showing for at least 10 minutes | No freezes every 160 s | `Receive: video ... interArrivalMaxMs=` stays under 1000 and `audio stats ... underruns=0`; no `Audio loss` bursts with `udpRcvbufErrors=+` about 160 s apart |
 | F9 | Repeat F8 with the car Wi-Fi **on** (not joined to a network), for comparison | Note whether the 160 s freezes return | Same lines as F8; note the times of each freeze |
+| F10 | mg4.91: repeat F8 with **Wi-Fi high performance** on, then off | Freezes every 160 s gone with it on; note if they return with it off | `Wireless Wi-Fi lock acquired: mg4cplay:high-performance` (or `unavailable`), then the F8 lines |
 
 ## G. Getting the report
 
