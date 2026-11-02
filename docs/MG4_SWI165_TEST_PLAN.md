@@ -50,7 +50,7 @@ end, wait a few seconds, then copy it off.
 
 | # | Step | Pass | Log lines |
 |---|---|---|---|
-| D1 | Voice button on the wheel | Siri opens | Raw code for the voice button (not yet known) |
+| D1 | Voice button on the wheel, short press and held (mg4.92) | Siri opens; note whether the car's own voice assistant also starts | `Wheel raw key: code=287 down=false long=false -> Siri sent=true` (287 found 2026-11-03) |
 | D2 | "What's the weather in Geelong", three times per Microphone (test) option | Siri hears it correctly | `Microphone speechrecognition: started source=...` |
 | D3 | Start an Apple Maps route; wait for a spoken prompt | Prompt is heard; music lowers, then comes back | `audioType=default` or `alert` stream, and whether it played (see risk R1) |
 | D4 | Dashboard (Directions on the dashboard on) | Next turn, distance, street on the cluster | `Cluster nav: guidance started`, `Cluster nav: apple=...` |

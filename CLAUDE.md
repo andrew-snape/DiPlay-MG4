@@ -56,6 +56,8 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
 - No ADB on this car: builds are installed from a USB stick. Diagnostics come back as
   the report file (USB or **Download to iPhone**).
 - Gear: `vehiclecondition` code 5; only 1 = P is confirmed.
+- Wheel raw keys (`com.saic.keyevent.hardkey.report`): 287 voice (opens Siri), 291 phone,
+  299 previous, 300 next, 297/298 volume, 301 mute, 286 and 17 star, 288 HVAC.
 - Charging status: 1 AC, 10 DC, 5 connecting, 7 connected not charging, 8 stopped.
 - Day/night: `Settings.System.screen_day_night_mode` (0 day, 1 night) switches with the
   headlights, and Android's night mode follows it, so CarPlay dark mode follows the car.

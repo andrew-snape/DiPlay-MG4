@@ -19,6 +19,7 @@ Run one at a time.
 | Music over Wi-Fi (CarPlay audio) | Working. Broken in mg4.67 and mg4.68 (no CarPlay audio at all); fixed in mg4.69 and confirmed in the car in mg4.71 |
 | Phone calls over Wi-Fi | Working in mg4.83: the call played through the car's phone audio path. Some static occurs when Wi-Fi drops call packets (30–60% loss in one car test); the cause is the Wi-Fi link, not the routing |
 | Call microphone | Working. Software Opus encoder on Android 9 (mg4.69), about 5 ms per frame (mg4.83) |
+| Wheel voice button opens Siri | mg4.92: raw key 287, found in the car 2026-11-03. Not yet tested |
 | Steering-wheel next and previous | Working (mg4.66, re-confirmed mg4.80) |
 | Hands-free released during CarPlay | Working (mg4.80); released again on each reconnect (mg4.81) |
 | Square corners | Confirmed in the car (mg4.70), default since mg4.75 |
