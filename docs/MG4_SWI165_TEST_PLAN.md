@@ -52,6 +52,7 @@ end, wait a few seconds, then copy it off.
 |---|---|---|---|
 | D1 | Voice button on the wheel, short press and held (mg4.92) | Siri opens; note whether the car's own voice assistant also starts | `Wheel raw key: code=287 down=false long=false -> Siri sent=true` (287 found 2026-11-03) |
 | D2 | "What's the weather in Geelong", three times per Microphone (test) option | Siri hears it correctly | `Microphone speechrecognition: started source=...` |
+| D2a | USB CarPlay: record a Voice Memo and dictate a message (upstream #1148) | Both record your voice, not silence | `Microphone speechrecognition: started ... codec=LPCM rate=48000 ... frameMs=10` (or another rate with its frameMs) |
 | D3 | Start an Apple Maps route; wait for a spoken prompt | Prompt is heard; music lowers, then comes back | `audioType=default` or `alert` stream, and whether it played (see risk R1) |
 | D4 | Dashboard (Directions on the dashboard on) | Next turn, distance, street on the cluster | `Cluster nav: guidance started`, `Cluster nav: apple=...` |
 | D5 | Report location to iPhone (now on by default on MG4). Accept the location prompt once, then drive with Apple Maps open | Maps follows the car; through a tunnel or car park it keeps moving | `wheel speed started`, `first wheel speed`, `gear raw=` lines |

@@ -1,3 +1,12 @@
+# Unreleased (SWI165 fork)
+
+Four fixes ported from upstream DiPlay ([shihabal3amri/DiPlay](https://github.com/shihabal3amri/DiPlay)). Not yet tested in the car.
+
+- **USB microphone at 48 kHz** (upstream #1148). When the iPhone asks for 48 kHz PCM without naming a packet size, MG4CPlay now sends 10 ms per packet instead of 20 ms, so each packet fits the 1,500-byte link and no longer splits in two. Upstream, those split packets made voice messages, Voice Memos and dictation over USB record silence. Siri (24 kHz) and calls are unchanged. The `Microphone <type>: started` line now shows `codec=` and `frameMs=`.
+- **Faster wireless Bonjour** (upstream #972). The address handed to JmDNS already carries its `carplay-…` name, so JmDNS doesn't ask the system resolver for it at start-up.
+- **Quieter USB log** (upstream #1144). Bare USB TCP acknowledgements and large writes are logged for the first 50 only; connection opens and closes are always logged. Logcat only.
+- **iPhone USB id hidden in the report** (upstream #1141). The hyphenated iPhone USB id (`00008110-001E2C3A0123401E`) is now redacted like other identifiers.
+
 # MG4CPlay 0.2.9-mg4.92 (SWI165 fork), 2026-11-03
 
 From the mg4.91 car report of 2026-11-03.

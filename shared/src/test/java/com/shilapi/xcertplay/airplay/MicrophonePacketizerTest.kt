@@ -2,7 +2,9 @@ package com.shilapi.xcertplay.airplay
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.net.InetAddress
 
 class MicrophonePacketizerTest {
     @Test
@@ -48,5 +50,30 @@ class MicrophonePacketizerTest {
                 byteArrayOf(0x34, 0x12, 0x78, 0x56),
             ),
         )
+    }
+
+    @Test
+    fun pcmPacketsFitOneLinkMtuWithTheirIpv6AndUdpHeaders() {
+        // Upstream DiPlay #1094: 20 ms of 48 kHz mono sealed to 1,956 bytes and left as IP fragments.
+        assertEquals(10, MicrophoneConfig.pcmFrameMillis(48_000, 1))
+        assertEquals(20, MicrophoneConfig.pcmFrameMillis(24_000, 1))
+        assertEquals(20, MicrophoneConfig.pcmFrameMillis(16_000, 1))
+        assertEquals(5, MicrophoneConfig.pcmFrameMillis(48_000, 2))
+
+        for ((sampleRate, channels) in listOf(48_000 to 1, 48_000 to 2, 44_100 to 1, 24_000 to 1, 16_000 to 1, 8_000 to 1)) {
+            val pcm = MicrophoneConfig(
+                audioType = "speechrecognition",
+                sampleRate = sampleRate,
+                channels = channels,
+                payloadType = 100,
+                frameMillis = MicrophoneConfig.pcmFrameMillis(sampleRate, channels),
+                host = InetAddress.getLoopbackAddress(),
+                port = 7000,
+                key = ByteArray(32),
+            )
+            val packet = MicrophonePacketizer.sealPacket(ByteArray(32), 100, MicrophoneCounters(),
+                ByteArray(pcm.frameBytes), pcm.samplesPerPacket)
+            assertTrue("$sampleRate Hz x$channels: ${packet.size} bytes", 40 + 8 + packet.size <= 1500)
+        }
     }
 }
