@@ -65,12 +65,14 @@ class DiPlayActivity : ComponentActivity() {
     private var navigationStreamType = 14
     private var testToneTrack: AudioTrack? = null
     private var toneStop: Runnable? = null
-    private var exportButton: Button? = null
-    private var downloadButton: Button? = null
+    private var exportButton: TextView? = null
+    private var downloadButton: TextView? = null
     private var downloadHint: TextView? = null
     private var reportDownload: ReportDownloadServer? = null
     private var reportDownloadPreparing = false
     private var reportDownloadStatus: TextView? = null
+    /** The two-pane Settings screen, MG4 only; other head units keep the upstream page. */
+    private var mg4Settings: com.shilapi.xcertplay.settings.Mg4SettingsPage? = null
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         connect(notificationTransport)
     }
@@ -114,12 +116,16 @@ class DiPlayActivity : ComponentActivity() {
         }
         pendingCarHotspotSetup = savedInstanceState?.getBoolean("pending_car_hotspot") ?: false
         page = savedInstanceState?.getString("page") ?: intent.getStringExtra("page") ?: "home"
+        if (Mg4FirmwareProfile.detect().isMg4) {
+            mg4Settings = com.shilapi.xcertplay.settings.Mg4SettingsPage(this, settingsHost).apply { restore(savedInstanceState) }
+        }
         render()
         CrashRecorder.consume(this)?.let { showCrashReport(it) }
         handleWirelessRecovery()
         checkForOtaOnStartup()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (page == "settings" && mg4Settings?.back() == true) return
                 if (page != "home") { page = "home"; render() }
                 else { isEnabled = false; onBackPressedDispatcher.onBackPressed(); isEnabled = true }
             }
@@ -155,7 +161,11 @@ class DiPlayActivity : ComponentActivity() {
             else handler.postDelayed({ openConnectedCarPlayFromLauncher() }, HOTSPOT_START_DELAY_MS)
         }
     }
-    override fun onSaveInstanceState(outState: Bundle) { outState.putString("page", page); outState.putBoolean("pending_car_hotspot", pendingCarHotspotSetup); super.onSaveInstanceState(outState) }
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("page", page); outState.putBoolean("pending_car_hotspot", pendingCarHotspotSetup)
+        mg4Settings?.save(outState)
+        super.onSaveInstanceState(outState)
+    }
     override fun onConfigurationChanged(newConfig: Configuration) { super.onConfigurationChanged(newConfig); render() }
     override fun onResume() {
         super.onResume()
@@ -184,6 +194,17 @@ class DiPlayActivity : ComponentActivity() {
 
     private fun render() {
         status = null; connectButton = null; disconnectButton = null; lastRunning = null
+        exportButton = null; downloadButton = null; downloadHint = null
+        mg4Settings?.let { settings ->
+            // On MG4, Connection setup is the Connection category of Settings.
+            if (page == "connection") { page = "settings"; settings.show(com.shilapi.xcertplay.settings.SettingsCategory.CONNECTION) }
+            if (page == "settings") {
+                setContentView(settings.build())
+                status = settings.statusView
+                refreshStatus()
+                return
+            }
+        }
         val scroll = ScrollView(this).apply { setBackgroundColor(BG); isFillViewport = true; clipToPadding = false }
         val content = column().apply { setPadding(dp(32), dp(24), dp(32), dp(32)) }
         scroll.addView(content)
@@ -1091,6 +1112,7 @@ class DiPlayActivity : ComponentActivity() {
         }
         connectButton?.isEnabled = setupError == null
         updateDownloadButton()
+        if (page == "settings") mg4Settings?.refresh()
     }
     private fun reportFileName() = "MG4CPlay-${SimpleDateFormat("yyyyMMdd-HHmmss-SSS", Locale.US).format(Date())}.txt"
 
@@ -1118,6 +1140,10 @@ class DiPlayActivity : ComponentActivity() {
         appendLine("Session: ${if (CarPlayBackgroundSession.active) "active" else if (CarPlayBackgroundSession.hasSession()) "connecting" else "stopped"}")
         appendLine("Head-unit board: ${Build.BOARD}; hardware: ${Build.HARDWARE}; build: ${Build.DISPLAY}")
         if (Mg4FirmwareProfile.detect().isMg4) appendLine("Day/night: ${DayNightProbe.snapshot(appContext)}")
+        com.shilapi.xcertplay.settings.SettingsChangeLog.lines(appContext).takeIf { it.isNotEmpty() }?.let { lines ->
+            appendLine("--- Settings changes (newest last) ---")
+            lines.forEach(::appendLine)
+        }
         appendLine("Update check: ${OtaUpdater.lastCheck(appContext) ?: "not run yet"}")
         appendLine()
         appendLine("--- Last display negotiation (timestamps distinguish it from current settings) ---")
@@ -1390,6 +1416,60 @@ class DiPlayActivity : ComponentActivity() {
         return grid
     }
     private fun version() = packageManager.getPackageInfo(packageName, 0).versionName ?: "0.1.0-beta.1"
+    private val settingsHost = object : com.shilapi.xcertplay.settings.Mg4SettingsPage.Host {
+        override val sessionRunning get() = CarPlayBackgroundSession.hasSession()
+        override val hotspotSetupPending get() = pendingCarHotspotSetup
+        override fun render() = this@DiPlayActivity.render()
+        override fun goHome() { page = "home"; render() }
+        override fun hotspotOff() = carHotspotOff()
+        override fun choosePhone() = this@DiPlayActivity.choosePhone()
+        override fun editHotspotDetails(onSaved: () -> Unit) = askHotspotCredentials { ssid, password ->
+            saveHotspotCredentials(ssid, password)
+            pendingCarHotspotSetup = false
+            onSaved()
+        }
+        override fun openCarHotspotSettings() = openCarWifiSettings()
+        override fun openCarWifiSettings() = openCarClientWifiSettings()
+        override fun editNavigationChannel(onSaved: () -> Unit) {
+            val current = AirPlayPersistence.loadNavigationAudioChannel(this@DiPlayActivity)
+            showChannelDialog(getString(R.string.contrib_audio_home_nav_channel_label), current, navigation = true) { value ->
+                if (value != current) { AirPlayPersistence.saveNavigationAudioChannel(this@DiPlayActivity, value); onSaved() }
+            }
+        }
+        override fun setLocationReporting(enabled: Boolean) {
+            AirPlayPersistence.saveLocationReportingEnabled(this@DiPlayActivity, enabled)
+            if (enabled && !hasPreciseLocation()) {
+                locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+            } else {
+                reconnectForLocation()
+            }
+        }
+        override fun editAbrpAccount() = showAbrpCredentialsDialog()
+        override fun abrpTelemetryChanged(enabled: Boolean) {
+            com.shilapi.xcertplay.vehicle.AbrpSettings.setEnabled(this@DiPlayActivity, enabled)
+            if (enabled && CarPlayBackgroundSession.hasSession()) com.shilapi.xcertplay.vehicle.AbrpUploader.start(this@DiPlayActivity)
+            else if (!enabled) com.shilapi.xcertplay.vehicle.AbrpUploader.stop()
+        }
+        override fun checkForUpdates() = checkForOta()
+        override fun openAppPermissions() = openSystem(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+        override fun openBluetoothSettings() = openSystem(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+        override fun saveReport() { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) exportDiagnostics() else chooseReportDestination() }
+        override fun downloadReport() = startReportDownload()
+        override fun chooseReportLocation() = chooseReportDestination()
+        override fun bindReportControls(save: TextView, download: TextView, downloadHint: TextView) {
+            exportButton = save.apply {
+                isEnabled = !exportInProgress
+                text = getString(if (exportInProgress) R.string.saving_report else R.string.save_diagnostic_report)
+            }
+            downloadButton = download
+            this@DiPlayActivity.downloadHint = downloadHint
+            updateDownloadButton()
+        }
+        override fun wirelessHelp() = this@DiPlayActivity.wirelessHelp()
+        override fun reconnect() = connect(AirPlayPersistence.loadWirelessEnabled(this@DiPlayActivity))
+        override fun version() = this@DiPlayActivity.version()
+    }
+
     private fun languageSettings(content: LinearLayout) {
         section(content, getString(R.string.language_section_title)) { card ->
             card.addView(label(getString(R.string.language_hint), 14, MUTED))

@@ -1,5 +1,12 @@
 # Unreleased
 
+New Settings screen on MG4: built and unit tested, not yet tried in the car (test plan section H).
+
+- **Two-pane Settings on MG4.** A category list on the left (Connection, Display, Sound, Car, Apps, General, Help, About) and the chosen category on the right, like iOS Settings. Short lists (CarPlay size, colour range and so on) open as a page of rows with a tick, not a dialog. Other head units keep the old settings page.
+- **Reconnect is clearer.** The **Apply and reconnect** dialog button is gone. Rows that need a reconnect carry a **Reconnect** tag, and changing one while CarPlay runs shows **Some changes apply after CarPlay reconnects. Reconnect now**.
+- **Behaviour change.** Dark mode at sunset, Car battery on iPhone and Video while parked no longer reconnect CarPlay by themselves; they take effect straight away.
+- **Connection setup is now Settings > Connection** on MG4. Send location to iPhone is under Car > Driving.
+- **Settings changes in the report.** The diagnostic report lists the last 40 changes (`--- Settings changes (newest last) ---`).
 - **MG4 only.** Removed the code for other cars that came from upstream: the windshield HUD and cluster directions, the ADB battery, wheel-speed and parked readers, the cluster-map screen and its settings, and their steering-wheel key codes. MG4 cluster directions, battery, charging, wheel speed, gear and video while parked are unchanged. Saved battery, connector, low-charge and video choices carry over. Not yet tried in the car.
 
 # MG4CPlay 0.2.9-mg4.93 (SWI165 fork), 2026-11-03

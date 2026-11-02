@@ -52,6 +52,7 @@ screen such as MG4Dash never show the stock card, so they don't need it.
 | Car GPS and wheel speed to the iPhone | mg4.90: location on by default on MG4. Speed is the AOSP vehicle-speed property (EVHardware scales it per firmware); gear is `vehiclecondition` code 5, where only 1 = P is known, so other gears are sent as D. Awaiting a car test (test plan D5, D6) |
 | Charging in Apple Maps | mg4.90: `isCharging` from the car's charging status (1 AC, 10 DC; 5 connecting, 7 connected, 8 stopped are not charging), falling back to the plug or pack power. Awaiting a car test (D7) |
 | Dark mode | Found 2026-11-03 (mg4.91 probe): the car's day/night is `Settings.System.screen_day_night_mode` (0 day, 1 night), with `SAIC_DAY_NIGHT_MODE_FROM_CAR=1`. Switching the headlights on sets it to 1, and Android's night mode (`Settings.Secure.ui_night_mode` 2, `uiNight=true`) follows within a second, so CarPlay follows too. mg4.92 makes this the default; sunset mode is optional and falls back to the car until a position is known |
+| Settings screen | Two-pane iOS-style Settings (Connection, Display, Sound, Car, Apps, General, Help, About) on MG4 only; a bar offers **Reconnect now** after changes that need it. Built, not yet tried in the car. See [SETTINGS_REDESIGN_PLAN.md](./SETTINGS_REDESIGN_PLAN.md) |
 
 ## Signing note
 
