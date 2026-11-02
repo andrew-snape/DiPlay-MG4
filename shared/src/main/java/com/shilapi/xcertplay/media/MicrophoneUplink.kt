@@ -42,6 +42,8 @@ internal class MicrophoneUplink(
     private var encodeMaxNs = 0L
     private var readMaxNs = 0L
     private var bytesSent = 0L
+    // Input level, to tell a quiet or clipping microphone from a network problem (Siri, 2026-11-03).
+    private val level = MicrophoneLevel()
     private val running = AtomicBoolean(false)
     private val firstPacketLogged = AtomicBoolean(false)
     @Volatile private var recorder: AudioRecord? = null
@@ -222,7 +224,8 @@ internal class MicrophoneUplink(
                         "audioMs=${framesSent * frameMs} wallMs=${elapsedNs / 1_000_000L} " +
                         "encodeAvgUs=${if (framesSent > 0) encodeTotalNs / framesSent / 1000 else 0} " +
                         "encodeMaxUs=${encodeMaxNs / 1000} readMaxMs=${readMaxNs / 1_000_000L} " +
-                        "kbps=${if (elapsedNs > 0) bytesSent * 8_000_000L / elapsedNs else 0}" +
+                        "kbps=${if (elapsedNs > 0) bytesSent * 8_000_000L / elapsedNs else 0} " +
+                        level.summary() +
                         if (force) " ended=true" else "",
                 )
             }
@@ -233,9 +236,11 @@ internal class MicrophoneUplink(
         encodeMaxNs = 0L
         readMaxNs = 0L
         bytesSent = 0L
+        level.reset()
     }
 
     private fun sendFrame(socket: DatagramSocket, counters: MicrophoneCounters, frame: ByteArray) {
+        level.add(frame)
         val encodeStarted = System.nanoTime()
         val bodies = if (config.codec == AudioCodecKind.OPUS) {
             opusEncoder?.encode(frame).orEmpty()
@@ -340,4 +345,41 @@ internal class MicrophoneUplink(
         private const val CLOSE_JOIN_MILLIS = 500L
         private const val STATS_WINDOW_NS = 5_000_000_000L
     }
+}
+
+/** Peak and RMS of 16-bit little-endian PCM frames, in dBFS (0 is full scale). */
+internal class MicrophoneLevel {
+    private var peak = 0
+    private var sumSquares = 0.0
+    private var samples = 0L
+    private var clipped = 0L
+
+    fun add(frame: ByteArray) {
+        var index = 0
+        while (index + 1 < frame.size) {
+            val sample = (frame[index].toInt() and 0xff) or (frame[index + 1].toInt() shl 8)
+            val magnitude = kotlin.math.abs(sample)
+            if (magnitude > peak) peak = magnitude
+            if (magnitude >= 32_767) clipped++
+            sumSquares += sample.toDouble() * sample
+            samples++
+            index += 2
+        }
+    }
+
+    fun summary(): String {
+        if (samples == 0L) return "level=none"
+        val rms = kotlin.math.sqrt(sumSquares / samples)
+        return "peakDb=${dbfs(peak.toDouble())} rmsDb=${dbfs(rms)} clipped=$clipped"
+    }
+
+    fun reset() {
+        peak = 0
+        sumSquares = 0.0
+        samples = 0
+        clipped = 0
+    }
+
+    private fun dbfs(value: Double): String =
+        if (value <= 0.0) "-inf" else String.format(java.util.Locale.US, "%.1f", 20 * kotlin.math.log10(value / 32_768.0))
 }

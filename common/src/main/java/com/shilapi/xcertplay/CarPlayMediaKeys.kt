@@ -64,16 +64,29 @@ internal object CarPlayMediaKeys {
     internal enum class RawKeyAction { CALL_HOOK, SIRI }
 
     /**
-     * What a raw wheel key does in CarPlay, or null. Both act once, on release. A held voice key
-     * still releases with long=false (car test 2026-11-03), so a long press opens Siri too.
+     * What a raw wheel key does in CarPlay, or null. The voice key opens Siri as soon as the car
+     * reports it held (down with long=true, about 0.5 s in), so there is no need to let go first;
+     * the release that follows does nothing ([voiceHeld]). A short press opens Siri on release.
+     * The car's sequence for a held key: down, down+long, then up with long=false (2026-11-03).
+     * The phone key acts once, on a short release.
      */
-    internal fun rawKeyAction(code: Int, down: Boolean, longPress: Boolean, callsOverCarPlay: Boolean): RawKeyAction? =
+    internal fun rawKeyAction(
+        code: Int,
+        down: Boolean,
+        longPress: Boolean,
+        callsOverCarPlay: Boolean,
+        voiceHeld: Boolean = false,
+    ): RawKeyAction? =
         when {
+            code == RAW_VOICE_KEY && down && longPress && !voiceHeld -> RawKeyAction.SIRI
+            code == RAW_VOICE_KEY && !down && !voiceHeld -> RawKeyAction.SIRI
             down -> null
-            code == RAW_VOICE_KEY -> RawKeyAction.SIRI
             code == RAW_PHONE_KEY && !longPress && callsOverCarPlay -> RawKeyAction.CALL_HOOK
             else -> null
         }
+
+    /** The voice key already opened Siri on this press, while held. */
+    private var voiceHeld = false
     private var rawKeyReceiver: BroadcastReceiver? = null
     private var callsOverCarPlay = false
 
@@ -212,7 +225,11 @@ internal object CarPlayMediaKeys {
         val longPress = intent.getBooleanExtra("android.intent.extra.hardkey.longpress", false)
         // Phone key, short press, on release: CarPlay hook switch (answers a ringing call or ends
         // the current one). Only when hands-free is released, or the car's own phone acts as well.
-        val action = rawKeyAction(code, down, longPress, callsOverCarPlay)
+        val action = synchronized(this) {
+            rawKeyAction(code, down, longPress, callsOverCarPlay, voiceHeld).also {
+                if (code == RAW_VOICE_KEY) voiceHeld = down && (voiceHeld || (longPress && it == RawKeyAction.SIRI))
+            }
+        }
         val target = synchronized(this) { controller }
         val sent = when (action) {
             RawKeyAction.CALL_HOOK -> target?.sendTelephonyButton(TELEPHONY_HOOK_SWITCH) ?: false

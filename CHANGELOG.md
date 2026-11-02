@@ -1,3 +1,14 @@
+# MG4CPlay 0.2.9-mg4.93 (SWI165 fork), 2026-11-03
+
+From the mg4.92 car test.
+
+- **Siri on hold.** Holding the wheel voice button now opens Siri as soon as the car reports it held (about half a second), instead of on release; letting go afterwards does nothing. A short press still opens Siri on release. The log shows `Wheel raw key: code=287 down=true long=true -> Siri sent=true`.
+- **USB CarPlay works without the missing dialog.** USB CarPlay needs Android's VPN permission dialog, which this head unit doesn't have, so the app crashed opening it (2026-11-03). Choosing USB now counts as consent: the app (a system app on MG4) authorises its own VPN as the dialog would, for this app only. If that fails it says USB CarPlay could not start, instead of crashing. Log: `USB VPN: authorised for this app without the system dialog` or `self-authorisation failed`.
+- **Australian labels.** The charging connector choice reads "CCS2 and Type 2 · Europe and Australia" (the MG4's plug here, and already the default), and the MG4 "Car battery for the iPhone" switch no longer says "needs ADB" (it reads the car directly).
+- **Gears.** The selector reads 1 P, 2 R, 3 N, 4 D (car test 2026-11-03), so reverse and neutral now go to the iPhone correctly; before, everything but P was sent as D.
+- **Microphone level.** Each `Microphone ... stats` line now ends with `peakDb= rmsDb= clipped=`, to tell a microphone that is too quiet or clipping from a network problem. In the mg4.92 test Siri's audio arrived complete and on time (no drops, encoding 5 ms per 20 ms frame), so its level is the next thing to check.
+- **HEVC colour.** Colour range set to Limited still looks washed out with HEVC (test F11), so the car's video plane ignores the range hint. H.264 shows the right colours. No code change yet.
+
 # MG4CPlay 0.2.9-mg4.92 (SWI165 fork), 2026-11-03
 
 From the mg4.91 car report of 2026-11-03.

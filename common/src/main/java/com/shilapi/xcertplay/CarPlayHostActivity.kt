@@ -575,6 +575,17 @@ class CarPlayHostActivity : ComponentActivity() {
         if (consent == null) {
             vpnReady = true
             maybeStartCarPlay()
+        } else if (consent.resolveActivity(packageManager) == null) {
+            // MG4 SWI165 has no com.android.vpndialogs, so launching the consent dialog crashed
+            // the app (car test 2026-11-03). Choosing USB is the consent: authorise this app as
+            // the dialog would, or say USB CarPlay is unavailable.
+            appendLog("USB VPN: the system consent dialog is missing on this head unit")
+            if (VpnSelfAuthorizer.authorize(this, ::appendLog) && CarPlayVpnService.prepare(this) == null) {
+                vpnReady = true
+                maybeStartCarPlay()
+            } else {
+                setStatus(getString(R.string.usb_vpn_unavailable))
+            }
         } else {
             awaitingVpnConsent = true
             vpnConsent.launch(consent)
