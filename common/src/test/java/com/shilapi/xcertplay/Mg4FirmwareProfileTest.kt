@@ -32,7 +32,7 @@ class Mg4FirmwareProfileTest {
 
     @Test
     fun unknownOrMissingFirmwareKeepsDefaults() {
-        for (firmware in listOf(null, "", "  ", "SWI68-1", "BYD-DiLink")) {
+        for (firmware in listOf(null, "", "  ", "SWI68-1", "OTHER-1.0")) {
             val profile = Mg4FirmwareProfile.forFirmware(firmware)
             assertEquals(Generation.OTHER, profile.generation)
             assertFalse(profile.preferSurfaceVideo)
@@ -43,7 +43,7 @@ class Mg4FirmwareProfileTest {
     @Test
     fun swi165DefaultsToWifiAudioAndOthersToHybridBluetooth() {
         assertEquals(AudioMode.CARPLAY_WIFI, Mg4FirmwareProfile.forFirmware("SWI165-29176-1100R11").defaultAudioMode)
-        for (firmware in listOf("SWI69-12345-1000R01", null, "BYD-DiLink")) {
+        for (firmware in listOf("SWI69-12345-1000R01", null, "OTHER-1.0")) {
             assertEquals(AudioMode.HYBRID_BLUETOOTH, Mg4FirmwareProfile.forFirmware(firmware).defaultAudioMode)
         }
     }
@@ -51,7 +51,7 @@ class Mg4FirmwareProfileTest {
     @Test
     fun onlySwi165DefaultsToSquareCorners() {
         assertEquals(true, Mg4FirmwareProfile.forFirmware("SWI165-29176-1100R11").squareCorners)
-        for (firmware in listOf("SWI69-12345-1000R01", null, "BYD-DiLink")) {
+        for (firmware in listOf("SWI69-12345-1000R01", null, "OTHER-1.0")) {
             assertEquals(false, Mg4FirmwareProfile.forFirmware(firmware).squareCorners)
         }
     }

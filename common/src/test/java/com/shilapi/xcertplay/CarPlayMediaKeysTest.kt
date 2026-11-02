@@ -13,10 +13,17 @@ import org.robolectric.annotation.Config
 @Config(sdk = [28], manifest = Config.NONE)
 class CarPlayMediaKeysTest {
     @Test
-    fun voiceKeyOpensSiriOnceOnRelease() {
+    fun heldVoiceKeyOpensSiriWhileHeldAndNotAgainOnRelease() {
         // The car's sequence for a held voice key on 2026-11-03: down, down+long, then up.
         assertNull(CarPlayMediaKeys.rawKeyAction(287, down = true, longPress = false, callsOverCarPlay = false))
-        assertNull(CarPlayMediaKeys.rawKeyAction(287, down = true, longPress = true, callsOverCarPlay = false))
+        assertEquals(RawKeyAction.SIRI, CarPlayMediaKeys.rawKeyAction(287, down = true, longPress = true, callsOverCarPlay = false))
+        assertNull(CarPlayMediaKeys.rawKeyAction(287, down = true, longPress = true, callsOverCarPlay = false, voiceHeld = true))
+        assertNull(CarPlayMediaKeys.rawKeyAction(287, down = false, longPress = false, callsOverCarPlay = false, voiceHeld = true))
+    }
+
+    @Test
+    fun shortVoicePressOpensSiriOnRelease() {
+        assertNull(CarPlayMediaKeys.rawKeyAction(287, down = true, longPress = false, callsOverCarPlay = false))
         assertEquals(RawKeyAction.SIRI, CarPlayMediaKeys.rawKeyAction(287, down = false, longPress = false, callsOverCarPlay = false))
     }
 

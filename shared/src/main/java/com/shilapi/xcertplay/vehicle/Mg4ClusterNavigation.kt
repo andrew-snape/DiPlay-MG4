@@ -8,9 +8,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
 import android.os.Parcel
-import com.shilapi.xcertplay.hud.BydAppleManeuver
-import com.shilapi.xcertplay.hud.BydHudRouteChange
-import com.shilapi.xcertplay.hud.BydHudRouteState
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
 
 /**
@@ -43,11 +40,11 @@ object Mg4ClusterNavigation {
 
     // Lazy so the pure [icon] mapping can be used (and unit tested) without starting a thread.
     private val handler by lazy { Handler(HandlerThread("mg4-cluster-nav").apply { start() }.looper) }
-    private val route = BydHudRouteState()
+    private val route = RouteGuidanceState()
     @Volatile private var binder: IBinder? = null
     private var bound = false
     private var guiding = false
-    private var lastSent: BydAppleManeuver? = null
+    private var lastSent: RouteManeuver? = null
     private var lastRoad: String? = null
     private var report: (String) -> Unit = {}
 
@@ -88,10 +85,10 @@ object Mg4ClusterNavigation {
 
     /** Route guidance frames (0x5201/0x5202) from the iPhone. */
     fun onFrame(frame: Iap2Frame) {
-        if (frame.messageId != BydHudRouteState.ROUTE_GUIDANCE_UPDATE &&
-            frame.messageId != BydHudRouteState.ROUTE_GUIDANCE_MANEUVER_UPDATE) return
+        if (frame.messageId != RouteGuidanceState.ROUTE_GUIDANCE_UPDATE &&
+            frame.messageId != RouteGuidanceState.ROUTE_GUIDANCE_MANEUVER_UPDATE) return
         handler.post {
-            if (route.accept(frame.messageId, frame.payload) != BydHudRouteChange.NONE) publish()
+            if (route.accept(frame.messageId, frame.payload) != RouteChange.NONE) publish()
         }
     }
 
@@ -107,7 +104,7 @@ object Mg4ClusterNavigation {
 
     private fun publish() {
         val service = binder?.takeIf { it.isBinderAlive } ?: return
-        val maneuver = route.currentApple()
+        val maneuver = route.current()
         if (maneuver == null) {
             if (guiding) {
                 call(service, TX_GUIDE_STATUS) { writeInt(0) }

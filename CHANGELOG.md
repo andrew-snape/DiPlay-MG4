@@ -1,11 +1,31 @@
 # Unreleased (SWI165 fork)
 
+New Settings screen on MG4: built and unit tested, not yet tried in the car (test plan section H).
+
+- **Two-pane Settings on MG4.** A category list on the left (Connection, Display, Sound, Car, Apps, General, Help, About) and the chosen category on the right, like iOS Settings. Short lists (CarPlay size, colour range and so on) open as a page of rows with a tick, not a dialog. Other head units keep the old settings page.
+- **Reconnect is clearer.** The **Apply and reconnect** dialog button is gone. Rows that need a reconnect carry a **Reconnect** tag, and changing one while CarPlay runs shows **Some changes apply after CarPlay reconnects. Reconnect now**.
+- **Behaviour change.** Dark mode at sunset, Car battery on iPhone and Video while parked no longer reconnect CarPlay by themselves; they take effect straight away.
+- **Connection setup is now Settings > Connection** on MG4. Send location to iPhone is under Car > Driving.
+- **Settings changes in the report.** The diagnostic report lists the last 40 changes (`--- Settings changes (newest last) ---`).
+- **MG4 only.** Removed the code for other cars that came from upstream: the windshield HUD and cluster directions, the ADB battery, wheel-speed and parked readers, the cluster-map screen and its settings, and their steering-wheel key codes. MG4 cluster directions, battery, charging, wheel speed, gear and video while parked are unchanged. Saved battery, connector, low-charge and video choices carry over. Not yet tried in the car.
+
 Four fixes ported from upstream DiPlay ([shihabal3amri/DiPlay](https://github.com/shihabal3amri/DiPlay)). Not yet tested in the car.
 
 - **USB microphone at 48 kHz** (upstream #1148). When the iPhone asks for 48 kHz PCM without naming a packet size, MG4CPlay now sends 10 ms per packet instead of 20 ms, so each packet fits the 1,500-byte link and no longer splits in two. Upstream, those split packets made voice messages, Voice Memos and dictation over USB record silence. Siri (24 kHz) and calls are unchanged. The `Microphone <type>: started` line now shows `codec=` and `frameMs=`.
 - **Faster wireless Bonjour** (upstream #972). The address handed to JmDNS already carries its `carplay-…` name, so JmDNS doesn't ask the system resolver for it at start-up.
 - **Quieter USB log** (upstream #1144). Bare USB TCP acknowledgements and large writes are logged for the first 50 only; connection opens and closes are always logged. Logcat only.
 - **iPhone USB id hidden in the report** (upstream #1141). The hyphenated iPhone USB id (`00008110-001E2C3A0123401E`) is now redacted like other identifiers.
+
+# MG4CPlay 0.2.9-mg4.93 (SWI165 fork), 2026-11-03
+
+From the mg4.92 car test.
+
+- **Siri on hold.** Holding the wheel voice button now opens Siri as soon as the car reports it held (about half a second), instead of on release; letting go afterwards does nothing. A short press still opens Siri on release. The log shows `Wheel raw key: code=287 down=true long=true -> Siri sent=true`.
+- **USB CarPlay works without the missing dialog.** USB CarPlay needs Android's VPN permission dialog, which this head unit doesn't have, so the app crashed opening it (2026-11-03). Choosing USB now counts as consent: the app (a system app on MG4) authorises its own VPN as the dialog would, for this app only. If that fails it says USB CarPlay could not start, instead of crashing. Log: `USB VPN: authorised for this app without the system dialog` or `self-authorisation failed`.
+- **Australian labels.** The charging connector choice reads "CCS2 and Type 2 · Europe and Australia" (the MG4's plug here, and already the default), and the MG4 "Car battery for the iPhone" switch no longer says "needs ADB" (it reads the car directly).
+- **Gears.** The selector reads 1 P, 2 R, 3 N, 4 D (car test 2026-11-03), so reverse and neutral now go to the iPhone correctly; before, everything but P was sent as D.
+- **Microphone level.** Each `Microphone ... stats` line now ends with `peakDb= rmsDb= clipped=`, to tell a microphone that is too quiet or clipping from a network problem. In the mg4.92 test Siri's audio arrived complete and on time (no drops, encoding 5 ms per 20 ms frame), so its level is the next thing to check.
+- **HEVC colour.** Colour range set to Limited still looks washed out with HEVC (test F11), so the car's video plane ignores the range hint. H.264 shows the right colours. No code change yet.
 
 # MG4CPlay 0.2.9-mg4.92 (SWI165 fork), 2026-11-03
 
@@ -92,7 +112,7 @@ Fixes ported from upstream DiPlay 0.2.19–0.2.22 ([shihabal3amri/DiPlay](https:
 
 # MG4CPlay 0.2.9-mg4.79 (SWI165 fork), 2026-11-01
 
-- Log every Android display once per session (id, name, size, density, flags, whether it accepts presentations), to find out whether the SWI165 instrument cluster is an Android display. If it is, CarPlay's own instrument-cluster map could be shown there, as DiPlay already does on BYD.
+- Log every Android display once per session (id, name, size, density, flags, whether it accepts presentations), to find out whether the SWI165 instrument cluster is an Android display. If it is, CarPlay's own instrument-cluster map could be shown there, as upstream does on other cars.
 
 # MG4CPlay 0.2.9-mg4.78 (SWI165 fork), 2026-11-01
 

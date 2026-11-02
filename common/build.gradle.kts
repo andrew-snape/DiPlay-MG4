@@ -21,6 +21,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Settings screen tests build real views, which need the app's strings and drawables.
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {

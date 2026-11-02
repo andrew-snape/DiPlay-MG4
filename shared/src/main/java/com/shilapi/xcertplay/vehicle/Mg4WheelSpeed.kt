@@ -14,9 +14,8 @@ import java.util.concurrent.TimeUnit
 
 /**
  * MG4 speed and gear, read directly from the car (no adb). Speed is the AOSP vehicle-speed property
- * that EVHardware already scales per firmware; gear is the vehiclecondition service, where only
- * 1 = P is confirmed on SWI68/SWI165. Every other gear is sent as D, and the raw value is logged so
- * a car test can confirm R.
+ * that EVHardware already scales per firmware; gear is the vehiclecondition service:
+ * 1 P, 2 R, 3 N, 4 D on SWI165 (car test 2026-11-03); an unknown positive value is sent as D.
  */
 internal object Mg4WheelSpeed {
     const val GEAR_PARK = 1
@@ -24,10 +23,14 @@ internal object Mg4WheelSpeed {
     fun metersPerSecond(kmh: Float?): Double? =
         kmh?.toDouble()?.takeIf { it.isFinite() && it in 0.0..300.0 }?.div(3.6)
 
-    fun gear(raw: Int?): VehicleGear? = when {
-        raw == null || raw <= 0 -> null
-        raw == GEAR_PARK -> VehicleGear.PARK
-        else -> VehicleGear.DRIVE
+    // Car test 2026-11-03 (mg4.92), moving the selector P, R, P, R, N, D, P: 1 P, 2 R, 3 N, 4 D.
+    fun gear(raw: Int?): VehicleGear? = when (raw) {
+        GEAR_PARK -> VehicleGear.PARK
+        2 -> VehicleGear.REVERSE
+        3 -> VehicleGear.NEUTRAL
+        4 -> VehicleGear.DRIVE
+        null -> null
+        else -> if (raw > 0) VehicleGear.DRIVE else null
     }
 }
 
