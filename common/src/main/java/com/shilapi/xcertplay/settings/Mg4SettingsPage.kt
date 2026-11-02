@@ -16,7 +16,6 @@ import com.shilapi.xcertplay.DiPlayPreferences
 import com.shilapi.xcertplay.Mg4FirmwareProfile
 import com.shilapi.xcertplay.airplay.CarPlaySize
 import com.shilapi.xcertplay.host.R
-import com.shilapi.xcertplay.hud.BydOutputSettings
 import com.shilapi.xcertplay.localizedLabel
 import com.shilapi.xcertplay.media.AudioMode
 import com.shilapi.xcertplay.media.MediaAudioBuffer
@@ -26,6 +25,7 @@ import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
 import com.shilapi.xcertplay.transport.EvChargingConnectors
 import com.shilapi.xcertplay.vehicle.AbrpSettings
 import com.shilapi.xcertplay.vehicle.Mg4Vehicle
+import com.shilapi.xcertplay.vehicle.VehicleSettings
 import com.shilapi.xcertplay.settings.SettingsUi.Companion as Colors
 
 /**
@@ -487,10 +487,10 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 }
                 SettingRow.CLUSTER_DIRECTIONS -> switch(AirPlayPersistence.loadClusterDirections(activity)) { AirPlayPersistence.saveClusterDirections(activity, it) }
                 SettingRow.SEND_LOCATION -> switch(AirPlayPersistence.loadLocationReportingEnabled(activity)) { host.setLocationReporting(it) }
-                SettingRow.VIDEO_WHILE_PARKED -> switch(BydOutputSettings.videoWhileParked(activity)) { BydOutputSettings.setVideoWhileParked(activity, it) }
+                SettingRow.VIDEO_WHILE_PARKED -> switch(VehicleSettings.videoWhileParked(activity)) { VehicleSettings.setVideoWhileParked(activity, it) }
                 SettingRow.SUNSET_DARK_MODE -> switch(AirPlayPersistence.loadSunsetDarkMode(activity)) { AirPlayPersistence.saveSunsetDarkMode(activity, it) }
-                SettingRow.CAR_BATTERY -> switch(BydOutputSettings.batteryToIphone(activity)) {
-                    BydOutputSettings.setBatteryToIphone(activity, it)
+                SettingRow.CAR_BATTERY -> switch(VehicleSettings.batteryToIphone(activity)) {
+                    VehicleSettings.setBatteryToIphone(activity, it)
                     if (it) Mg4Vehicle.start(activity.applicationContext)
                 }
                 SettingRow.ABRP_TELEMETRY -> {
@@ -606,16 +606,16 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.CHARGING_CONNECTORS -> {
             val connectors = EvChargingConnectors.entries
             Picker(rowTitle(row), connectors.map { it.localizedLabel(activity) },
-                connectors.indexOf(BydOutputSettings.chargingConnectors(activity))) {
-                BydOutputSettings.setChargingConnectors(activity, connectors[it])
+                connectors.indexOf(VehicleSettings.chargingConnectors(activity))) {
+                VehicleSettings.setChargingConnectors(activity, connectors[it])
             }
         }
         SettingRow.LOW_CHARGE_WARNING -> {
-            val presets = BydOutputSettings.lowChargePresets
+            val presets = VehicleSettings.lowChargePresets
             Picker(rowTitle(row), presets.map {
-                activity.getString(if (it == BydOutputSettings.DEFAULT_LOW_CHARGE_PERCENT) R.string.percent_default else R.string.percent_value, it)
-            }, presets.indexOf(BydOutputSettings.lowChargePercent(activity)).coerceAtLeast(0)) {
-                BydOutputSettings.setLowChargePercent(activity, presets[it])
+                activity.getString(if (it == VehicleSettings.DEFAULT_LOW_CHARGE_PERCENT) R.string.percent_default else R.string.percent_value, it)
+            }, presets.indexOf(VehicleSettings.lowChargePercent(activity)).coerceAtLeast(0)) {
+                VehicleSettings.setLowChargePercent(activity, presets[it])
             }
         }
         else -> null

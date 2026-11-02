@@ -115,7 +115,7 @@ Keep code-built views (no XML layouts), as now. Move the new pieces out of
 3. **Shell**: two-pane layout, sidebar, back stack inside the right pane, saved page on
    rotate and restart (extends the current `page` field).
 4. **Move each category over**, one commit each, calling the same `AirPlayPersistence`,
-   `BydOutputSettings` and `AbrpSettings` methods. No saved setting changes key or default.
+   `VehicleSettings` and `AbrpSettings` methods. No saved setting changes key or default.
 5. **Reconnect bar** and row tags, replacing the per-dialog reconnect.
 6. **Connection page** replaces the separate Connection setup page. Its numbered steps
    become the footer and the hotspot details page.
