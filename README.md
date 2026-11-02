@@ -28,6 +28,7 @@ Run one at a time.
 | Car GPS and wheel speed to the iPhone | Test build (mg4.90): location on by default on MG4, with the car's own speed for tunnels (no adb). Not yet tested in the car |
 | Charging shown in Apple Maps | Test build (mg4.90): uses the car's charging status (AC or DC session), not just the plug. Not yet tested in the car |
 | Wi-Fi high performance | Test build (mg4.91): keeps the car's Wi-Fi out of power saving during CarPlay (from xcertplay 1.4.1). Being tested against the 160 s freezes |
+| Video while parked | Built in (upstream feature, gated on the MG4's gear P). Not yet tested in the car |
 | Dark mode at sunset | Test build (mg4.90): CarPlay goes dark between sunset and sunrise at the car's GPS position. Not yet tested in the car |
 
 The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
@@ -67,6 +68,7 @@ All in DiPlay's settings screen. Changes apply the next time CarPlay connects.
 | Music buffer | Display and performance | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. |
 | Report location to iPhone | Location | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it on MG4. |
 | Directions on the dashboard (test) | MG4 vehicle | Off. Sends CarPlay directions to the instrument cluster (mg4.80). |
+| Video while parked | MG4 vehicle | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P (read directly, no ADB). Leaving P closes the player. DRM video such as Apple TV+ won't play. |
 | Dark mode at sunset | MG4 vehicle | On. Dark between sunset and sunrise at the car's position. Off follows the head unit's night mode. |
 
 Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, the music audio channel and in-app updates (which point at upstream builds).
