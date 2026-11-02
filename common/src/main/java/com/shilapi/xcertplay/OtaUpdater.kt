@@ -25,7 +25,10 @@ internal object OtaUpdater {
     private const val TAG = "DiPlay_OTA"
     private const val SHELL_TMP_DIR = "/data/local/tmp"
     private const val STAGED_APK_NAME = "mg4cplay-update.apk"
-    private const val RELEASES = "https://api.github.com/repos/andrew-snape/DiPlay-MG4/releases?per_page=20"
+    private const val REPO = "andrew-snape/DiPlay-MG4"
+    private const val RELEASES = "https://api.github.com/repos/$REPO/releases?per_page=20"
+    private const val PREFS = "ota_updater"
+    private const val KEY_LAST_CHECK = "last_check"
     private val worker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
 
@@ -42,7 +45,23 @@ internal object OtaUpdater {
             connection.disconnect()
             select(JSONArray(body), version(context))
         }
+        recordCheck(context, version(context), result)
         main.post { callback(result) }
+    }
+
+    /** The last check's outcome, one line for the diagnostic report, or null before the first check. */
+    fun lastCheck(context: Context): String? =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_LAST_CHECK, null)
+
+    private fun recordCheck(context: Context, current: String, result: Result<Release?>) {
+        val time = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(java.util.Date())
+        val outcome = result.fold(
+            { release -> if (release == null) "up to date" else "found ${release.version}" },
+            { error -> "failed ${error.javaClass.simpleName}" },
+        )
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_LAST_CHECK, "$time installed=$current repo=$REPO $outcome")
+            .apply()
     }
 
     fun downloadAndInstall(context: Context, release: Release, status: (String) -> Unit) {
@@ -254,12 +273,19 @@ internal object OtaUpdater {
         }
     }
 
-    private fun select(releases: JSONArray, current: String): Release? {
+    /**
+     * The highest published release newer than [current] that carries an MG4CPlay APK with a
+     * GitHub SHA-256 digest, or null. Highest by version, not by list order, so a re-published
+     * older release is never offered over a newer one.
+     */
+    internal fun select(releases: JSONArray, current: String): Release? {
+        var best: Release? = null
         for (i in 0 until releases.length()) {
             val release = releases.getJSONObject(i)
             if (release.optBoolean("draft") || release.optBoolean("prerelease")) continue
             val version = release.optString("tag_name").trimStart('v', 'V')
             if (compare(version, current) <= 0) continue
+            if (best != null && compare(version, best.version) <= 0) continue
             val assets = release.optJSONArray("assets") ?: continue
             for (j in 0 until assets.length()) {
                 val asset = assets.getJSONObject(j)
@@ -267,13 +293,15 @@ internal object OtaUpdater {
                 if (!name.startsWith("MG4CPlay-") || !name.endsWith(".apk")) continue
                 val digest = asset.optString("digest").removePrefix("sha256:")
                 if (!digest.matches(Regex("[a-fA-F0-9]{64}"))) continue
-                return Release(version, asset.getString("browser_download_url"), name, digest)
+                best = Release(version, asset.getString("browser_download_url"), name, digest)
+                break
             }
         }
-        return null
+        return best
     }
 
-    private fun compare(left: String, right: String): Int {
+    /** Compares the numbers in two versions in order, so `0.2.9-mg4.91-hud-test` equals `0.2.9-mg4.91`. */
+    internal fun compare(left: String, right: String): Int {
         fun parts(value: String) = Regex("\\d+").findAll(value).map { it.value.toIntOrNull() ?: 0 }.toList()
         val a = parts(left); val b = parts(right)
         for (i in 0 until maxOf(a.size, b.size)) {

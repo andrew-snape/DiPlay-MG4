@@ -1357,6 +1357,7 @@ class DiPlayActivity : ComponentActivity() {
         appendLine("Session: ${if (CarPlayBackgroundSession.active) "active" else if (CarPlayBackgroundSession.hasSession()) "connecting" else "stopped"}")
         appendLine("Head-unit board: ${Build.BOARD}; hardware: ${Build.HARDWARE}; build: ${Build.DISPLAY}")
         if (Mg4FirmwareProfile.detect().isMg4) appendLine("Day/night: ${DayNightProbe.snapshot(appContext)}")
+        appendLine("Update check: ${OtaUpdater.lastCheck(appContext) ?: "not run yet"}")
         appendLine()
         appendLine("--- Last display negotiation (timestamps distinguish it from current settings) ---")
         appendLine(DisplayDiagnosticSnapshot.report(appContext))

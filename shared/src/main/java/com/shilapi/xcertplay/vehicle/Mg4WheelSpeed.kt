@@ -48,6 +48,14 @@ internal object Mg4WheelSpeedSource : VehicleSpeedSource {
     private var reads = 0
     private var firstSampleLogged = false
 
+    /** The session log, so these lines reach the diagnostic report; logcat alone does not. */
+    @Volatile var reportLog: (String) -> Unit = {}
+
+    private fun log(message: String) {
+        Log.i(TAG, message)
+        reportLog("MG4 $message")
+    }
+
     @Synchronized
     override fun start() {
         if (executor != null) return
@@ -59,13 +67,13 @@ internal object Mg4WheelSpeedSource : VehicleSpeedSource {
         executor = Executors.newSingleThreadScheduledExecutor { runnable ->
             Thread(runnable, "diplay-mg4-wheel-speed").apply { isDaemon = true }
         }.also { it.scheduleWithFixedDelay(::poll, 0, READ_MILLIS, TimeUnit.MILLISECONDS) }
-        Log.i(TAG, "wheel speed started")
+        log("wheel speed started")
     }
 
     override fun stop() {
         val running = synchronized(this) { executor.also { executor = null } } ?: return
         running.shutdown()
-        Log.i(TAG, "wheel speed stopped")
+        log("wheel speed stopped")
     }
 
     @Synchronized
@@ -88,7 +96,7 @@ internal object Mg4WheelSpeedSource : VehicleSpeedSource {
             val raw = SaicVehicleCondition.gearOrNull()
             Mg4WheelSpeed.gear(raw)?.let { next ->
                 val changed = synchronized(this) { (rawGear != raw).also { gear = next; rawGear = raw } }
-                if (changed) Log.i(TAG, "gear raw=$raw sent=$next")
+                if (changed) log("gear raw=$raw sent=$next")
             }
         }
         val before = SystemClock.elapsedRealtime()
@@ -100,7 +108,7 @@ internal object Mg4WheelSpeedSource : VehicleSpeedSource {
         }
         if (!firstSampleLogged) {
             firstSampleLogged = true
-            Log.i(TAG, "first wheel speed ${"%.1f".format(speed * 3.6)} km/h")
+            log("first wheel speed ${"%.1f".format(java.util.Locale.US, speed * 3.6)} km/h")
         }
     }
 }

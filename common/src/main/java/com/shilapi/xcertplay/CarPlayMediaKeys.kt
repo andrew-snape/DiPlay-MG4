@@ -54,11 +54,26 @@ internal object CarPlayMediaKeys {
      * SystemUI_eh32_aus_local_P (`PhysicalKeysBroadcastReceiver`). Raw codes: 297 volume up,
      * 298 volume down, 299 previous, 300 next, 301 mute (reformatted to KEY_CODE 1 to 5 in the
      * wheel's default mode), 291 phone key, 286 and 17 the custom (star) keys, 288 the HVAC key,
-     * 3 home. Logged so the voice key's code can be found; the phone key answers or ends a CarPlay
-     * call when calls are CarPlay-only.
+     * 3 home, and 287 the voice key (car test 2026-11-03). The phone key answers or ends a CarPlay
+     * call when calls are CarPlay-only; the voice key opens Siri.
      */
     private const val ACTION_RAW_HARD_KEY = "com.saic.keyevent.hardkey.report"
     private const val RAW_PHONE_KEY = 291
+    private const val RAW_VOICE_KEY = 287
+
+    internal enum class RawKeyAction { CALL_HOOK, SIRI }
+
+    /**
+     * What a raw wheel key does in CarPlay, or null. Both act once, on release. A held voice key
+     * still releases with long=false (car test 2026-11-03), so a long press opens Siri too.
+     */
+    internal fun rawKeyAction(code: Int, down: Boolean, longPress: Boolean, callsOverCarPlay: Boolean): RawKeyAction? =
+        when {
+            down -> null
+            code == RAW_VOICE_KEY -> RawKeyAction.SIRI
+            code == RAW_PHONE_KEY && !longPress && callsOverCarPlay -> RawKeyAction.CALL_HOOK
+            else -> null
+        }
     private var rawKeyReceiver: BroadcastReceiver? = null
     private var callsOverCarPlay = false
 
@@ -197,12 +212,19 @@ internal object CarPlayMediaKeys {
         val longPress = intent.getBooleanExtra("android.intent.extra.hardkey.longpress", false)
         // Phone key, short press, on release: CarPlay hook switch (answers a ringing call or ends
         // the current one). Only when hands-free is released, or the car's own phone acts as well.
-        val act = code == RAW_PHONE_KEY && !down && !longPress && callsOverCarPlay
-        report("Wheel raw key: code=$code down=$down long=$longPress${if (act) " -> CarPlay call" else ""}")
-        if (act) {
-            val sent = synchronized(this) { controller }?.sendTelephonyButton(TELEPHONY_HOOK_SWITCH) ?: false
-            Log.i(TAG, "phone key -> CarPlay hook switch sent=$sent")
+        val action = rawKeyAction(code, down, longPress, callsOverCarPlay)
+        val target = synchronized(this) { controller }
+        val sent = when (action) {
+            RawKeyAction.CALL_HOOK -> target?.sendTelephonyButton(TELEPHONY_HOOK_SWITCH) ?: false
+            RawKeyAction.SIRI -> target?.requestSiri() ?: false
+            null -> null
         }
+        val suffix = when (action) {
+            RawKeyAction.CALL_HOOK -> " -> CarPlay call sent=$sent"
+            RawKeyAction.SIRI -> " -> Siri sent=$sent"
+            null -> ""
+        }
+        report("Wheel raw key: code=$code down=$down long=$longPress$suffix")
     }
 
     // Index into AirPlayHid's telephony report: usage 0x20, Hook Switch.

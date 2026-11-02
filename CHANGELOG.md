@@ -1,3 +1,14 @@
+# MG4CPlay 0.2.9-mg4.92 (SWI165 fork), 2026-11-03
+
+From the mg4.91 car report of 2026-11-03.
+
+- **Dark mode follows the car.** The day/night probe found the car's own setting (`screen_day_night_mode`), which switches with the headlights; Android's night mode, and so CarPlay, already follows it. **Dark mode at sunset** is now off by default (a saved choice wins). In the report, `Dark mode on (car)` or `(sunset)` says which decided, and `(car, no position for sunset yet)` when sunset mode has no position; the old log said "sunset" in that case. `AirPlay dark mode=` now reaches the report too.
+- **Vehicle lines in the report.** The MG4 wheel speed (`MG4 wheel speed started`, `MG4 first wheel speed`), gear (`MG4 gear raw=`) and charging (`MG4 battery ... chargeStatus= charging=`, on change) lines only went to logcat, which the report doesn't include. They now go to the session log, so tests D5–D7 can be read from a report.
+- **Video while parked** label on MG4 no longer says "needs ADB" (#13).
+- **Wheel voice button opens Siri.** The car test found the voice button is raw key 287. A press, short or held, opens Siri on release while CarPlay runs. The log shows `Wheel raw key: code=287 ... -> Siri sent=true`.
+- **Update check.** Offers the highest newer release rather than the first one GitHub lists, and the diagnostic report shows the last check (`Update check: <time> installed=<version> repo=andrew-snape/DiPlay-MG4 up to date | found <version> | failed <error>`). README corrected: the check has used this fork's releases since mg4.84, not upstream.
+- **Wi-Fi scan log.** The mg4.91 drive still showed audio hiccups about every 160 s with the Wi-Fi lock held, and the lost packets were counted by the car's UDP receive buffer (`udpRcvbufErrors`), with nothing lost on the Wi-Fi radio (`ap0RxDrop=+0`). Each scan the head unit finishes is now logged (`Wi-Fi scan done ... sinceLast=`), to check whether scans line up with the hiccups. Read-only; it never starts a scan.
+
 # MG4CPlay 0.2.9-mg4.91 (SWI165 fork), 2026-11-02
 
 Two fixes from upstream [xcertplay](https://github.com/shilapi/xcertplay) 1.4.1. Not yet tested in the car.

@@ -345,6 +345,7 @@ class CarPlayHostActivity : ComponentActivity() {
         }
     }
     private var dayNightProbe: DayNightProbe? = null
+    private var wifiScanProbe: WifiScanProbe? = null
     private var activeAirPlaySession: AirPlaySession? = null
     private val activeScreenStreamTypes = mutableSetOf<Int>()
     private var handshakeResetInProgress = false
@@ -453,7 +454,9 @@ class CarPlayHostActivity : ComponentActivity() {
         darkMode = currentDarkMode()
         if (sunsetDarkMode) mainHandler.postDelayed(refreshSunsetDarkMode, SUNSET_CHECK_MILLIS)
         if (Mg4FirmwareProfile.detect().isMg4) {
+            com.shilapi.xcertplay.vehicle.VehicleIntegration.setReportLog(::appendLog)
             dayNightProbe = DayNightProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
+            wifiScanProbe = WifiScanProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
         }
         advancedAudioChannelMappingSupported =
             resources.getBoolean(R.bool.config_advanced_audio_channel_mapping)
@@ -820,6 +823,9 @@ class CarPlayHostActivity : ComponentActivity() {
         mainHandler.removeCallbacks(refreshSunsetDarkMode)
         dayNightProbe?.stop()
         dayNightProbe = null
+        wifiScanProbe?.stop()
+        wifiScanProbe = null
+        com.shilapi.xcertplay.vehicle.VehicleIntegration.setReportLog(null)
         clusterMonitor?.stop()
         dismissClusterPresentation()
         mainHandler.removeCallbacks(applyDisplaySize)
@@ -3327,18 +3333,23 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     private fun updateDarkMode() {
-        val next = currentDarkMode()
+        val (next, source) = darkModeWithSource()
         if (next == darkMode) return
         darkMode = next
-        appendLog("Dark mode ${if (next) "on" else "off"} (${if (sunsetDarkMode) "sunset" else "Android"})")
+        appendLog("Dark mode ${if (next) "on" else "off"} ($source)")
         syncAirPlayDarkMode()
     }
 
-    /** Dark between sunset and sunrise when that is on and the place is known, else Android's night mode. */
-    private fun currentDarkMode(): Boolean {
-        if (!sunsetDarkMode) return androidDarkMode
-        val (latitude, longitude) = sunPlace() ?: return androidDarkMode
-        return SunPosition.isNight(latitude, longitude, System.currentTimeMillis())
+    private fun currentDarkMode(): Boolean = darkModeWithSource().first
+
+    /**
+     * Dark between sunset and sunrise when that is on and the place is known, else the head unit's
+     * night mode, which on MG4 follows the car's day/night and headlights.
+     */
+    private fun darkModeWithSource(): Pair<Boolean, String> {
+        if (!sunsetDarkMode) return androidDarkMode to "car"
+        val (latitude, longitude) = sunPlace() ?: return androidDarkMode to "car, no position for sunset yet"
+        return SunPosition.isNight(latitude, longitude, System.currentTimeMillis()) to "sunset"
     }
 
     /** The newest location fix Android holds, else the last place saved; only the rough position is kept. */
@@ -3365,10 +3376,7 @@ class CarPlayHostActivity : ComponentActivity() {
         airPlayCommandExecutor.execute {
             try {
                 val sent = session.setNightMode(night)
-                Log.i(
-                    TAG,
-                    "AirPlay dark mode=${if (night) "dark" else "light"} eventChannelReady=$sent",
-                )
+                appendLog("AirPlay dark mode=${if (night) "dark" else "light"} eventChannelReady=$sent")
             } catch (error: Throwable) {
                 Log.w(TAG, "Could not send AirPlay dark mode update", error)
             }

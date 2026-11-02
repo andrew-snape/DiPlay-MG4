@@ -50,7 +50,7 @@ end, wait a few seconds, then copy it off.
 
 | # | Step | Pass | Log lines |
 |---|---|---|---|
-| D1 | Voice button on the wheel | Siri opens | Raw code for the voice button (not yet known) |
+| D1 | Voice button on the wheel, short press and held (mg4.92) | Siri opens; note whether the car's own voice assistant also starts | `Wheel raw key: code=287 down=false long=false -> Siri sent=true` (287 found 2026-11-03) |
 | D2 | "What's the weather in Geelong", three times per Microphone (test) option | Siri hears it correctly | `Microphone speechrecognition: started source=...` |
 | D3 | Start an Apple Maps route; wait for a spoken prompt | Prompt is heard; music lowers, then comes back | `audioType=default` or `alert` stream, and whether it played (see risk R1) |
 | D4 | Dashboard (Directions on the dashboard on) | Next turn, distance, street on the cluster | `Cluster nav: guidance started`, `Cluster nav: apple=...` |
@@ -58,7 +58,7 @@ end, wait a few seconds, then copy it off.
 | D5a | mg4.91: same drive as D5 | Maps still follows the car and tunnels | `start-location-information components=[...] intervals={...}`, then `tx=0xfffb` |
 | D6 | Select R, N and D in turn while parked | Note each gear's raw number | `gear raw=<n> sent=...` (only 1 = P is known; others are sent as D) |
 | D7 | Plug in to charge with CarPlay running, then unplug | Apple Maps shows charging while charging, not once it stops | `chargeStatus=` and `charging=` on the MG4 battery line |
-| D8 | Drive from daylight into dusk, and switch the headlights on and off | CarPlay turns dark within a minute or two of sunset; note any probe line that changes | `Dark mode on (sunset)`, `AirPlay dark mode=dark`, `Day/night probe:` lines; also the `Day/night:` line in the report |
+| D8 | Switch the headlights on and off (or drive into dusk with auto headlights) | CarPlay turns dark with the headlights and light again without them | `Day/night probe: SYSTEM.screen_day_night_mode=1`, `Dark mode on (car)`, `AirPlay dark mode=dark eventChannelReady=true` |
 | D9 | Turn on **MG4 vehicle > Video while parked**, park in P, play a video in a supported iPhone app via CarPlay; then select D | Video plays on the car screen in P; the player closes on leaving P | `video in car allowed=true sent=true` in P, then `allowed=false` on leaving P. Player details only go to logcat, so note what you see |
 
 ## E. Bluetooth fall-backs and recovery
@@ -84,7 +84,8 @@ end, wait a few seconds, then copy it off.
 | F7 | Repeat B (music) and C (calls) on Wi-Fi Direct and compare with the car hotspot | Fewer skips and less call static than the hotspot | `Audio loss` lines and `call loss packets=` at hang-up, for both modes |
 | F8 | mg4.86 log: with the car hotspot, video and music froze for 1 to 5 s about every 160 s (Android 9's longest gap between Wi-Fi scans while not joined to a network). Car hotspot on, **car Wi-Fi off**, play music with the map showing for at least 10 minutes | No freezes every 160 s | `Receive: video ... interArrivalMaxMs=` stays under 1000 and `audio stats ... underruns=0`; no `Audio loss` bursts with `udpRcvbufErrors=+` about 160 s apart |
 | F9 | Repeat F8 with the car Wi-Fi **on** (not joined to a network), for comparison | Note whether the 160 s freezes return | Same lines as F8; note the times of each freeze |
-| F10 | mg4.91: repeat F8 with **Wi-Fi high performance** on, then off | Freezes every 160 s gone with it on; note if they return with it off | `Wireless Wi-Fi lock acquired: mg4cplay:high-performance` (or `unavailable`), then the F8 lines |
+| F10 | mg4.92: 10 minutes or more of music with the map showing, car hotspot, **Wi-Fi high performance** on | Note whether the hiccups line up with scans | `Wi-Fi scan done ... sinceLast=` times against `Audio loss` lines with `udpRcvbufErrors=+` and `interArrivalMaxMs=` over 1000. mg4.91 (2026-11-03): the lock did not stop the ~160 s hiccups |
+| F11 | HEVC on, **Colour range (test)** set to **Limited**; compare with H.264 | HEVC no longer washed out | `Video: decoder=...HEVC ... colourRangeHint=limited` and the `output format ... color=` line (H.264 logs `86/1/2`, HEVC `1/1/2` with the default) |
 
 ## G. Getting the report
 

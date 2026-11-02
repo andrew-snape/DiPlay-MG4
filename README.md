@@ -5,7 +5,7 @@ Wireless CarPlay for the MG4 head unit. This is a personal fork of
 for an Australian **MG4 on SWI165 firmware** (`SWI165-29176-1100R11`, Android 9,
 AUTUS SAIC MT2712, 1920x720 panel). Upstream is tested on SWI69.
 
-Current build: **0.2.9-mg4.91**. Car-test builds install as
+Current build: **0.2.9-mg4.92**. Car-test builds install as
 `com.shihab.diplay.hudtest`, alongside any upstream `com.shihab.diplay` install.
 Run one at a time.
 
@@ -19,6 +19,7 @@ Run one at a time.
 | Music over Wi-Fi (CarPlay audio) | Working. Broken in mg4.67 and mg4.68 (no CarPlay audio at all); fixed in mg4.69 and confirmed in the car in mg4.71 |
 | Phone calls over Wi-Fi | Working in mg4.83: the call played through the car's phone audio path. Some static occurs when Wi-Fi drops call packets (30–60% loss in one car test); the cause is the Wi-Fi link, not the routing |
 | Call microphone | Working. Software Opus encoder on Android 9 (mg4.69), about 5 ms per frame (mg4.83) |
+| Wheel voice button opens Siri | mg4.92: raw key 287, found in the car 2026-11-03. Not yet tested |
 | Steering-wheel next and previous | Working (mg4.66, re-confirmed mg4.80) |
 | Hands-free released during CarPlay | Working (mg4.80); released again on each reconnect (mg4.81) |
 | Square corners | Confirmed in the car (mg4.70), default since mg4.75 |
@@ -29,7 +30,7 @@ Run one at a time.
 | Charging shown in Apple Maps | Test build (mg4.90): uses the car's charging status (AC or DC session), not just the plug. Not yet tested in the car |
 | Wi-Fi high performance | Test build (mg4.91): keeps the car's Wi-Fi out of power saving during CarPlay (from xcertplay 1.4.1). Being tested against the 160 s freezes |
 | Video while parked | Built in (upstream feature, gated on the MG4's gear P). Not yet tested in the car |
-| Dark mode at sunset | Test build (mg4.90): CarPlay goes dark between sunset and sunrise at the car's GPS position. Not yet tested in the car |
+| Dark mode | Follows the car's own day/night, which switches with the headlights. Confirmed in the car (2026-11-03): headlights on turned the car, Android and CarPlay dark. Dark mode at sunset is an option (mg4.92: off by default) |
 
 The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 
@@ -47,7 +48,7 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 | Location | On by default on MG4 (mg4.90). Sends the car's GPS with its own wheel speed and gear (`$PASCD`), read directly from the car, so Apple Maps keeps moving in tunnels. Only gear P is confirmed; others are sent as D. |
 | Wi-Fi | Holds Android's high-performance Wi-Fi lock during wireless CarPlay (mg4.91, from xcertplay 1.4.1). Location sends each NMEA sentence as its own parameter, only the types the iPhone asked for, at its intervals (mg4.91, from xcertplay 1.4.1). |
 | Charging | Apple Maps' "charging" comes from the car's charging status (1 AC, 10 DC) (mg4.90). Plugged in but stopped or finished is not charging. |
-| Dark mode | CarPlay goes dark between sunset and sunrise at the car's position (mg4.90), since no car day/night signal is known. A probe logs candidate system settings so a dusk drive can find one. |
+| Dark mode | Follows the car's day/night (`screen_day_night_mode`), which Android's night mode tracks and which switches with the headlights (found by the mg4.90 probe, 2026-11-03). Optional sunset mode (mg4.90). |
 | Build fixes | Replaces upstream calls to Bluetooth functions that were never published in the EVHardware submodule, so the tree compiles. The build script finds the Android SDK and writes the APK to `dist/`. |
 | Diagnostics | Reports record the firmware profile, video renderer, audio mode, car audio source, microphone source and every wheel key. |
 
@@ -69,9 +70,9 @@ All in DiPlay's settings screen. Changes apply the next time CarPlay connects.
 | Report location to iPhone | Location | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it on MG4. |
 | Directions on the dashboard (test) | MG4 vehicle | Off. Sends CarPlay directions to the instrument cluster (mg4.80). |
 | Video while parked | MG4 vehicle | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P (read directly, no ADB). Leaving P closes the player. DRM video such as Apple TV+ won't play. |
-| Dark mode at sunset | MG4 vehicle | On. Dark between sunset and sunrise at the car's position. Off follows the head unit's night mode. |
+| Dark mode at sunset | MG4 vehicle | Off (mg4.92). Off follows the car's day/night, which changes with the headlights. On uses sunset and sunrise at the car's position, once a position is known. |
 
-Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, the music audio channel and in-app updates (which point at upstream builds).
+Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, and the music audio channel.
 
 ## Building on a Mac
 
@@ -146,8 +147,14 @@ off; some uploads have arrived empty when copied straight away.
 
 ## Updates
 
-The in-app update check still looks at the **upstream** repository, so it can offer
-builds without this fork's SWI165 changes. Build from this repo instead.
+The in-app update check looks at **this fork's** releases (`andrew-snape/DiPlay-MG4`),
+when the app opens and from the ↻ button on the home screen. It offers the highest
+published release newer than the installed version, comparing only the numbers (so
+`0.2.9-mg4.92` is newer than `0.2.9-mg4.91-hud-test`), and only an `MG4CPlay-…apk` with a
+GitHub SHA-256 digest. After download it checks the digest, package name and signing key,
+then installs, or opens Downloads if the head unit refuses. It needs the head unit online
+and the repo public. The diagnostic report shows the last check (`Update check:`). See
+[docs/OTA.md](docs/OTA.md).
 
 ## Caveats
 

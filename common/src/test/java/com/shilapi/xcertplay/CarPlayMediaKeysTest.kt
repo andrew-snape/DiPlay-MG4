@@ -1,0 +1,35 @@
+package com.shilapi.xcertplay
+
+import com.shilapi.xcertplay.CarPlayMediaKeys.RawKeyAction
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+// CarPlayMediaKeys creates a main-looper Handler when it loads.
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28], manifest = Config.NONE)
+class CarPlayMediaKeysTest {
+    @Test
+    fun voiceKeyOpensSiriOnceOnRelease() {
+        // The car's sequence for a held voice key on 2026-11-03: down, down+long, then up.
+        assertNull(CarPlayMediaKeys.rawKeyAction(287, down = true, longPress = false, callsOverCarPlay = false))
+        assertNull(CarPlayMediaKeys.rawKeyAction(287, down = true, longPress = true, callsOverCarPlay = false))
+        assertEquals(RawKeyAction.SIRI, CarPlayMediaKeys.rawKeyAction(287, down = false, longPress = false, callsOverCarPlay = false))
+    }
+
+    @Test
+    fun phoneKeyDrivesTheCallOnlyWhenCallsAreCarPlayOnly() {
+        assertEquals(RawKeyAction.CALL_HOOK, CarPlayMediaKeys.rawKeyAction(291, down = false, longPress = false, callsOverCarPlay = true))
+        assertNull(CarPlayMediaKeys.rawKeyAction(291, down = false, longPress = false, callsOverCarPlay = false))
+        assertNull(CarPlayMediaKeys.rawKeyAction(291, down = false, longPress = true, callsOverCarPlay = true))
+    }
+
+    @Test
+    fun otherKeysDoNothing() {
+        assertNull(CarPlayMediaKeys.rawKeyAction(299, down = false, longPress = false, callsOverCarPlay = true))
+        assertNull(CarPlayMediaKeys.rawKeyAction(286, down = false, longPress = false, callsOverCarPlay = true))
+    }
+}

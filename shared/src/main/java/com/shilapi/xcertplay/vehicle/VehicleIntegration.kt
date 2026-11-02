@@ -42,6 +42,12 @@ object VehicleIntegration {
     fun wheelSpeed(context: Context): VehicleSpeedSource =
         if (isMg4(context)) Mg4WheelSpeedSource else BydNavigationOutputs.wheelSpeed(context)
 
+    /** Sends MG4 wheel-speed, gear and charging lines to [log] (the session log), or stops with null. */
+    fun setReportLog(log: ((String) -> Unit)?) {
+        Mg4WheelSpeedSource.reportLog = log ?: {}
+        Mg4Vehicle.reportLog = log ?: {}
+    }
+
     fun parked(context: Context): Boolean? =
         if (isMg4(context)) Mg4Vehicle.parked(context) else BydNavigationOutputs.parked(context)
 }
