@@ -345,6 +345,7 @@ class CarPlayHostActivity : ComponentActivity() {
         }
     }
     private var dayNightProbe: DayNightProbe? = null
+    private var wifiScanProbe: WifiScanProbe? = null
     private var activeAirPlaySession: AirPlaySession? = null
     private val activeScreenStreamTypes = mutableSetOf<Int>()
     private var handshakeResetInProgress = false
@@ -455,6 +456,7 @@ class CarPlayHostActivity : ComponentActivity() {
         if (Mg4FirmwareProfile.detect().isMg4) {
             com.shilapi.xcertplay.vehicle.VehicleIntegration.setReportLog(::appendLog)
             dayNightProbe = DayNightProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
+            wifiScanProbe = WifiScanProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
         }
         advancedAudioChannelMappingSupported =
             resources.getBoolean(R.bool.config_advanced_audio_channel_mapping)
@@ -821,6 +823,8 @@ class CarPlayHostActivity : ComponentActivity() {
         mainHandler.removeCallbacks(refreshSunsetDarkMode)
         dayNightProbe?.stop()
         dayNightProbe = null
+        wifiScanProbe?.stop()
+        wifiScanProbe = null
         com.shilapi.xcertplay.vehicle.VehicleIntegration.setReportLog(null)
         clusterMonitor?.stop()
         dismissClusterPresentation()
