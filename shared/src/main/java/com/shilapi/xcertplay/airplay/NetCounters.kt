@@ -28,6 +28,10 @@ internal object NetCounters {
         }
     }
 
+    /** Absolute ap0 packet and byte totals: if Tx keeps rising while Rx stops, the outage is on the iPhone side or in the air. */
+    fun totals(): String = read().filterKeys { it.startsWith("ap0") }.entries.joinToString(",") { "${it.key}=${it.value}" }
+        .ifEmpty { "unreadable" }
+
     private fun read(): Map<String, Long> {
         val result = linkedMapOf<String, Long>()
         runCatching {
@@ -47,9 +51,11 @@ internal object NetCounters {
                 val fields = line.substringAfter(':').trim().split(Regex("\\s+")).mapNotNull(String::toLongOrNull)
                 // rx: bytes packets errs drop fifo frame compressed multicast; tx: bytes packets errs drop ...
                 if (fields.size >= 12) {
+                    result["ap0RxBytes"] = fields[0]
                     result["ap0RxPackets"] = fields[1]
                     result["ap0RxErr"] = fields[2]
                     result["ap0RxDrop"] = fields[3]
+                    result["ap0TxPackets"] = fields[9]
                     result["ap0TxErr"] = fields[10]
                     result["ap0TxDrop"] = fields[11]
                 }
