@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
+import com.shilapi.xcertplay.host.R
 
 /** Which discovered Bluetooth devices to offer as an iPhone. Kept pure so it can be unit tested. */
 internal object PhonePairingRules {
