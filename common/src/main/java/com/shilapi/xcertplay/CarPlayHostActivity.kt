@@ -568,27 +568,31 @@ class CarPlayHostActivity : ComponentActivity() {
         if (consent == null) {
             vpnReady = true
             maybeStartCarPlay()
-        } else if (consent.resolveActivity(packageManager) == null) {
-            // MG4 SWI165 has no com.android.vpndialogs, so launching the consent dialog crashed
-            // the app (car test 2026-11-03). Choosing USB is the consent: authorise this app as
-            // the dialog would, or say USB CarPlay is unavailable.
+            return
+        }
+        if (consent.resolveActivity(packageManager) == null) {
             appendLog("USB VPN: the system consent dialog is missing on this head unit")
-            if (VpnSelfAuthorizer.authorize(this, ::appendLog) && CarPlayVpnService.prepare(this) == null) {
-                vpnReady = true
-                maybeStartCarPlay()
-            } else {
-                setStatus(getString(R.string.usb_vpn_unavailable))
-            }
+            authoriseVpnWithoutDialog()
+            return
+        }
+        awaitingVpnConsent = true
+        try {
+            vpnConsent.launch(consent)
+        } catch (error: android.content.ActivityNotFoundException) {
+            // MG4 SWI165 reports the dialog as resolvable but cannot start it (car test
+            // 2026-11-03, crash at the launch). Choosing USB is the consent: authorise this app.
+            awaitingVpnConsent = false
+            appendLog("USB VPN: consent dialog launch failed: ${error.message}")
+            authoriseVpnWithoutDialog()
+        }
+    }
+
+    private fun authoriseVpnWithoutDialog() {
+        if (VpnSelfAuthorizer.authorize(this, ::appendLog) && CarPlayVpnService.prepare(this) == null) {
+            vpnReady = true
+            maybeStartCarPlay()
         } else {
-            awaitingVpnConsent = true
-            try {
-                vpnConsent.launch(consent)
-            } catch (error: android.content.ActivityNotFoundException) {
-                // resolveActivity said yes but the launch still failed: never crash the app over it.
-                awaitingVpnConsent = false
-                appendLog("USB VPN: consent dialog launch failed: ${error.message}")
-                setStatus(getString(R.string.usb_vpn_unavailable))
-            }
+            setStatus(getString(R.string.usb_vpn_unavailable))
         }
     }
 
