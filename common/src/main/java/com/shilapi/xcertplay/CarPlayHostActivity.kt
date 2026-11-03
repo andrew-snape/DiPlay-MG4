@@ -581,7 +581,14 @@ class CarPlayHostActivity : ComponentActivity() {
             }
         } else {
             awaitingVpnConsent = true
-            vpnConsent.launch(consent)
+            try {
+                vpnConsent.launch(consent)
+            } catch (error: android.content.ActivityNotFoundException) {
+                // resolveActivity said yes but the launch still failed: never crash the app over it.
+                awaitingVpnConsent = false
+                appendLog("USB VPN: consent dialog launch failed: ${error.message}")
+                setStatus(getString(R.string.usb_vpn_unavailable))
+            }
         }
     }
 
