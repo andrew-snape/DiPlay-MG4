@@ -141,14 +141,14 @@ class DiPlayActivity : ComponentActivity() {
         }
         val scroll = ScrollView(this).apply { addView(message) }
         AlertDialog.Builder(this)
-            .setTitle("Önceki çökme raporu")
+            .setTitle("Previous crash report")
             .setView(scroll)
-            .setPositiveButton("Kopyala") { _, _ ->
+            .setPositiveButton("Copy") { _, _ ->
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("DiPlay crash", report))
-                Toast.makeText(this, "Crash raporu kopyalandı", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Crash report copied", Toast.LENGTH_LONG).show()
             }
-            .setNegativeButton("Kapat", null)
+            .setNegativeButton("Close", null)
             .show()
     }
 
