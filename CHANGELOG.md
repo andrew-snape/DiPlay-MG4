@@ -16,6 +16,10 @@ Four fixes ported from upstream DiPlay ([shihabal3amri/DiPlay](https://github.co
 - **Quieter USB log** (upstream #1144). Bare USB TCP acknowledgements and large writes are logged for the first 50 only; connection opens and closes are always logged. Logcat only.
 - **iPhone USB id hidden in the report** (upstream #1141). The hyphenated iPhone USB id (`00008110-001E2C3A0123401E`) is now redacted like other identifiers.
 
+# MG4CPlay 0.2.9-mg4.95 (SWI165 fork), 2026-11-03
+
+- **USB CarPlay now authorises itself when the dialog cannot start.** In the mg4.93 car report the head unit said the VPN dialog existed, so the app launched it and crashed (`CarPlayHostActivity.kt:584`). If that launch fails, the app now falls back to authorising its own VPN, as it does when the dialog is missing. Log: `USB VPN: consent dialog launch failed` then `authorised for this app` or `self-authorisation failed`.
+
 # MG4CPlay 0.2.9-mg4.94 (SWI165 fork), 2026-11-03
 
 - **USB CarPlay no longer crashes on a missing consent dialog.** If launching Android's VPN dialog still fails on this head unit, the app now logs `USB VPN: consent dialog launch failed` and shows that USB CarPlay could not start, instead of closing.
