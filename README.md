@@ -28,6 +28,8 @@ Run one at a time.
 | Bluetooth Music mode (fallback) | Fix in mg4.66, awaiting a car test |
 | Car GPS and wheel speed to the iPhone | Test build (mg4.90): location on by default on MG4, with the car's own speed for tunnels (no adb). Not yet tested in the car |
 | Charging shown in Apple Maps | Test build (mg4.90): uses the car's charging status (AC or DC session), not just the plug. Not yet tested in the car |
+| In-app pairing | Test build (mg4.96): Pair another searches and pairs the iPhone without leaving the app. Not yet tried in the car |
+| USB CarPlay | Removed in mg4.96. The car's own wired CarPlay holds the iPhone, so MG4CPlay cannot claim it. Use the car's built-in CarPlay for a cable |
 | Wi-Fi high performance | Test build (mg4.91): keeps the car's Wi-Fi out of power saving during CarPlay (from xcertplay 1.4.1). Being tested against the 160 s freezes |
 | Video while parked | Built in (upstream feature, gated on the MG4's gear P). Not yet tested in the car |
 | Dark mode | Follows the car's own day/night, which switches with the headlights. Confirmed in the car (2026-11-03): headlights on turned the car, Android and CarPlay dark. Dark mode at sunset is an option (mg4.92: off by default) |
@@ -60,7 +62,7 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 
 | Setting | Where | Default on SWI165 |
 |---|---|---|
-| Connection type, hotspot details, iPhone, Wi-Fi Direct band | Connection | Car hotspot. Replaces the old Connection setup page. |
+| Connection type (car hotspot or Wi-Fi Direct), hotspot details, iPhone (choose or pair in the app), Wi-Fi Direct band | Connection | Car hotspot. Replaces the old Connection setup page. |
 | Connect when MG4CPlay opens, Open after the car starts | Connection | As before. |
 | Wi-Fi high performance | Connection | On (mg4.91). Turn off to compare freezes and skips. |
 | CarPlay size, Right-hand drive, Full screen | Display | As before. |

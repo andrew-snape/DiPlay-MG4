@@ -1,5 +1,12 @@
 # Unreleased (SWI165 fork)
 
+mg4.96 (test build). Not yet tried in the car: test plan E6, F12.
+
+- **Pair your iPhone inside the app.** On MG4, **Pair another** (or **Open Bluetooth** when no iPhone is paired) now searches for nearby phones in MG4CPlay, lists them, and pairs when you tap one, with the confirm-the-code step shown in the app. It saves the iPhone and connects. If the car's Bluetooth refuses any step, it opens the Android Bluetooth settings as before. Log lines start with `Pairing:` in the Settings changes section of the report.
+- **USB CarPlay removed on MG4.** The mg4.95 car log shows the iPhone could not be claimed (`Android could not claim USBMUX interface 1`) and then left the USB bus, which fits the car's own wired CarPlay holding it. That is outside the app's control. The USB button, the USB choice in Settings > Connection and the VPN prompt are gone, and a saved USB choice now means wireless. The USB code stays in the tree, unused.
+- **Stall diagnostics.** When audio or video stops arriving for a second or more, the `Receive:` line now ends with `stall=[...]`: hotspot packets in and out, signal, load and garbage collection time, at most once every 10 seconds. The mg4.95 drive showed two 2 to 5 second freezes where both streams stopped together and the car received almost nothing, which points to the Wi-Fi link or the iPhone, not the app. The app cannot raise the kernel's 512 KiB socket buffer cap.
+- **Music buffer 2000 ms.** New longest setting. It rides out a short Wi-Fi dropout and adds about a second of music delay. Calls, Siri and prompts are unaffected.
+
 New Settings screen on MG4: built and unit tested, not yet tried in the car (test plan section H).
 
 - **Two-pane Settings on MG4.** A category list on the left (Connection, Display, Sound, Car, Apps, General, Help, About) and the chosen category on the right, like iOS Settings. Short lists (CarPlay size, colour range and so on) open as a page of rows with a tick, not a dialog. Other head units keep the old settings page.

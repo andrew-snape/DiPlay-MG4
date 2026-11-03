@@ -499,4 +499,15 @@
     <string name="settings_footer_buffer">A longer buffer rides out Wi-Fi drop-outs but starts songs a little later. 750 ms is the default.</string>
     <string name="settings_footer_video_while_parked">Allows iPhone video only while the car reports P. If the gear can’t be read, video stays off.</string>
     <string name="settings_footer_battery">Car battery on iPhone sends the MG4’s charge and range to Apple Maps, so it can warn about a low charge and suggest chargers. The low charge warning applies straight away.</string>
+    <string name="pair_in_app_title">Pair your iPhone</string>
+    <string name="pair_in_app_help">On your iPhone, open Settings > Bluetooth and keep that screen open. Searching…</string>
+    <string name="pair_in_app_pick">Tap your iPhone to pair.</string>
+    <string name="no_iphone_found">No iPhone found. Keep Settings > Bluetooth open on your iPhone, then search again.</string>
+    <string name="search_again">Search again</string>
+    <string name="confirm_code_on_iphone">Check your iPhone and confirm the code.</string>
+    <string name="does_iphone_show_code">Does your iPhone show %1$s?</string>
+    <string name="pairing_failed">Pairing didn\'t finish. Tap your iPhone to try again.</string>
+    <string name="open_bluetooth_settings">Bluetooth settings</string>
+    <string name="pair">Pair</string>
+    <string name="music_buffer_2000">2000 ms (rides out Wi-Fi dropouts, adds delay)</string>
 </resources>

@@ -82,6 +82,10 @@ class DiPlayActivity : ComponentActivity() {
     private val bluetoothPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) choosePhone() else permissionHelp(getString(R.string.nearby_devices), getString(R.string.allow_nearby_devices_so_diplay_can_connect_to_your_paired))
     }
+    private var pairing: PhonePairing? = null
+    private val pairingPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) pairInApp() else openSystem(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+    }
     private val locationPermission = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         if (hasPreciseLocation()) return@registerForActivityResult reconnectForLocation()
         AirPlayPersistence.saveLocationReportingEnabled(this, false)
@@ -190,7 +194,7 @@ class DiPlayActivity : ComponentActivity() {
         }
     }
     override fun onPause() { handler.removeCallbacks(tick); super.onPause() }
-    override fun onDestroy() { reportDownload?.close(); reportDownload = null; super.onDestroy() }
+    override fun onDestroy() { pairing?.close(); pairing = null; reportDownload?.close(); reportDownload = null; super.onDestroy() }
 
     private fun render() {
         status = null; connectButton = null; disconnectButton = null; lastRunning = null
@@ -277,8 +281,6 @@ class DiPlayActivity : ComponentActivity() {
             gravity = Gravity.CENTER
             addView(logo, LinearLayout.LayoutParams(dp(96), dp(96)))
         }
-        right.addView(button(getString(R.string.connect_with_usb), false) { connect(false) }, matchButton())
-        right.addView(label(getString(R.string.plug_your_iphone_into_a_usb_data_port_allow_carplay_when_y), 14, MUTED).apply { gravity = Gravity.CENTER; setPadding(dp(8), dp(10), dp(8), dp(24)) })
         right.addView(button(getString(R.string.settings), false) { page = "settings"; render() }, matchButton())
         right.addView(label(getString(R.string.make_diplay_feel_right_for_your_car), 14, MUTED).apply { gravity = Gravity.CENTER; setPadding(0, dp(10), 0, dp(24)) })
         right.addView(label("${getString(R.string.home_public_preview)}${version()}", 12, MUTED).apply { letterSpacing = .08f })
@@ -343,7 +345,7 @@ class DiPlayActivity : ComponentActivity() {
             carPlaySizeControl(card)
             choice(card, getString(R.string.resolution), listOf(getString(R.string.resolution_native), getString(R.string.s_80_lighter_load), getString(R.string.s_60_lightest_load)), listOf(10, 8, 6).indexOf(AirPlayPersistence.loadDisplayScaleTenths(this)).coerceAtLeast(0)) { AirPlayPersistence.saveDisplayScaleTenths(this, listOf(10, 8, 6)[it]) }
             val bufferPresets = com.shilapi.xcertplay.media.MediaAudioBuffer.presets
-            choice(card, getString(R.string.music_buffer), listOf(getString(R.string.music_buffer_500), getString(R.string.music_buffer_750_default), getString(R.string.s_1000_ms_most_stable)),
+            choice(card, getString(R.string.music_buffer), listOf(getString(R.string.music_buffer_500), getString(R.string.music_buffer_750_default), getString(R.string.s_1000_ms_most_stable), getString(R.string.music_buffer_2000)),
                 bufferPresets.indexOf(AirPlayPersistence.loadMediaBufferMillis(this)).coerceAtLeast(0)) {
                 AirPlayPersistence.saveMediaBufferMillis(this, bufferPresets[it])
             }
@@ -646,10 +648,6 @@ class DiPlayActivity : ComponentActivity() {
         section(content, getString(R.string.s_3_connect)) { card ->
             card.addView(label(getString(R.string.return_from_car_settings_to_diplay_then_connect_accept_the), 16, MUTED))
             card.addView(button(getString(R.string.connect_phone), true) { connect(true) }, matchButton(12, 60))
-        }
-        section(content, getString(R.string.prefer_a_cable)) { card ->
-            card.addView(label(getString(R.string.use_a_usb_data_cable_and_the_car_s_usb_data_port_unlock_yo), 16, MUTED))
-            card.addView(button(getString(R.string.connect_with_usb), false) { connect(false) }, matchButton(12, 60))
         }
     }
 
@@ -1022,7 +1020,7 @@ class DiPlayActivity : ComponentActivity() {
         if (devices.isEmpty()) {
             AlertDialog.Builder(this).setTitle(getString(R.string.pair_your_iphone))
                 .setMessage(getString(R.string.on_your_iphone_open_settings_bluetooth_and_pair_with_the_c))
-                .setPositiveButton(getString(R.string.open_bluetooth)) { _, _ -> openSystem(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) }
+                .setPositiveButton(getString(R.string.open_bluetooth)) { _, _ -> pairOrOpenSettings() }
                 .setNegativeButton(getString(R.string.got_it), null).show(); return
         }
         AlertDialog.Builder(this).setTitle(getString(R.string.choose_your_iphone))
@@ -1035,8 +1033,40 @@ class DiPlayActivity : ComponentActivity() {
                 val start = pendingWireless; pendingWireless = false
                 render()
                 if (start) connect(true)
-            }.setNeutralButton(getString(R.string.pair_another)) { _, _ -> openSystem(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) }
+            }.setNeutralButton(getString(R.string.pair_another)) { _, _ -> pairOrOpenSettings() }
             .setNegativeButton(getString(R.string.cancel)) { _, _ -> pendingWireless = false }.show()
+    }
+
+    /** MG4 pairs inside the app; anything else (or a refusal from the car's Bluetooth) uses the system screen. */
+    private fun pairOrOpenSettings() {
+        if (Mg4FirmwareProfile.detect().isMg4 && Build.VERSION.SDK_INT <= 30) pairInApp()
+        else openSystem(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+    }
+
+    private fun pairInApp() {
+        val adapter = getSystemService(BluetoothManager::class.java)?.adapter
+        val hasLocation = checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        when {
+            adapter == null || !adapter.isEnabled || CarPlayBackgroundSession.hasSession() ->
+                openSystem(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+            !hasLocation -> pairingPermission.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            else -> {
+                pairing?.close()
+                pairing = PhonePairing(
+                    activity = this,
+                    adapter = adapter,
+                    log = { com.shilapi.xcertplay.settings.SettingsChangeLog.note(this, it) },
+                    openSystemSettings = { openSystem(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
+                    onBonded = { device ->
+                        DiPlayPreferences.savePhone(this, device.address, device.name ?: "iPhone")
+                        val start = pendingWireless; pendingWireless = false
+                        render()
+                        if (start) connect(true)
+                    },
+                ).also { it.start() }
+            }
+        }
     }
 
     private fun wirelessHelp() {
