@@ -19,6 +19,7 @@ Four fixes ported from upstream DiPlay ([shihabal3amri/DiPlay](https://github.co
 # MG4CPlay 0.2.9-mg4.94 (SWI165 fork), 2026-11-03
 
 - **USB CarPlay no longer crashes on a missing consent dialog.** If launching Android's VPN dialog still fails on this head unit, the app now logs `USB VPN: consent dialog launch failed` and shows that USB CarPlay could not start, instead of closing.
+- **Crash report in English.** The previous-crash dialog was in Turkish (from upstream); it now reads Previous crash report, Copy, Close.
 
 # MG4CPlay 0.2.9-mg4.93 (SWI165 fork), 2026-11-03
 
