@@ -33,11 +33,10 @@ class SettingsModelTest {
         assertTrue(SettingRow.HOTSPOT_DETAILS in hotspot)
         assertFalse(SettingRow.WIFI_DIRECT_BAND in hotspot)
 
-        val usb = rows(SettingsCategory.CONNECTION, env(connection = ConnectionChoice.USB))
-        assertFalse(SettingRow.HOTSPOT_DETAILS in usb)
-        assertFalse(SettingRow.WIFI_HIGH_PERFORMANCE in usb)
-        assertFalse(SettingRow.OPEN_CAR_WIFI in usb)
-        assertTrue(SettingRow.IPHONE in usb)
+        val direct = rows(SettingsCategory.CONNECTION, env(connection = ConnectionChoice.WIFI_DIRECT))
+        assertFalse(SettingRow.HOTSPOT_DETAILS in direct)
+        assertTrue(SettingRow.OPEN_CAR_WIFI in direct)
+        assertTrue(SettingRow.IPHONE in direct)
     }
 
     @Test fun wifiDirectBandOnlyOnAndroid9() {

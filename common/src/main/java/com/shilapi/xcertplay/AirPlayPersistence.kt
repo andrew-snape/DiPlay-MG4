@@ -320,8 +320,9 @@ object AirPlayPersistence {
             .apply()
     }
 
+    /** USB CarPlay was removed on MG4 in mg4.96 (the car's own wired CarPlay holds the iPhone), so a saved USB choice is ignored there. */
     fun loadWirelessEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        Mg4FirmwareProfile.detect().isMg4 || context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getBoolean(KEY_WIRELESS_ENABLED, true)
 
     fun saveWirelessEnabled(context: Context, enabled: Boolean) {

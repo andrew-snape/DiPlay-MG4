@@ -327,7 +327,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                     }
                 }
                 ConnectionChoice.WIFI_DIRECT -> add(R.string.hotspot_mode_p2p_desc)
-                ConnectionChoice.USB -> add(R.string.use_a_usb_data_cable_and_the_car_s_usb_data_port_unlock_yo)
             }
             "automatic" -> add(R.string.settings_footer_automatic)
             "wifi" -> {
@@ -568,7 +567,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
 
     private fun picker(row: SettingRow): Picker? = when (row) {
         SettingRow.CONNECTION_TYPE -> Picker(rowTitle(row),
-            listOf(activity.getString(R.string.settings_car_hotspot), activity.getString(R.string.wifi_direct), activity.getString(R.string.settings_usb_cable)),
+            listOf(activity.getString(R.string.settings_car_hotspot), activity.getString(R.string.wifi_direct)),
             connectionChoice().ordinal) { index ->
             when (ConnectionChoice.entries[index]) {
                 ConnectionChoice.CAR_HOTSPOT -> if (hotspotSaved()) useCarHotspot() else host.editHotspotDetails { useCarHotspot(); host.render() }
@@ -576,7 +575,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                     AirPlayPersistence.saveWirelessHotspotMode(activity, WirelessHotspotMode.WIFI_P2P)
                     AirPlayPersistence.saveWirelessEnabled(activity, true)
                 }
-                ConnectionChoice.USB -> AirPlayPersistence.saveWirelessEnabled(activity, false)
             }
         }
         SettingRow.WIFI_DIRECT_BAND -> {
@@ -630,7 +628,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         AirPlayPersistence.loadManualHotspotSsid(activity), AirPlayPersistence.loadManualHotspotPassphrase(activity)) == null
 
     private fun connectionChoice() = when {
-        !AirPlayPersistence.loadWirelessEnabled(activity) -> ConnectionChoice.USB
         AirPlayPersistence.loadWirelessHotspotMode(activity) == WirelessHotspotMode.MANUAL -> ConnectionChoice.CAR_HOTSPOT
         else -> ConnectionChoice.WIFI_DIRECT
     }

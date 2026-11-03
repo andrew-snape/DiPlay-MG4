@@ -84,7 +84,7 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     CREDITS(RowKind.INFO),
 }
 
-internal enum class ConnectionChoice { CAR_HOTSPOT, WIFI_DIRECT, USB }
+internal enum class ConnectionChoice { CAR_HOTSPOT, WIFI_DIRECT }
 
 /** A rounded group of rows. [key] picks its heading and footer. A group may have no rows. */
 internal data class SettingsGroup(val key: String, val rows: List<SettingRow>)
@@ -111,7 +111,7 @@ internal object SettingsLayout {
                 // The band choice only reaches the Wi-Fi Direct group on Android 9 and older.
                 SettingRow.WIFI_DIRECT_BAND.takeIf { env.connection == ConnectionChoice.WIFI_DIRECT && env.sdkInt < 29 },
                 SettingRow.OPEN_CAR_WIFI,
-            )).takeIf { env.connection != ConnectionChoice.USB },
+            )),
         )
         SettingsCategory.DISPLAY -> listOf(
             SettingsGroup("screen", listOf(SettingRow.CARPLAY_SIZE, SettingRow.RIGHT_HAND_DRIVE, SettingRow.FULL_SCREEN)),
