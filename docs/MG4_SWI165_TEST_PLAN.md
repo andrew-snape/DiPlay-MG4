@@ -53,7 +53,7 @@ end, wait a few seconds, then copy it off.
 |---|---|---|---|
 | D1 | Voice button on the wheel: hold it, then a short press (mg4.93) | Holding opens Siri while still held; letting go does nothing more. A short press opens Siri on release. Note whether the car's own voice assistant also starts | `Wheel raw key: code=287 down=true long=true -> Siri sent=true`; for a short press, `down=false long=false -> Siri sent=true` |
 | D2 | "What's the weather in Geelong", three times per Microphone (test) option | Siri hears it correctly | `Microphone speechrecognition: started source=...` |
-| D2a | USB CarPlay: record a Voice Memo and dictate a message (upstream #1148) | Both record your voice, not silence | `Microphone speechrecognition: started ... codec=LPCM rate=48000 ... frameMs=10` (or another rate with its frameMs) |
+| D2a | n/a since mg4.96 (USB removed). Was USB CarPlay: record a Voice Memo and dictate a message (upstream #1148) | Both record your voice, not silence | `Microphone speechrecognition: started ... codec=LPCM rate=48000 ... frameMs=10` (or another rate with its frameMs) |
 | D2b | mg4.93: hold the voice button, speak a normal sentence at normal volume, once per Microphone (test) option | Siri understands; note which option works best | `Microphone speechrecognition stats ... peakDb= rmsDb= clipped=`: speech should peak around -20 to -6 dB with clipped=0 |
 | D3 | Start an Apple Maps route; wait for a spoken prompt | Prompt is heard; music lowers, then comes back | `audioType=default` or `alert` stream, and whether it played (see risk R1) |
 | D4 | Dashboard (Directions on the dashboard on) | Next turn, distance, street on the cluster | `Cluster nav: guidance started`, `Cluster nav: apple=...` |
@@ -73,6 +73,7 @@ end, wait a few seconds, then copy it off.
 | E3 | Turn the car off and on again, open DiPlay | CarPlay returns; A1 to A3 pass again | |
 | E4 | Calls over CarPlay only off, make a call | Note where it goes (CarPlay or Bluetooth) | `mode=` and stream lines |
 | E5 | CarPlay audio over Wi-Fi off (Bluetooth Music mode), play music | Plays over the car's Bluetooth Music | `car source: ... switched`, `source=5 (bluetooth)` |
+| E6 | mg4.96: Settings > Connection > iPhone > **Pair another**, with the iPhone's Settings > Bluetooth open | The iPhone appears within 20 s; tapping it shows a code in MG4CPlay and on the iPhone; **Pair** saves it and CarPlay connects without leaving the app. If it falls back to Android settings, note which step | `Pairing: discovery started=`, `found phones=`, `bond requested=`, `pairing request variant=2 handled=true`, `bond result=bonded` (Settings changes section) |
 
 ## F. Wi-Fi stress
 
@@ -89,6 +90,7 @@ end, wait a few seconds, then copy it off.
 | F9 | Repeat F8 with the car Wi-Fi **on** (not joined to a network), for comparison | Note whether the 160 s freezes return | Same lines as F8; note the times of each freeze |
 | F10 | mg4.92: 10 minutes or more of music with the map showing, car hotspot, **Wi-Fi high performance** on | Note whether the hiccups line up with scans | `Wi-Fi scan done ... sinceLast=` times against `Audio loss` lines with `udpRcvbufErrors=+` and `interArrivalMaxMs=` over 1000. mg4.91 (2026-11-03): the lock did not stop the ~160 s hiccups |
 | F11 | HEVC on, **Colour range (test)** set to **Limited**; compare with H.264 | HEVC no longer washed out | `Video: decoder=...HEVC ... colourRangeHint=limited` and the `output format ... color=` line (H.264 logs `86/1/2`, HEVC `1/1/2` with the default). mg4.92 (2026-11-03): still washed out with Limited |
+| F12 | mg4.96: drive 15 minutes with an Apple Maps route and music; note the time of each freeze. Optionally set **Music buffer** to 2000 ms | Each freeze has a `stall=[...]` on a `Receive:` line | Whether `ap0RxPackets` stops while `ap0TxPackets` keeps rising, the `wireless=` signal, `load=` and `gcBlocking=` |
 
 ## G. Getting the report
 
@@ -96,7 +98,7 @@ end, wait a few seconds, then copy it off.
 |---|---|---|---|
 | G1 | mg4.88: with wireless CarPlay connected, open MG4CPlay > Settings > Diagnostics, tap **Download to iPhone**, scan the QR code with the iPhone camera and open the link | Safari downloads `MG4CPlay-<time>.txt`; the dialog says it was sent; the file opens in Files and can be AirDropped to the Mac | `Report download served bytes= ms=` |
 | G2 | Open the same link again, or wait 5 minutes without scanning | The link no longer loads; after 5 minutes the dialog says the link expired | `Report download expired` |
-| G3 | Switch to USB CarPlay (or disconnect) and open Diagnostics | **Download to iPhone** is greyed out with a short explanation | n/a |
+| G3 | Disconnect CarPlay and open Diagnostics | **Download to iPhone** is greyed out with a short explanation | n/a |
 
 ## H. Settings screen
 
