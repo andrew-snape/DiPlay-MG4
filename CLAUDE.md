@@ -14,8 +14,9 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
   diagnostics), `AirPlayPersistence` (settings), `Mg4FirmwareProfile` (per-firmware
   defaults).
 - `mobile/`: the APK module; holds `versionName`.
-- `vendor/MG4ABRP/EVHardware`: git submodule with the MG4 car APIs (battery, speed, gear,
-  charging). Don't edit it here; its property accessors are private.
+- `shared/.../vehicle/`: MG4 car reads, SWI165 only (`Mg4Firmware` gate). Read-only: `SaicBinder`
+  (SAIC hub and services), `CarProperties` (CarPropertyManager), `Mg4CarReader` (sanity bounds).
+  No vendor library: battery, speed, gear and charging are read here.
 
 ## Building and testing
 
@@ -26,7 +27,7 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
 - The repo sits in iCloud-synced `~/Documents`. iCloud makes `name 2.kt` / `name 2.xml`
   copies, which break the build with duplicate classes or resources. Move untracked
   `* 2.*` files out of the tree (don't commit them), and clean before building:
-  `./gradlew --stop && rm -rf build */build vendor/MG4ABRP/EVHardware/lib/build .gradle`
+  `./gradlew --stop && rm -rf build */build .gradle`
 
 ## Conventions
 

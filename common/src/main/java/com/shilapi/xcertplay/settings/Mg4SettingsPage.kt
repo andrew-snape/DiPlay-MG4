@@ -23,7 +23,6 @@ import com.shilapi.xcertplay.orchestration.ManualHotspotBand
 import com.shilapi.xcertplay.orchestration.ManualHotspotValidation
 import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
 import com.shilapi.xcertplay.transport.EvChargingConnectors
-import com.shilapi.xcertplay.vehicle.AbrpSettings
 import com.shilapi.xcertplay.vehicle.Mg4Vehicle
 import com.shilapi.xcertplay.vehicle.VehicleSettings
 import com.shilapi.xcertplay.settings.SettingsUi.Companion as Colors
@@ -49,8 +48,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         fun openCarWifiSettings()
         fun editNavigationChannel(onSaved: () -> Unit)
         fun setLocationReporting(enabled: Boolean)
-        fun editAbrpAccount()
-        fun abrpTelemetryChanged(enabled: Boolean)
         fun checkForUpdates()
         fun openAppPermissions()
         fun openBluetoothSettings()
@@ -211,7 +208,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingsCategory.DISPLAY -> R.string.settings_category_display
         SettingsCategory.SOUND -> R.string.settings_category_sound
         SettingsCategory.CAR -> R.string.settings_category_car
-        SettingsCategory.APPS -> R.string.settings_category_apps
         SettingsCategory.GENERAL -> R.string.settings_category_general
         SettingsCategory.HELP -> R.string.settings_category_help
         SettingsCategory.ABOUT -> R.string.about
@@ -222,7 +218,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingsCategory.DISPLAY -> R.drawable.ic_dp_display
         SettingsCategory.SOUND -> R.drawable.ic_dp_sound
         SettingsCategory.CAR -> R.drawable.ic_dp_car
-        SettingsCategory.APPS -> R.drawable.ic_dp_apps
         SettingsCategory.GENERAL -> R.drawable.ic_dp_general
         SettingsCategory.HELP -> R.drawable.ic_dp_diagnostics
         SettingsCategory.ABOUT -> R.drawable.ic_dp_about
@@ -234,7 +229,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingsCategory.DISPLAY -> 0xFF5E5CE6.toInt()
         SettingsCategory.SOUND -> 0xFFFF375F.toInt()
         SettingsCategory.CAR -> 0xFF30D158.toInt()
-        SettingsCategory.APPS -> 0xFFFF9F0A.toInt()
         SettingsCategory.GENERAL -> 0xFF8E8E93.toInt()
         SettingsCategory.HELP -> 0xFF40C8E0.toInt()
         SettingsCategory.ABOUT -> 0xFF8E8E93.toInt()
@@ -306,7 +300,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         "location" -> R.string.settings_header_driving.takeIf { env.generation != Mg4FirmwareProfile.Generation.SWI165 }
         "appearance" -> R.string.settings_header_appearance
         "battery" -> R.string.settings_header_battery
-        "abrp" -> R.string.settings_header_abrp
         "system" -> R.string.settings_header_permissions
         "diagnostics" -> R.string.diagnostics
         "help" -> R.string.settings_header_help
@@ -347,7 +340,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
             "parked" -> add(R.string.settings_footer_video_while_parked)
             "appearance" -> add(R.string.mg4_sunset_dark_mode_description)
             "battery" -> add(R.string.settings_footer_battery)
-            "abrp" -> add(R.string.abrp_live_telemetry_description)
             "system" -> add(R.string.nearby_devices_connects_your_iphone_microphone_enables_sir)
             "diagnostics" -> {
                 val hint = ui.groupFooter(activity.getString(R.string.download_to_iphone_unavailable))
@@ -397,8 +389,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.CAR_BATTERY -> R.string.settings_car_battery
         SettingRow.CHARGING_CONNECTORS -> R.string.charging_connectors
         SettingRow.LOW_CHARGE_WARNING -> R.string.low_charge_warning
-        SettingRow.ABRP_TELEMETRY -> R.string.abrp_live_telemetry
-        SettingRow.ABRP_ACCOUNT -> R.string.settings_abrp_account
         SettingRow.LANGUAGE -> R.string.language_section_title
         SettingRow.SOFTWARE_UPDATE -> R.string.settings_software_update
         SettingRow.APP_PERMISSIONS -> R.string.app_permissions
@@ -491,21 +481,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 SettingRow.CAR_BATTERY -> switch(VehicleSettings.batteryToIphone(activity)) {
                     VehicleSettings.setBatteryToIphone(activity, it)
                     if (it) Mg4Vehicle.start(activity.applicationContext)
-                }
-                SettingRow.ABRP_TELEMETRY -> {
-                    val (built, toggle) = ui.switchRow(title, AbrpSettings.enabled(activity)) { on ->
-                        changed(row, if (on) "on" else "off")
-                        host.abrpTelemetryChanged(on)
-                    }
-                    // Without an account the switch stays off; the account dialog turns it on when saved.
-                    if (!AbrpSettings.configured(activity)) toggle.setOnCheckedChangeListener { view, on ->
-                        if (on) { view.isChecked = false; host.editAbrpAccount() }
-                    }
-                    keep(row, built)
-                }
-                SettingRow.ABRP_ACCOUNT -> {
-                    val ready = AbrpSettings.configured(activity)
-                    link(activity.getString(if (ready) R.string.settings_set_up else R.string.settings_not_set), warning = !ready) { host.editAbrpAccount() }
                 }
                 SettingRow.LANGUAGE -> link(AppLocale.displayName(activity, AppLocale.preference(activity))) { AppLocale.showPicker(activity) }
                 SettingRow.SOFTWARE_UPDATE -> link(host.version()) { host.checkForUpdates() }

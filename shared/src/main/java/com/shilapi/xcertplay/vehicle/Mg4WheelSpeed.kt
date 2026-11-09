@@ -2,8 +2,6 @@ package com.shilapi.xcertplay.vehicle
 
 import android.os.SystemClock
 import android.util.Log
-import com.evsuite.hardware.EVHardware
-import com.evsuite.hardware.saic.SaicVehicleCondition
 import com.shilapi.xcertplay.transport.VehicleGear
 import com.shilapi.xcertplay.transport.VehicleSpeedReading
 import com.shilapi.xcertplay.transport.VehicleSpeedSample
@@ -14,14 +12,15 @@ import java.util.concurrent.TimeUnit
 
 /**
  * MG4 speed and gear, read directly from the car (no adb). Speed is the AOSP vehicle-speed property
- * that EVHardware already scales per firmware; gear is the vehiclecondition service:
+ * read from the car property (m/s on SWI165); gear is the vehiclecondition service:
  * 1 P, 2 R, 3 N, 4 D on SWI165 (car test 2026-11-03); an unknown positive value is sent as D.
  */
 internal object Mg4WheelSpeed {
     const val GEAR_PARK = 1
 
-    fun metersPerSecond(kmh: Float?): Double? =
-        kmh?.toDouble()?.takeIf { it.isFinite() && it in 0.0..300.0 }?.div(3.6)
+    /** Speed in m/s, or null when missing or impossible. */
+    fun validSpeed(metersPerSecond: Float?): Double? =
+        metersPerSecond?.toDouble()?.takeIf { it.isFinite() && it in 0.0..90.0 }
 
     // Car test 2026-11-03 (mg4.92), moving the selector P, R, P, R, N, D, P: 1 P, 2 R, 3 N, 4 D.
     fun gear(raw: Int?): VehicleGear? = when (raw) {
@@ -96,14 +95,14 @@ internal object Mg4WheelSpeedSource : VehicleSpeedSource {
 
     private fun pollSafely() {
         if (reads++ % GEAR_EVERY_READS == 0) {
-            val raw = SaicVehicleCondition.gearOrNull()
+            val raw = Mg4CarSignals.rawGear()
             Mg4WheelSpeed.gear(raw)?.let { next ->
                 val changed = synchronized(this) { (rawGear != raw).also { gear = next; rawGear = raw } }
                 if (changed) log("gear raw=$raw sent=$next")
             }
         }
         val before = SystemClock.elapsedRealtime()
-        val speed = Mg4WheelSpeed.metersPerSecond(EVHardware.getVehicleSpeedKmh()) ?: return
+        val speed = Mg4WheelSpeed.validSpeed(Mg4CarSignals.speedMetersPerSecond()) ?: return
         val sample = VehicleSpeedSample((before + SystemClock.elapsedRealtime()) / 2, speed)
         synchronized(this) {
             if (samples.size == MAX_SAMPLES) samples.removeAt(0)

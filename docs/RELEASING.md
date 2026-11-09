@@ -17,7 +17,6 @@ published release. Written for the MG4 Comfort / SWI69 / Android 9 target.
 | `common/` | Activities and UI — `DiPlayActivity`, `CarPlayHostActivity`, `OtaUpdater`. |
 | `shared/` | The CarPlay stack: AirPlay, iAP2, media, orchestration, networking. |
 | `automotive/` | Android Automotive variant. Not the MG4 target. |
-| `vendor/MG4ABRP/` | Git submodule. Provides `:evhardware` (`SaicMediaPlayer`, vehicle telemetry). |
 | `tools/` | Platform signing keys: `platform.pk8`, `platform.x509.pem`, `platform.key`, `platform.p12`. |
 | `.private/` | Local-only inputs: `runtime-assets/offline-mfi/` (CarPlay identity) and `prebuilt-jni/`. Never committed. |
 
@@ -31,8 +30,6 @@ Upstream used two remotes (`fatihdonmezdev/DiPlay-MG4` and the older public mirr
 # Android SDK location
 printf 'sdk.dir=%s/Android/Sdk\n' "$HOME" > local.properties
 
-# Submodule (provides :evhardware)
-git submodule update --init --recursive
 ```
 
 Requirements: JDK 17+, Android SDK with build-tools (36.0.0 is what these notes

@@ -62,6 +62,7 @@ end, wait a few seconds, then copy it off.
 | D6 | Select P, R, N and D in turn while parked | Done 2026-11-03: 1 P, 2 R, 3 N, 4 D. mg4.93 sends R and N as such | `MG4 gear raw=2 sent=REVERSE` etc. |
 | D7 | Plug in to charge with CarPlay running, then unplug | Apple Maps shows charging while charging, not once it stops | `chargeStatus=` and `charging=` on the MG4 battery line |
 | D8 | Switch the headlights on and off (or drive into dusk with auto headlights) | CarPlay turns dark with the headlights and light again without them | `Day/night probe: SYSTEM.screen_day_night_mode=1`, `Dark mode on (car)`, `AirPlay dark mode=dark eventChannelReady=true` |
+| D10 | Settings > Car > MG4 vehicle > **Car data** with CarPlay running (no vendor library) | Firmware SWI165; hub connected; properties ready; charge, range, gear and speed match the car and cluster; each value shows where it came from | `MG4 car: hub=connected properties=ready`, `MG4 car: first reading soc=…`, `MG4 gear raw=` |
 | D9 | Turn on **MG4 vehicle > Video while parked**, park in P, play a video in a supported iPhone app via CarPlay; then select D | Video plays on the car screen in P; the player closes on leaving P | `video in car allowed=true sent=true` in P, then `allowed=false` on leaving P. Player details only go to logcat, so note what you see |
 
 ## E. Bluetooth fall-backs and recovery

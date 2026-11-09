@@ -1,5 +1,13 @@
 # Unreleased (SWI165 fork)
 
+Vendor library and ABRP removed. Not yet tried in the car: test plan D5, D6, D7, D9, D10.
+
+- **Vendor library removed.** The `MG4ABRP` submodule (`EVHardware`) is gone, so CI no longer fails cloning it. Car reads are our own read-only code in `shared/.../vehicle/`: the SAIC hub and its `vehiclecharging` and `vehiclecondition` services, and the car's CarPropertyManager.
+- **SWI165 only for car data.** Car reads (battery, range, charging, gear, speed, park) are off on SWI68, SWI69, SWI131, SWI132 and SWI133. SWI69 and the others lose car data; nothing else changes on them.
+- **ABRP removed.** The live telemetry uploader, its settings and its account are gone. A saved ABRP account is deleted on first start.
+- **Car data page.** Settings > Car > MG4 vehicle > **Car data** shows the firmware, the hub and property state, and each car value with the source that answered.
+- **Apps category removed** from the two-pane Settings, since ABRP was its only row.
+
 mg4.96 (test build). Not yet tried in the car: test plan E6, F12.
 
 - **Pair your iPhone inside the app.** On MG4, **Pair another** (or **Open Bluetooth** when no iPhone is paired) now searches for nearby phones in MG4CPlay, lists them, and pairs when you tap one, with the confirm-the-code step shown in the app. It saves the iPhone and connects. If the car's Bluetooth refuses any step, it opens the Android Bluetooth settings as before. Log lines start with `Pairing:` in the Settings changes section of the report.

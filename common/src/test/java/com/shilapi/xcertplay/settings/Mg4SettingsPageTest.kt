@@ -36,8 +36,6 @@ class Mg4SettingsPageTest {
         override fun openCarWifiSettings() {}
         override fun editNavigationChannel(onSaved: () -> Unit) {}
         override fun setLocationReporting(enabled: Boolean) {}
-        override fun editAbrpAccount() {}
-        override fun abrpTelemetryChanged(enabled: Boolean) {}
         override fun checkForUpdates() {}
         override fun openAppPermissions() {}
         override fun openBluetoothSettings() {}

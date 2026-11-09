@@ -449,30 +449,7 @@ class DiPlayActivity : ComponentActivity() {
                 }, lowCharge.indexOf(VehicleSettings.lowChargePercent(this)).coerceAtLeast(0), reconnects = false) {
                 VehicleSettings.setLowChargePercent(this, lowCharge[it])
             }
-            toggle(card, getString(R.string.abrp_live_telemetry),
-                getString(R.string.abrp_live_telemetry_description),
-                com.shilapi.xcertplay.vehicle.AbrpSettings.enabled(this)) { enabled ->
-                if (enabled && !com.shilapi.xcertplay.vehicle.AbrpSettings.configured(this)) {
-                    showAbrpCredentialsDialog()
-                } else {
-                    com.shilapi.xcertplay.vehicle.AbrpSettings.setEnabled(this, enabled)
-                    if (enabled && CarPlayBackgroundSession.hasSession()) {
-                        com.shilapi.xcertplay.vehicle.AbrpUploader.start(this)
-                    } else if (!enabled) {
-                        com.shilapi.xcertplay.vehicle.AbrpUploader.stop()
-                    }
-                }
-            }
-            card.addView(button(
-                getString(
-                    if (com.shilapi.xcertplay.vehicle.AbrpSettings.configured(this)) {
-                        R.string.abrp_credentials_configured
-                    } else {
-                        R.string.abrp_credentials_not_configured
-                    },
-                ),
-                false,
-            ) { showAbrpCredentialsDialog() }, matchButton(10, 56))
+            card.addView(button(getString(R.string.mg4_car_data), false) { showCarData() }, matchButton(10, 56))
             toggle(card, getString(R.string.mg4_video_while_parked),
                 getString(R.string.mg4_video_while_parked_description),
                 VehicleSettings.videoWhileParked(this)) {
@@ -834,72 +811,21 @@ class DiPlayActivity : ComponentActivity() {
         dialog.show()
     }
 
-    private fun showAbrpCredentialsDialog() {
-        val fields = column().apply { setPadding(dp(24), dp(12), dp(24), dp(12)) }
-        fields.addView(label(getString(R.string.abrp_credentials_description), 15, MUTED))
-        val apiKey = EditText(this).apply {
-            hint = getString(R.string.abrp_api_key)
-            setText(com.shilapi.xcertplay.vehicle.AbrpSettings.apiKey(this@DiPlayActivity))
-            setSingleLine()
-        }
-        val token = EditText(this).apply {
-            hint = getString(R.string.abrp_user_token)
-            setText(com.shilapi.xcertplay.vehicle.AbrpSettings.token(this@DiPlayActivity))
-            setSingleLine()
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
-        }
-        fields.addView(apiKey)
-        fields.addView(token)
-        val error = label("", 14, WARNING)
-        fields.addView(button(getString(R.string.abrp_paste_token), false) {
-            val clipboard = getSystemService(ClipboardManager::class.java)
-            val pasted = clipboard.primaryClip
-                ?.takeIf { it.itemCount > 0 }
-                ?.getItemAt(0)
-                ?.coerceToText(this)
-                ?.toString()
-                ?.trim()
-                .orEmpty()
-            if (pasted.isEmpty()) {
-                error.text = getString(R.string.abrp_clipboard_empty)
-            } else {
-                token.setText(pasted)
-                token.setSelection(token.text.length)
-                error.text = ""
-            }
-        }, matchButton(8, 52))
-        fields.addView(CheckBox(this).apply {
-            text = getString(R.string.show_password)
-            setOnCheckedChangeListener { _, checked ->
-                token.transformationMethod = if (checked) null else android.text.method.PasswordTransformationMethod.getInstance()
-                token.setSelection(token.text.length)
-            }
-        })
-        fields.addView(error)
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(getString(R.string.abrp_credentials))
-            .setView(ScrollView(this).apply { addView(fields) })
-            .setPositiveButton(getString(R.string.save), null)
-            .setNegativeButton(getString(R.string.cancel), null)
-            .create()
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val keyValue = apiKey.text.toString().trim()
-                val tokenValue = token.text.toString().trim()
-                if (keyValue.isEmpty() || tokenValue.isEmpty()) {
-                    error.text = getString(R.string.abrp_credentials_required)
-                } else {
-                    com.shilapi.xcertplay.vehicle.AbrpSettings.save(this, keyValue, tokenValue, true)
-                    if (CarPlayBackgroundSession.hasSession()) {
-                        com.shilapi.xcertplay.vehicle.AbrpUploader.stop()
-                        com.shilapi.xcertplay.vehicle.AbrpUploader.start(this)
-                    }
-                    dialog.dismiss()
-                    render()
-                }
-            }
-        }
-        dialog.show()
+    /** The Car data page: each car signal read now, with the source that answered. */
+    private fun showCarData() {
+        val content = column().apply { setPadding(dp(24), dp(12), dp(24), dp(12)) }
+        val body = label(getString(R.string.mg4_car_data_loading), 15, MUTED)
+        content.addView(body)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.mg4_car_data))
+            .setView(ScrollView(this).apply { addView(content) })
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+        // Binder and car-property calls: keep them off the UI thread.
+        Thread {
+            val report = com.shilapi.xcertplay.vehicle.VehicleIntegration.carDataReport(applicationContext)
+            runOnUiThread { body.text = report }
+        }.apply { isDaemon = true }.start()
     }
 
     private fun hasPreciseLocation() =
@@ -1473,12 +1399,6 @@ class DiPlayActivity : ComponentActivity() {
             } else {
                 reconnectForLocation()
             }
-        }
-        override fun editAbrpAccount() = showAbrpCredentialsDialog()
-        override fun abrpTelemetryChanged(enabled: Boolean) {
-            com.shilapi.xcertplay.vehicle.AbrpSettings.setEnabled(this@DiPlayActivity, enabled)
-            if (enabled && CarPlayBackgroundSession.hasSession()) com.shilapi.xcertplay.vehicle.AbrpUploader.start(this@DiPlayActivity)
-            else if (!enabled) com.shilapi.xcertplay.vehicle.AbrpUploader.stop()
         }
         override fun checkForUpdates() = checkForOta()
         override fun openAppPermissions() = openSystem(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))

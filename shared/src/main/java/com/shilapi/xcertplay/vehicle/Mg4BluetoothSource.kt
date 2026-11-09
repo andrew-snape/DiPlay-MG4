@@ -6,13 +6,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
-import com.evsuite.hardware.saic.SaicAidl
+
 
 /**
  * Moves the car's audio source to Bluetooth Music, as the SAIC launcher's music card does.
  *
- * Upstream called `SaicMediaPlayer.connectBluetooth` / `switchToBluetooth`, which were never
- * published in the MG4ABRP submodule, so the public tree did not compile.
+ * (Upstream called a vendor-library method that was never published, so the old tree did not compile.)
  *
  * Read from the SWI165 MediaService APK (`MediaService_eh32_aus_local_P`):
  * `IBtMusicBinderInterface` has transactions 1-14 only, so the SWI68 launcher's
@@ -22,7 +21,7 @@ import com.evsuite.hardware.saic.SaicAidl
  * Bluetooth source) and starts A2DP rendering, then tells the phone to play. It returns false
  * when AVRCP is not connected, Android Auto is connected, or Bluetooth has transiently lost focus.
  *
- * The bind is done here rather than through EVHardware's `SaicService` so its outcome can be
+ * The bind is done here so its outcome can be
  * reported in DiPlay's own diagnostic log: on SWI165 the first build waited three seconds and
  * only saw "never answered", with the reason lost in logcat.
  *
@@ -116,13 +115,13 @@ object Mg4BluetoothSource {
      *
      * Source codes as measured by MG4Control on the car and used by the SWI68 launcher
      * (same media SDK as SWI165): 0 none, 1-4 radio/DAB, 5 bluetooth, 6 usb, 14 online,
-     * 0x12 usb-video, 50 carplay, 70 android-auto. EVHardware's own table has 6 and 7 the
+     * 0x12 usb-video, 50 carplay, 70 android-auto. The vendor library's table had 6 and 7 the
      * other way round and no 14, so it is not used here. Player codes from the SWI68
      * launcher: 2 usb, 3 online, 4 bluetooth.
      */
     fun currentSourceDescription(): String {
         val status = statusBinder?.takeIf { it.isBinderAlive }
-        val source = SaicAidl.callInt(status, DESC_STATUS, TX_CURRENT_SOURCE)?.let { code ->
+        val source = SaicBinder.callInt(status, DESC_STATUS, TX_CURRENT_SOURCE)?.let { code ->
             val name = when (code) {
                 0 -> "none"
                 in 1..4 -> "radio/DAB"
@@ -136,7 +135,7 @@ object Mg4BluetoothSource {
             }
             "$code ($name)"
         } ?: "unknown"
-        val player = SaicAidl.callInt(status, DESC_STATUS, TX_CURRENT_PLAYER)?.let { code ->
+        val player = SaicBinder.callInt(status, DESC_STATUS, TX_CURRENT_PLAYER)?.let { code ->
             val name = when (code) {
                 2 -> "usb"
                 3 -> "online"
@@ -152,7 +151,7 @@ object Mg4BluetoothSource {
     fun switchToBluetooth(): Result {
         val service = binder?.takeIf { it.isBinderAlive }
             ?: return if (bindRequested && !bindAccepted) Result.BIND_REFUSED else Result.NOT_CONNECTED
-        return when (SaicAidl.callBoolean(service, DESC_BT, TX_BT_PLAY)) {
+        return when (SaicBinder.callBoolean(service, DESC_BT, TX_BT_PLAY)) {
             true -> Result.SWITCHED
             false -> Result.PLAY_REJECTED
             null -> Result.PLAY_FAILED
@@ -162,8 +161,8 @@ object Mg4BluetoothSource {
     /** Bluetooth music state from the media service, e.g. `bt=2 play=3`, for the diagnostic log. */
     fun bluetoothStateDescription(): String {
         val service = binder?.takeIf { it.isBinderAlive } ?: return "bt service not connected"
-        val bt = SaicAidl.callInt(service, DESC_BT, TX_BT_STATE)?.toString() ?: "?"
-        val play = SaicAidl.callInt(service, DESC_BT, TX_BT_PLAY_STATE)?.toString() ?: "?"
+        val bt = SaicBinder.callInt(service, DESC_BT, TX_BT_STATE)?.toString() ?: "?"
+        val play = SaicBinder.callInt(service, DESC_BT, TX_BT_PLAY_STATE)?.toString() ?: "?"
         return "bt state=$bt play state=$play"
     }
 }

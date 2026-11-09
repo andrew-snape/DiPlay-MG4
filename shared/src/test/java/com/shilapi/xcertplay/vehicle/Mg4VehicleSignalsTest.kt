@@ -10,16 +10,16 @@ import org.junit.Test
 class Mg4VehicleSignalsTest {
     @Test
     fun readsSpeedInMetersPerSecond() {
-        assertEquals(0.0, Mg4WheelSpeed.metersPerSecond(0f)!!, 1e-9)
-        assertEquals(10.0, Mg4WheelSpeed.metersPerSecond(36f)!!, 1e-6)
+        assertEquals(0.0, Mg4WheelSpeed.validSpeed(0f)!!, 1e-9)
+        assertEquals(10.0, Mg4WheelSpeed.validSpeed(10f)!!, 1e-6)
     }
 
     @Test
     fun rejectsMissingOrImpossibleSpeed() {
-        assertNull(Mg4WheelSpeed.metersPerSecond(null))
-        assertNull(Mg4WheelSpeed.metersPerSecond(-1f))
-        assertNull(Mg4WheelSpeed.metersPerSecond(Float.NaN))
-        assertNull(Mg4WheelSpeed.metersPerSecond(301f))
+        assertNull(Mg4WheelSpeed.validSpeed(null))
+        assertNull(Mg4WheelSpeed.validSpeed(-1f))
+        assertNull(Mg4WheelSpeed.validSpeed(Float.NaN))
+        assertNull(Mg4WheelSpeed.validSpeed(91f))
     }
 
     @Test
