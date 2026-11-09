@@ -1,8 +1,16 @@
 # Unreleased (SWI165 fork)
 
-mg4.97 (test build). Not yet tried in the car: test plan D2c, D2d.
+mg4.97 (test build). Siri microphone fix. Not yet tried in the car: test plan D2c, D2d.
 
 - **Siri microphone fix.** The microphone's RTP clock always counted at 48 kHz, so when the iPhone asks for Opus at 24 kHz (usual for Siri) or 16 kHz (usual for calls), each 20 ms packet claimed to be 40 ms or 60 ms long and the iPhone heard speech full of gaps. The microphone now counts at the negotiated rate (the same fix upstream #644 made for playback). The 2026-11-04 report showed the microphone sending clean audio at a good level on all three sources, and Siri still failing on each. Calls get the same fix; check callers still hear you clearly. The log now shows `airplay audio format ... audioFormat=0x... rtpClock=` and the microphone line ends with `rtpClock= tsStep=`.
+
+Vendor library and ABRP removed. Not yet tried in the car: test plan D5, D6, D7, D9, D10.
+
+- **Vendor library removed.** The `MG4ABRP` submodule (`EVHardware`) is gone, so CI no longer fails cloning it. Car reads are our own read-only code in `shared/.../vehicle/`: the SAIC hub and its `vehiclecharging` and `vehiclecondition` services, and the car's CarPropertyManager.
+- **SWI165 only for car data.** Car reads (battery, range, charging, gear, speed, park) are off on SWI68, SWI69, SWI131, SWI132 and SWI133. SWI69 and the others lose car data; nothing else changes on them.
+- **ABRP removed.** The live telemetry uploader, its settings and its account are gone. A saved ABRP account is deleted on first start.
+- **Car data page.** Settings > Car > MG4 vehicle > **Car data** shows the firmware, the hub and property state, and each car value with the source that answered.
+- **Apps category removed** from the two-pane Settings, since ABRP was its only row.
 
 mg4.96 (test build). Not yet tried in the car: test plan E6, F12.
 

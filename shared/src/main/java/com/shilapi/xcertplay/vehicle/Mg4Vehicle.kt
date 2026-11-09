@@ -3,10 +3,6 @@ package com.shilapi.xcertplay.vehicle
 import android.content.Context
 import android.os.SystemClock
 import android.util.Log
-import com.evsuite.hardware.EVHardware
-import com.evsuite.hardware.FirmwareInfo
-import com.evsuite.hardware.saic.SaicVehicleCondition
-import com.evsuite.hardware.telemetry.EnergyTelemetryReader
 import com.shilapi.xcertplay.transport.VehicleStatusProvider
 import com.shilapi.xcertplay.transport.VehicleStatusSnapshot
 import java.util.concurrent.CountDownLatch
@@ -15,7 +11,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-/** Read-only MG firmware bridge. All values come from the EVHardware paths used by EVABRPUploader. */
+/** Read-only MG4 (SWI165) vehicle status for Apple Maps. Other firmware reads nothing. */
 object Mg4Vehicle : VehicleStatusProvider {
     private const val TAG = "DiPlay-MG4"
     private const val READ_MILLIS = 30_000L
@@ -28,8 +24,8 @@ object Mg4Vehicle : VehicleStatusProvider {
     @Volatile private var latestMillis = 0L
     @Volatile private var started = false
     @Volatile private var initialized = false
-    @Volatile private var reader: EnergyTelemetryReader? = null
     @Volatile private var reportedCharge: Pair<Int?, Boolean>? = null
+    private val reader = Mg4CarReader(Mg4CarSignals)
 
     /**
      * The session log, so charging changes reach the diagnostic report; logcat alone does not. Setting
@@ -45,11 +41,7 @@ object Mg4Vehicle : VehicleStatusProvider {
         Thread(runnable, "diplay-mg4-vehicle").apply { isDaemon = true }
     }
 
-    fun available(context: Context): Boolean {
-        return runCatching { FirmwareInfo.isDetectedGenerationSupported() }
-            .onFailure { Log.e(TAG, "Could not detect MG4 firmware", it) }
-            .getOrDefault(false)
-    }
+    fun available(context: Context): Boolean = Mg4Firmware.supported()
 
     @Synchronized
     fun start(context: Context) {
@@ -61,15 +53,16 @@ object Mg4Vehicle : VehicleStatusProvider {
         started = true
         executor.execute {
             try {
-                // Use exactly the same reader as EVABRPUploader. Besides the AAOS/VHAL
-                // fallbacks it connects SAIC's vehiclecharging service, which is the most
-                // reliable source of SOC and range across supported MG firmware generations.
-                reader = EnergyTelemetryReader(context.applicationContext)
+                val hub = SaicBinder.connect(context.applicationContext)
+                val properties = CarProperties.connect(context.applicationContext)
+                Mg4CarSignals.sources.clear()
+                log("hub=$hub properties=$properties")
                 initialized = true
                 primeFirstReading()
+                log("first reading " + Mg4CarSignals.sources.entries.joinToString(" ") { "${it.key}=${it.value}" })
                 executor.scheduleWithFixedDelay(::poll, READ_MILLIS, READ_MILLIS, TimeUnit.MILLISECONDS)
             } catch (error: Throwable) {
-                Log.e(TAG, "EVHardware initialization failed; disabling vehicle data", error)
+                Log.e(TAG, "MG4 car reads could not start; vehicle data disabled", error)
             } finally {
                 firstReading.countDown()
             }
@@ -77,8 +70,8 @@ object Mg4Vehicle : VehicleStatusProvider {
     }
 
     override fun snapshot(): VehicleStatusSnapshot? {
-        // Identification runs off the UI thread. Give the EVABRPUploader reader time to bind
-        // before iAP2 permanently decides whether this CarPlay connection is an EV session.
+        // Identification runs off the UI thread. Give the first read time to finish before
+        // iAP2 permanently decides whether this CarPlay connection is an EV session.
         if (started && latest == null) {
             runCatching { firstReading.await(INITIAL_READ_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS) }
         }
@@ -89,12 +82,7 @@ object Mg4Vehicle : VehicleStatusProvider {
     fun parked(context: Context): Boolean? {
         if (!available(context)) return null
         return runCatching {
-            // On some MG firmware CarStateClient may return its unset value (0). The head unit's own
-            // video apps use vehiclecondition gear=1 for P, so prefer that direct signal.
-            SaicVehicleCondition.gearOrNull()
-                ?.takeIf { it in 1..4 }
-                ?.let { it == 1 }
-                ?: EVHardware.isVehicleInPark()
+            Mg4CarSignals.rawGear()?.takeIf { it in 1..4 }?.let { it == Mg4WheelSpeed.GEAR_PARK }
         }
             .onFailure { Log.e(TAG, "Could not read MG4 gear", it) }
             .getOrNull()
@@ -119,17 +107,15 @@ object Mg4Vehicle : VehicleStatusProvider {
 
     private fun pollSafely() {
         val context = app ?: return
-        if (!FirmwareInfo.isDetectedGenerationSupported()) return
-        val vehicle = reader?.read() ?: return
+        if (!Mg4Firmware.supported()) return
+        val vehicle = reader.read()
         val percent = vehicle.socPercent?.toDouble() ?: return
-        val range = vehicle.rangeKm?.roundToInt() ?: return
+        val range = vehicle.rangeKm ?: return
         val fraction = percent / 100.0
         val currentKwh = vehicle.batteryEnergyKwh?.toDouble()
         val capacityKwh = vehicle.batteryCapacityKwh?.toDouble()
             ?: currentKwh?.takeIf { fraction > 0.0 }?.div(fraction)
         val maxRange = if (fraction > 0.0) (range / fraction).roundToInt() else range
-        // iAP2 requires charge and capacity together. If AAOS does not expose Wh on this
-        // firmware, use a normalized capacity so the ratio remains exactly the measured SOC.
         val reportedCapacityKwh = capacityKwh ?: 100.0
         val reportedCurrentKwh = currentKwh ?: reportedCapacityKwh * fraction
         latest = VehicleStatusSnapshot(
@@ -148,7 +134,7 @@ object Mg4Vehicle : VehicleStatusProvider {
         latestMillis = SystemClock.elapsedRealtime()
         val line = "battery ${percent.roundToInt()}% range ${range}km " +
             "chargeStatus=${vehicle.chargingStatus} charging=${latest?.charging}"
-        Log.i(TAG, "${FirmwareInfo.getDetectedString()} $line")
+        Log.i(TAG, "${Mg4Firmware.detectedString()} $line")
         // Only changes go to the report: this runs every 30 s.
         val charge = vehicle.chargingStatus to (latest?.charging == true)
         if (charge != reportedCharge) {
@@ -156,11 +142,16 @@ object Mg4Vehicle : VehicleStatusProvider {
             reportLog("MG4 $line")
         }
     }
+
+    private fun log(message: String) {
+        Log.i(TAG, "MG4 car: $message")
+        reportLog("MG4 car: $message")
+    }
 }
 
 /** Whether the MG4 is charging, as Apple Maps' isCharging wants it. */
 internal object Mg4Charging {
-    // The car's own charging-session values (EVHardware PROP_VENDOR_CHARGE_STATUS): 1 AC, 10 DC.
+    // The car's own charging-session values: 1 AC, 10 DC.
     private val CHARGING_STATUSES = setOf(1, 10)
     private const val CHARGING_POWER_KW = -0.3f
 

@@ -41,7 +41,6 @@ android {
     }
 }
 dependencies {
-    implementation project(':evhardware')
     implementation libs.androidx.app
     implementation libs.bouncycastle
     implementation libs.jmdns

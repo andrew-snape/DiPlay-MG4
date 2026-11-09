@@ -43,7 +43,7 @@ cd "$ROOT"
 # iCloud Drive (Desktop & Documents sync) leaves "name 2.ext" copies in build output, which
 # fail Android resource validation ("Failed file name validation ... ic_launcher 2.xml").
 # Remove them from build folders only; sources are never touched.
-for dir in build */build vendor/*/*/lib/build .gradle; do
+for dir in build */build .gradle; do
   [ -d "$dir" ] && find "$dir" -name '* [0-9].*' -type f -delete 2>/dev/null || true
 done
 if [ -n "${DIPLAY_PREBUILT_JNI_DIR:-}" ]; then

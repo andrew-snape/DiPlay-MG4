@@ -18,7 +18,6 @@ class DiPlaySessionService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            com.shilapi.xcertplay.vehicle.AbrpUploader.stop()
             CarPlayBackgroundSession.stop()
             stopSelf()
             return START_NOT_STICKY
@@ -46,11 +45,9 @@ class DiPlaySessionService : Service() {
             }
             startForeground(1, notification, types)
         } else startForeground(1, notification)
-        com.shilapi.xcertplay.vehicle.AbrpUploader.start(this)
         return START_NOT_STICKY
     }
     override fun onDestroy() {
-        com.shilapi.xcertplay.vehicle.AbrpUploader.stop()
         super.onDestroy()
     }
     override fun onTaskRemoved(rootIntent: Intent?) {

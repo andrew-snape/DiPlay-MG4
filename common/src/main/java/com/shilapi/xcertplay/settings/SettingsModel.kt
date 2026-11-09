@@ -7,7 +7,7 @@ import com.shilapi.xcertplay.Mg4FirmwareProfile
  * Which settings the MG4 Settings screen shows, and where. Plain Kotlin, so the layout for each
  * firmware can be unit-tested. [Mg4SettingsPage] turns it into views and reads and saves values.
  */
-internal enum class SettingsCategory { CONNECTION, DISPLAY, SOUND, CAR, APPS, GENERAL, HELP, ABOUT }
+internal enum class SettingsCategory { CONNECTION, DISPLAY, SOUND, CAR, GENERAL, HELP, ABOUT }
 
 internal enum class RowKind {
     /** On/off switch. */
@@ -67,8 +67,6 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     CHARGING_CONNECTORS(RowKind.PICKER, true),
     LOW_CHARGE_WARNING(RowKind.PICKER),
 
-    ABRP_TELEMETRY(RowKind.SWITCH),
-    ABRP_ACCOUNT(RowKind.LINK),
 
     LANGUAGE(RowKind.LINK),
     SOFTWARE_UPDATE(RowKind.LINK),
@@ -132,9 +130,6 @@ internal object SettingsLayout {
             SettingsGroup("parked", listOf(SettingRow.VIDEO_WHILE_PARKED)),
             SettingsGroup("appearance", listOf(SettingRow.SUNSET_DARK_MODE)),
             SettingsGroup("battery", listOf(SettingRow.CAR_BATTERY, SettingRow.CHARGING_CONNECTORS, SettingRow.LOW_CHARGE_WARNING)),
-        )
-        SettingsCategory.APPS -> listOf(
-            SettingsGroup("abrp", listOf(SettingRow.ABRP_TELEMETRY, SettingRow.ABRP_ACCOUNT)),
         )
         SettingsCategory.GENERAL -> listOf(
             SettingsGroup("general", listOf(SettingRow.LANGUAGE, SettingRow.SOFTWARE_UPDATE)),

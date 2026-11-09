@@ -52,7 +52,7 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 | Wi-Fi | Holds Android's high-performance Wi-Fi lock during wireless CarPlay (mg4.91, from xcertplay 1.4.1). Location sends each NMEA sentence as its own parameter, only the types the iPhone asked for, at its intervals (mg4.91, from xcertplay 1.4.1). |
 | Charging | Apple Maps' "charging" comes from the car's charging status (1 AC, 10 DC) (mg4.90). Plugged in but stopped or finished is not charging. |
 | Dark mode | Follows the car's day/night (`screen_day_night_mode`), which Android's night mode tracks and which switches with the headlights (found by the mg4.90 probe, 2026-11-03). Optional sunset mode (mg4.90). |
-| Build fixes | Replaces upstream calls to Bluetooth functions that were never published in the EVHardware submodule, so the tree compiles. The build script finds the Android SDK and writes the APK to `dist/`. |
+| Build fixes | Replaces upstream calls to Bluetooth functions that were never published, so the tree compiles. The build script finds the Android SDK and writes the APK to `dist/`. |
 | Diagnostics | Reports record the firmware profile, video renderer, audio mode, car audio source, microphone source and every wheel key. |
 
 ## Settings
@@ -88,13 +88,7 @@ fails with "Duplicate resources". Either turn that syncing off, or clean before
 each build:
 
 ```bash
-./gradlew --stop && rm -rf build */build vendor/MG4ABRP/EVHardware/lib/build .gradle
-```
-
-One-time setup, from the repo folder:
-
-```bash
-git submodule update --init --recursive
+./gradlew --stop && rm -rf build */build .gradle
 ```
 
 ```bash
