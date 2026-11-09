@@ -1,5 +1,9 @@
 # Unreleased (SWI165 fork)
 
+mg4.97 (test build). Not yet tried in the car: test plan D2c, D2d.
+
+- **Siri microphone fix.** The microphone's RTP clock always counted at 48 kHz, so when the iPhone asks for Opus at 24 kHz (usual for Siri) or 16 kHz (usual for calls), each 20 ms packet claimed to be 40 ms or 60 ms long and the iPhone heard speech full of gaps. The microphone now counts at the negotiated rate (the same fix upstream #644 made for playback). The 2026-11-04 report showed the microphone sending clean audio at a good level on all three sources, and Siri still failing on each. Calls get the same fix; check callers still hear you clearly. The log now shows `airplay audio format ... audioFormat=0x... rtpClock=` and the microphone line ends with `rtpClock= tsStep=`.
+
 mg4.96 (test build). Not yet tried in the car: test plan E6, F12.
 
 - **Pair your iPhone inside the app.** On MG4, **Pair another** (or **Open Bluetooth** when no iPhone is paired) now searches for nearby phones in MG4CPlay, lists them, and pairs when you tap one, with the confirm-the-code step shown in the app. It saves the iPhone and connects. If the car's Bluetooth refuses any step, it opens the Android Bluetooth settings as before. Log lines start with `Pairing:` in the Settings changes section of the report.
