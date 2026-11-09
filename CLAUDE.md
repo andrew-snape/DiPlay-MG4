@@ -20,7 +20,8 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
 
 ## Building and testing
 
-- Java 21 (`brew install openjdk@21`). Same checks as CI:
+- Java: any JDK 17 or later starts Gradle (`brew install openjdk@21`). Gradle then downloads and
+  runs on Java 25, pinned in `gradle/gradle-daemon-jvm.properties`, the same as CI. Same checks as CI:
   `./gradlew :shared:testDebugUnitTest :common:testDebugUnitTest :mobile:lintDebug :mobile:assembleDebug`
 - Car builds: `./scripts/build_mg4.sh`, with `DIPLAY_AUTH_ASSETS_DIR=$PWD/.private/runtime-assets`.
   The APK goes to `dist/`. Never commit `.private/`, keys or APKs.

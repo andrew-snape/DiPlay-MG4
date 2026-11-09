@@ -32,7 +32,7 @@ adb uninstall com.fatih.mg4carplaywidget
 
 ## Requirements
 
-- **JDK**: Java 17 or higher compatible with the included Gradle wrapper.
+- **JDK**: Java 17 or later to start Gradle. Gradle downloads and builds with Java 25 (pinned in `gradle/gradle-daemon-jvm.properties`), the same as CI.
 - **Android SDK**: Android SDK 34/36/37 with Build Tools installed.
 - **Android NDK**: NDK `28.2.13676358` (or configured via `build.gradle.kts`).
 - **Platform Keys**: The MG4 platform signing files (`platform.pk8` and `platform.x509.pem`) placed in `tools/` (git-ignored, never committed) or specified via `MG4_PLATFORM_KEYS_DIR`.

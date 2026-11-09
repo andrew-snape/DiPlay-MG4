@@ -104,7 +104,8 @@ mkdir -p .private/runtime-assets && unzip -o /tmp/diplay-release.apk 'assets/off
 ```
 
 Each build, in the same terminal window (Java from `brew install openjdk@21`, or use
-Android Studio's at `/Applications/Android Studio.app/Contents/jbr/Contents/Home`):
+Android Studio's at `/Applications/Android Studio.app/Contents/jbr/Contents/Home`). This Java only
+starts Gradle: the first build downloads Java 25 and builds with it, the same as CI:
 
 ```bash
 export JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home" && export DIPLAY_AUTH_ASSETS_DIR="$PWD/.private/runtime-assets"
