@@ -172,6 +172,7 @@ FairPlay receiver.
 ## Documentation
 
 - [SWI165 firmware profile and test record](docs/MG4_SWI165.md): start here
+- [First install on SWI165](docs/MG4_SWI165_FIRST_INSTALL.md): install, pair and what to expect
 - [Wi-Fi audio plan and car test checklist](docs/MG4_SWI165_WIFI_AUDIO_PLAN.md)
 - [Stock AllGo CarPlay app notes](docs/MG4_SWI165_ALLGO_NOTES.md): how the car's own CarPlay app handles calls and audio
 - [Release test plan: calls, music, Bluetooth and Wi-Fi](docs/MG4_SWI165_TEST_PLAN.md)
