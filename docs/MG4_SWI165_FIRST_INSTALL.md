@@ -28,14 +28,18 @@ keeps accepting it is unresolved. The full caveats are in the [README](../README
 Each build has a higher version number, so it installs over the last one. ADB has never
 worked on this car. For the ADB route, see [MG4_PLATFORM_INSTALL.md](MG4_PLATFORM_INSTALL.md).
 
-After installing, open DiPlay's About page and check the version matches the build you
+After installing, open MG4CPlay's About page and check the version matches the build you
 installed.
 
 ## First connection
 
 - **Connection type:** the car hotspot is the default. **Settings > Connection** holds the
   connection type (car hotspot or Wi-Fi Direct), the hotspot details, the iPhone, and the
-  Wi-Fi Direct band. How to turn on the car hotspot: not documented yet.
+  Wi-Fi Direct band.
+- **Car hotspot:** turn the hotspot on in the car's own settings (5 GHz if available), then
+  copy its name and password exactly into **Hotspot details**. Leave the hotspot on.
+  MG4CPlay sends the details to the iPhone over Bluetooth and the iPhone joins by itself
+  (from the app's own setup text).
 - **Wi-Fi Direct:** needs the car hotspot off and the car's Wi-Fi on. It is in the test
   plan (F5) and not yet confirmed.
 - **Pairing the iPhone with the car over Bluetooth:** the test plan assumes the iPhone is
@@ -83,7 +87,7 @@ install it ([OTA.md](OTA.md)).
 
 ## If something goes wrong
 
-- **Save a report:** in DiPlay, go to **Diagnostics > Save diagnostic report**. During
+- **Save a report:** in MG4CPlay, go to **Diagnostics > Save diagnostic report**. During
   wireless CarPlay you can tap **Download to iPhone** instead, then scan the QR code with
   the iPhone camera. The link expires after 5 minutes. The button is greyed out when
   CarPlay is not connected.
