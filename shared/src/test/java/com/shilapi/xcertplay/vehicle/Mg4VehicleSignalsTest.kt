@@ -35,6 +35,26 @@ class Mg4VehicleSignalsTest {
     }
 
     @Test
+    fun knownGearsAndLabelsOnlyForTheConfirmedCodes() {
+        assertEquals(VehicleGear.PARK, Mg4WheelSpeed.knownGear(1))
+        assertEquals(VehicleGear.REVERSE, Mg4WheelSpeed.knownGear(2))
+        assertEquals(VehicleGear.NEUTRAL, Mg4WheelSpeed.knownGear(3))
+        assertEquals(VehicleGear.DRIVE, Mg4WheelSpeed.knownGear(4))
+        assertNull(Mg4WheelSpeed.knownGear(0))
+        assertNull(Mg4WheelSpeed.knownGear(5))
+        assertNull(Mg4WheelSpeed.knownGear(7))
+        assertNull(Mg4WheelSpeed.knownGear(-1))
+        assertNull(Mg4WheelSpeed.knownGear(null))
+        assertEquals("(P)", Mg4WheelSpeed.gearLabel(1))
+        assertEquals("(R)", Mg4WheelSpeed.gearLabel(2))
+        assertEquals("(N)", Mg4WheelSpeed.gearLabel(3))
+        assertEquals("(D)", Mg4WheelSpeed.gearLabel(4))
+        assertEquals("", Mg4WheelSpeed.gearLabel(0))
+        assertEquals("", Mg4WheelSpeed.gearLabel(7))
+        assertEquals("", Mg4WheelSpeed.gearLabel(null))
+    }
+
+    @Test
     fun carChargingStatusDecidesWhenPresent() {
         assertTrue(Mg4Charging.isCharging(1, true, null)) // AC
         assertTrue(Mg4Charging.isCharging(10, true, null)) // DC
