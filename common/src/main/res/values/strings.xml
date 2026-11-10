@@ -58,7 +58,6 @@
     <string name="msg_car_hotspot_off">The car hotspot “%1$s” is off. Turn it on in the car settings before connecting.</string>
     <string name="home_public_preview">PUBLIC PREVIEW  ·\u0020\u0020</string>
     <string name="choose_iphone_prefix">Choose iPhone ·\u0020</string>
-    <string name="audio_saved_value">Saved: %1$d</string>
     <string name="about_public_preview_prefix">Public preview ·\u0020</string>
     <string name="msg_car_hotspot_connect">MG4CPlay connects through the car hotspot “%1$s”. Turn it on in the car settings, then connect.</string>
     <string name="edit_saved_hotspot_prefix">Edit saved hotspot ·\u0020</string>
@@ -135,7 +134,6 @@
     <string name="connect">Connect</string>
     <string name="connect_phone">Connect phone</string>
     <string name="connect_when_diplay_opens">Connect when MG4CPlay opens</string>
-    <string name="connect_with_usb">Connect with USB</string>
     <string name="connect_your_iphone_with_a_usb_cable">Connect your iPhone with a USB cable</string>
     <string name="connecting_bluetooth">Connecting Bluetooth</string>
     <string name="connecting_iap2_control">Connecting iAP2 control</string>
@@ -278,8 +276,6 @@
     <string name="physical_length">Physical length</string>
     <string name="physical_size_basis">Physical size basis</string>
     <string name="place_carplay_s_controls_closer_to_the_driver">Place CarPlay’s controls closer to the driver.</string>
-    <string name="plug_your_iphone_into_a_usb_data_port_allow_carplay_when_y">Plug your iPhone into a USB data port.\nAllow CarPlay when your iPhone asks.</string>
-    <string name="prefer_a_cable">Prefer a cable?</string>
     <string name="preparing_mfi_authentication">Preparing MFi authentication</string>
     <string name="ready">Ready</string>
     <string name="ready_when_you_are">Ready when you are</string>
@@ -314,10 +310,8 @@
     <string name="s_1_open_car_hotspot_settings_turn_the_hotspot_on_and_sele">1. Open car hotspot settings, turn the hotspot on and select 5 GHz if available.\n2. Copy its name and password below exactly.\n3. Leave the car hotspot on when connecting. MG4CPlay sends the details over Bluetooth; your iPhone joins automatically.</string>
     <string name="s_2_4_ghz">2.4 GHz</string>
     <string name="s_2_pair_your_iphone">2 · Pair your iPhone</string>
-    <string name="s_300_ms_default">300 ms · default</string>
     <string name="s_30_fps_lighter_load">30 fps · lighter load</string>
     <string name="s_3_connect">3 · Connect</string>
-    <string name="s_500_ms">500 ms</string>
     <string name="s_5_ghz">5 GHz</string>
     <string name="s_60_fps_smoother_motion">60 fps · smoother motion</string>
     <string name="s_60_lightest_load" formatted="false">60% · lightest load</string>
@@ -372,7 +366,6 @@
     <string name="turn_on_wi_fi_in_the_head_unit_s_settings_to_connect">Turn on Wi-Fi in the head unit’s settings to connect.</string>
     <string name="turn_the_car_s_wi_fi_switch_on_allow_location_nearby_devic">Turn the car’s Wi-Fi switch on. Allow Location / Nearby devices if requested and enable Location when Android asks. If playback stutters, try the built-in car hotspot at 5 GHz.</string>
     <string name="usb_ch341">USB/CH341</string>
-    <string name="use_a_usb_data_cable_and_the_car_s_usb_data_port_unlock_yo">Use a USB data cable and the car’s USB data port. Unlock your iPhone and allow CarPlay. No hotspot setup is needed.</string>
     <string name="use_a_usb_data_cable_and_unlock_your_iphone_allow_trust_an">Use a USB data cable and unlock your iPhone.\nAllow Trust and CarPlay if your iPhone asks.</string>
     <string name="efficient_video_mg4_description">HEVC uses about half the Wi-Fi data. The car’s own CarPlay app uses H.264; turn off to compare colours and whites. Applies next time CarPlay connects.</string>
     <string name="use_hevc_leave_off_for_the_widest_head_unit_compatibility">Use HEVC. Leave off for the widest head-unit compatibility.</string>
@@ -413,8 +406,6 @@
     <string name="hotspot_error_long_name">The hotspot name must be at most 32 bytes</string>
     <string name="hotspot_error_invalid_character">The name or password contains an invalid character</string>
     <string name="hotspot_error_password_length">The hotspot password must be 8–63 characters</string>
-    <string name="navi_mode_unknown">unknown mode</string>
-    <string name="car_battery_for_the_iphone">Car battery for the iPhone · needs ADB</string>
     <string name="mg4_car_battery_for_the_iphone">Car battery for the iPhone</string>
     <string name="charging_connectors">Charging connectors</string>
     <string name="connectors_ccs2_type2">CCS2 and Type 2 · Europe and Australia</string>
@@ -448,14 +439,12 @@
     <string name="settings_no_iphone">No iPhone chosen</string>
     <string name="settings_none">None</string>
     <string name="settings_not_set">Not set</string>
-    <string name="settings_set_up">Set up</string>
     <string name="settings_advanced">Advanced</string>
     <string name="settings_reconnect_tag">Reconnect</string>
     <string name="settings_reconnect_bar">Some changes apply after CarPlay reconnects.</string>
     <string name="settings_reconnect_now">Reconnect now</string>
     <string name="settings_connection_type">Connection type</string>
     <string name="settings_car_hotspot">Car hotspot</string>
-    <string name="settings_usb_cable">USB cable</string>
     <string name="settings_hotspot_details">Hotspot details</string>
     <string name="settings_iphone">iPhone</string>
     <string name="settings_header_automatic">Automatic</string>
