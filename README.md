@@ -5,7 +5,7 @@ Wireless CarPlay for the MG4 head unit. This is a personal fork of
 for an Australian **MG4 on SWI165 firmware** (`SWI165-29176-1100R11`, Android 9,
 AUTUS SAIC MT2712, 1920x720 panel). Upstream is tested on SWI69.
 
-Current build: **0.2.9-mg4.93**. Car-test builds install as
+Current build: **0.2.9-mg4.98**. Car-test builds install as
 `com.shihab.diplay.hudtest`, alongside any upstream `com.shihab.diplay` install.
 Run one at a time.
 
@@ -24,7 +24,8 @@ Run one at a time.
 | Hands-free released during CarPlay | Working (mg4.80); released again on each reconnect (mg4.81) |
 | Square corners | Confirmed in the car (mg4.70), default since mg4.75 |
 | Siri and Maps voice prompts | Siri audio clean in mg4.71 test; Maps voice prompts not yet tested |
-| Siri hears you | Fixed in mg4.97 (test build), not yet tried in the car. The microphone now counts its RTP clock at the rate Siri negotiates (24 kHz), so speech has no gaps |
+| Siri hears you | Not working: Siri dictation writes the wrong words. mg4.97 fixed the microphone's RTP clock (24 kHz for Siri) and mg4.98 adds a microphone recording and a PCM option to find the cause. Neither is tried in the car yet |
+| Callers hear you | Not confirmed on recent builds. mg4.98 records what callers are sent (test plan D2d) |
 | Instrument-cluster directions | Test build (mg4.80), not yet confirmed in the car |
 | Bluetooth Music mode (fallback) | Fix in mg4.66, awaiting a car test |
 | Car GPS and wheel speed to the iPhone | Test build (mg4.90): location on by default on MG4, with the car's own speed for tunnels (no adb). Not yet tested in the car |
@@ -72,11 +73,12 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | CarPlay audio over Wi-Fi, Calls over CarPlay only | Sound | On, on. Off uses the car's Bluetooth Music; calls-only disconnects the car's hands-free while CarPlay runs. A saved choice still wins. |
 | Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. |
 | Microphone (test) | Sound | Automatic. Plain microphone or call processing can be chosen to compare. |
+| Siri microphone as PCM (test), Record microphone (test) | Sound | Off, off (mg4.98). PCM sends Siri plain audio instead of Opus. Recording keeps the first 10 s of each Siri request and call on the car; **Download to iPhone** sends them with the report as a zip. |
 | Send location to iPhone | Car > Driving | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it. |
 | Video while parked | Car > Driving | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P. DRM video such as Apple TV+ won't play. |
 | Dark mode at sunset | Car > Appearance | Off (mg4.92). Off follows the car's day/night, which changes with the headlights. On uses sunset and sunrise at the car's position. |
 | Car battery on iPhone, Directions on the dashboard (test) | Car | As before. |
-| Diagnostics, updates, language, permissions | General, Help, About | Settings changes are listed in the diagnostic report. |
+| Diagnostics, updates, permissions | General, Help, About | Settings changes are listed in the diagnostic report. |
 
 Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, and the music audio channel.
 

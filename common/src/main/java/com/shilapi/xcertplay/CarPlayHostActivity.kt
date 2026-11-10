@@ -2,7 +2,6 @@ package com.shilapi.xcertplay
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -112,11 +111,6 @@ class CarPlayHostActivity : ComponentActivity() {
     private var wifiRecoveryButton: View? = null
     private var reconnectAttempts = 0
     private lateinit var airPlayIdentity: AirPlayIdentity
-    private var languagePreferenceAtCreate = AppLocale.SYSTEM
-
-    override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(AppLocale.wrap(newBase))
-    }
 
     // CH341 USB\VID_1A86&PID_5512&REV_0304 is the deployment-supplied bridge identity.
     private fun createRuntimeConfig(): CarPlayRuntimeConfig = CarPlayRuntimeConfig(
@@ -432,7 +426,6 @@ class CarPlayHostActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CrashRecorder.install(this)
-        languagePreferenceAtCreate = AppLocale.preference(this)
         if (intent.action == "android.hardware.usb.action.USB_DEVICE_ATTACHED") {
             AirPlayPersistence.saveWirelessEnabled(this, false)
         }
@@ -645,12 +638,6 @@ class CarPlayHostActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        val languagePreference = AppLocale.preference(this)
-        if (Build.VERSION.SDK_INT < 33 && languagePreference != languagePreferenceAtCreate) {
-            languagePreferenceAtCreate = languagePreference
-            recreate()
-            return
-        }
         locationPermissionAvailable = hasFineLocationPermission()
         if (locationReportingEnabled && !locationPermissionAvailable && !menuOpen) {
             requestLocationPermission()
@@ -1332,12 +1319,6 @@ class CarPlayHostActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).apply { topMargin = dp(12) },
         )
-
-        content.addView(Button(this).apply {
-            text = getString(R.string.language_app_language)
-            isAllCaps = false
-            setOnClickListener { AppLocale.showPicker(this@CarPlayHostActivity) }
-        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
         val scroll = ScrollView(this).apply {
             isFillViewport = true
@@ -2745,6 +2726,7 @@ class CarPlayHostActivity : ComponentActivity() {
             // Always offer Opus input: wireless iPhones treat the car as screen-only without it
             // (mg4.67 lost all CarPlay audio). Android 9 encodes it in software (Concentus).
             microphoneOpus = true,
+            siriMicrophoneOpus = !AirPlayPersistence.loadSiriMicrophonePcm(this),
             viewAreas = !(AirPlayPersistence.loadPlainDisplayArea(this) ?: Mg4FirmwareProfile.detect().squareCorners),
             manufacturer = normalizedManufacturer(),
             model = normalizedModel(),
@@ -3174,6 +3156,11 @@ class CarPlayHostActivity : ComponentActivity() {
                         2 -> android.media.MediaRecorder.AudioSource.MIC
                         else -> null
                     }
+                MicRecordings.sync(applicationContext)
+                appendLog(
+                    "Microphone test: siriFormat=${if (AirPlayPersistence.loadSiriMicrophonePcm(this)) "PCM" else "Opus"} " +
+                        "recording=${if (AirPlayPersistence.loadMicrophoneRecording(this)) "on" else "off"}",
+                )
                 sessionAudioMode == com.shilapi.xcertplay.media.AudioMode.CARPLAY_WIFI
             } &&
                 AirPlayPersistence.loadCallsOverCarPlayOnly(this),

@@ -34,10 +34,6 @@ class ImageCropActivity : Activity() {
     private lateinit var cropView: SquareCropView
     private lateinit var statusView: TextView
 
-    override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(AppLocale.wrap(newBase))
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val uri = intent.data

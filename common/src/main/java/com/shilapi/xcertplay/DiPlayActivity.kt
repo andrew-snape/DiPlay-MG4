@@ -96,16 +96,9 @@ class DiPlayActivity : ComponentActivity() {
         if (uri != null) exportDiagnostics(uri)
     }
 
-    private var languagePreferenceAtCreate = AppLocale.SYSTEM
-
-    override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(AppLocale.wrap(newBase))
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CrashRecorder.install(this)
-        languagePreferenceAtCreate = AppLocale.preference(this)
         com.shilapi.xcertplay.vehicle.VehicleIntegration.onAppOpened(applicationContext)
         CarHotspotController.enable(applicationContext)
         WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -173,10 +166,6 @@ class DiPlayActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) { super.onConfigurationChanged(newConfig); render() }
     override fun onResume() {
         super.onResume()
-        if (Build.VERSION.SDK_INT < 33 && AppLocale.preference(this) != languagePreferenceAtCreate) {
-            recreate()
-            return
-        }
         handler.removeCallbacks(tick); handler.post(tick)
         // Back from the car settings: refresh the car hotspot reminder on the home page.
         if (!initialLaunch && (page == "home" || page == "settings" || page == "connection")) render()
@@ -466,7 +455,6 @@ class DiPlayActivity : ComponentActivity() {
         section(content, getString(R.string.about), R.drawable.ic_dp_about) { card ->
             card.addView(button(getString(R.string.about_diplay), false) { page = "about"; render() }, matchButton(0, 60))
         }
-        languageSettings(content)
     }
 
     private fun about(content: LinearLayout) {
@@ -1096,6 +1084,11 @@ class DiPlayActivity : ComponentActivity() {
         appendLine("Session: ${if (CarPlayBackgroundSession.active) "active" else if (CarPlayBackgroundSession.hasSession()) "connecting" else "stopped"}")
         appendLine("Head-unit board: ${Build.BOARD}; hardware: ${Build.HARDWARE}; build: ${Build.DISPLAY}")
         if (Mg4FirmwareProfile.detect().isMg4) appendLine("Day/night: ${DayNightProbe.snapshot(appContext)}")
+        appendLine(
+            "Microphone test: siriFormat=${if (AirPlayPersistence.loadSiriMicrophonePcm(appContext)) "PCM" else "Opus"} " +
+                "recording=${if (AirPlayPersistence.loadMicrophoneRecording(appContext)) "on" else "off"} " +
+                "recordings=${MicRecordings.files(appContext).joinToString(",") { "${it.name}(${it.length()})" }.ifEmpty { "none" }}",
+        )
         com.shilapi.xcertplay.settings.SettingsChangeLog.lines(appContext).takeIf { it.isNotEmpty() }?.let { lines ->
             appendLine("--- Settings changes (newest last) ---")
             lines.forEach(::appendLine)
@@ -1193,10 +1186,15 @@ class DiPlayActivity : ComponentActivity() {
         Thread({
             var server: ReportDownloadServer? = null
             val result = runCatching {
-                val body = buildDiagnosticReport(appContext).toByteArray(Charsets.UTF_8)
-                ReportDownloadServer(address, fileName, body,
+                val report = buildDiagnosticReport(appContext).toByteArray(Charsets.UTF_8)
+                // mg4.98: microphone test recordings travel with the report, as one zip.
+                val recordings = MicRecordings.files(appContext)
+                val bundled = recordings.isNotEmpty()
+                val body = if (bundled) MicRecordings.zip(fileName, report, recordings) else report
+                ReportDownloadServer(address, if (bundled) fileName.removeSuffix(".txt") + ".zip" else fileName, body,
                     log = { message -> Log.i("DiPlay", message); controller?.logDiagnostic(message) },
                     onFinished = { outcome -> runOnUiThread { server?.let { onReportDownloadFinished(it, outcome) } } },
+                    contentType = if (bundled) "application/zip" else "text/plain; charset=utf-8",
                 ).also { server = it }
             }
             runOnUiThread {
@@ -1418,16 +1416,6 @@ class DiPlayActivity : ComponentActivity() {
         override fun wirelessHelp() = this@DiPlayActivity.wirelessHelp()
         override fun reconnect() = connect(AirPlayPersistence.loadWirelessEnabled(this@DiPlayActivity))
         override fun version() = this@DiPlayActivity.version()
-    }
-
-    private fun languageSettings(content: LinearLayout) {
-        section(content, getString(R.string.language_section_title)) { card ->
-            card.addView(label(getString(R.string.language_hint), 14, MUTED))
-            val current = AppLocale.preference(this)
-            val languageButton = button("${getString(R.string.language_app_language)} · ${AppLocale.displayName(this, current)}", false) { }
-            languageButton.setOnClickListener { AppLocale.showPicker(this) }
-            card.addView(languageButton, matchButton(12, 60))
-        }
     }
 
     private fun section(parent: LinearLayout, title: String, icon: Int? = null, build: (LinearLayout) -> Unit) {

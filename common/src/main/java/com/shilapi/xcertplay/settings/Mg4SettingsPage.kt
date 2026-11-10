@@ -11,7 +11,6 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import com.shilapi.xcertplay.AirPlayPersistence
-import com.shilapi.xcertplay.AppLocale
 import com.shilapi.xcertplay.DiPlayPreferences
 import com.shilapi.xcertplay.Mg4FirmwareProfile
 import com.shilapi.xcertplay.airplay.CarPlaySize
@@ -334,6 +333,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
             "wifi_audio" -> add(R.string.carplay_wifi_audio_description)
             "calls" -> add(R.string.calls_over_carplay_only_description)
             "buffer" -> add(R.string.settings_footer_buffer)
+            "microphone" -> add(R.string.settings_footer_microphone)
             "navigation" -> add(R.string.contrib_audio_home_nav_channel_note)
             "cluster" -> add(R.string.mg4_cluster_directions_description)
             "location" -> add(R.string.sends_precise_android_location_as_carplay_gps_data_when_th)
@@ -381,6 +381,8 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.CALLS_OVER_CARPLAY -> R.string.calls_over_carplay_only
         SettingRow.MUSIC_BUFFER -> R.string.music_buffer
         SettingRow.MICROPHONE -> R.string.microphone_source
+        SettingRow.SIRI_MIC_PCM -> R.string.siri_microphone_pcm
+        SettingRow.MIC_RECORDING -> R.string.microphone_recording
         SettingRow.NAVIGATION_CHANNEL -> R.string.contrib_audio_home_nav_channel_label
         SettingRow.CLUSTER_DIRECTIONS -> R.string.mg4_cluster_directions
         SettingRow.SEND_LOCATION -> R.string.settings_send_location
@@ -389,7 +391,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.CAR_BATTERY -> R.string.settings_car_battery
         SettingRow.CHARGING_CONNECTORS -> R.string.charging_connectors
         SettingRow.LOW_CHARGE_WARNING -> R.string.low_charge_warning
-        SettingRow.LANGUAGE -> R.string.language_section_title
         SettingRow.SOFTWARE_UPDATE -> R.string.settings_software_update
         SettingRow.APP_PERMISSIONS -> R.string.app_permissions
         SettingRow.BLUETOOTH -> R.string.bluetooth_settings
@@ -464,6 +465,13 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 SettingRow.CALLS_OVER_CARPLAY -> switch(AirPlayPersistence.loadCallsOverCarPlayOnly(activity)) {
                     AirPlayPersistence.saveCallsOverCarPlayOnly(activity, it)
                 }
+                SettingRow.SIRI_MIC_PCM -> switch(AirPlayPersistence.loadSiriMicrophonePcm(activity)) {
+                    AirPlayPersistence.saveSiriMicrophonePcm(activity, it)
+                }
+                SettingRow.MIC_RECORDING -> switch(AirPlayPersistence.loadMicrophoneRecording(activity)) {
+                    AirPlayPersistence.saveMicrophoneRecording(activity, it)
+                    com.shilapi.xcertplay.MicRecordings.sync(activity.applicationContext)
+                }
                 SettingRow.MUSIC_BUFFER -> {
                     val presets = MediaAudioBuffer.presets
                     segmented(presets.map { activity.getString(R.string.settings_milliseconds, it) },
@@ -482,7 +490,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                     VehicleSettings.setBatteryToIphone(activity, it)
                     if (it) Mg4Vehicle.start(activity.applicationContext)
                 }
-                SettingRow.LANGUAGE -> link(AppLocale.displayName(activity, AppLocale.preference(activity))) { AppLocale.showPicker(activity) }
                 SettingRow.SOFTWARE_UPDATE -> link(host.version()) { host.checkForUpdates() }
                 SettingRow.APP_PERMISSIONS -> link(null) { host.openAppPermissions() }
                 SettingRow.BLUETOOTH -> link(null) { host.openBluetoothSettings() }

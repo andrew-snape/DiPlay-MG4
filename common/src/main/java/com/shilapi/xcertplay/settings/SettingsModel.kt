@@ -55,6 +55,8 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     CALLS_OVER_CARPLAY(RowKind.SWITCH, true),
     MUSIC_BUFFER(RowKind.SEGMENTED, true),
     MICROPHONE(RowKind.PICKER, true),
+    SIRI_MIC_PCM(RowKind.SWITCH, true),
+    MIC_RECORDING(RowKind.SWITCH),
     SOUND_ADVANCED(RowKind.PAGE),
     NAVIGATION_CHANNEL(RowKind.LINK, true),
 
@@ -68,7 +70,6 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     LOW_CHARGE_WARNING(RowKind.PICKER),
 
 
-    LANGUAGE(RowKind.LINK),
     SOFTWARE_UPDATE(RowKind.LINK),
     APP_PERMISSIONS(RowKind.LINK),
     BLUETOOTH(RowKind.LINK),
@@ -120,7 +121,7 @@ internal object SettingsLayout {
             SettingsGroup("wifi_audio", listOf(SettingRow.WIFI_AUDIO)),
             SettingsGroup("calls", listOf(SettingRow.CALLS_OVER_CARPLAY)),
             SettingsGroup("buffer", listOf(SettingRow.MUSIC_BUFFER)),
-            SettingsGroup("microphone", listOf(SettingRow.MICROPHONE)),
+            SettingsGroup("microphone", listOf(SettingRow.MICROPHONE, SettingRow.SIRI_MIC_PCM, SettingRow.MIC_RECORDING)),
             SettingsGroup("advanced", listOf(SettingRow.SOUND_ADVANCED)),
         )
         SettingsCategory.CAR -> listOfNotNull(
@@ -132,7 +133,7 @@ internal object SettingsLayout {
             SettingsGroup("battery", listOf(SettingRow.CAR_BATTERY, SettingRow.CHARGING_CONNECTORS, SettingRow.LOW_CHARGE_WARNING)),
         )
         SettingsCategory.GENERAL -> listOf(
-            SettingsGroup("general", listOf(SettingRow.LANGUAGE, SettingRow.SOFTWARE_UPDATE)),
+            SettingsGroup("general", listOf(SettingRow.SOFTWARE_UPDATE)),
             SettingsGroup("system", listOf(SettingRow.APP_PERMISSIONS, SettingRow.BLUETOOTH)),
         )
         SettingsCategory.HELP -> listOf(
