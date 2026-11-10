@@ -2726,6 +2726,7 @@ class CarPlayHostActivity : ComponentActivity() {
             // Always offer Opus input: wireless iPhones treat the car as screen-only without it
             // (mg4.67 lost all CarPlay audio). Android 9 encodes it in software (Concentus).
             microphoneOpus = true,
+            siriMicrophoneOpus = !AirPlayPersistence.loadSiriMicrophonePcm(this),
             viewAreas = !(AirPlayPersistence.loadPlainDisplayArea(this) ?: Mg4FirmwareProfile.detect().squareCorners),
             manufacturer = normalizedManufacturer(),
             model = normalizedModel(),
@@ -3155,6 +3156,11 @@ class CarPlayHostActivity : ComponentActivity() {
                         2 -> android.media.MediaRecorder.AudioSource.MIC
                         else -> null
                     }
+                MicRecordings.sync(applicationContext)
+                appendLog(
+                    "Microphone test: siriFormat=${if (AirPlayPersistence.loadSiriMicrophonePcm(this)) "PCM" else "Opus"} " +
+                        "recording=${if (AirPlayPersistence.loadMicrophoneRecording(this)) "on" else "off"}",
+                )
                 sessionAudioMode == com.shilapi.xcertplay.media.AudioMode.CARPLAY_WIFI
             } &&
                 AirPlayPersistence.loadCallsOverCarPlayOnly(this),
