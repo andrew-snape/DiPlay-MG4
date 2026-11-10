@@ -20,7 +20,7 @@ Key facts:
 - No ADB on this car. Builds are installed from a USB stick; diagnostics come back as the
   app's report file (USB stick or Download to iPhone).
 - Car data comes from our own read-only code in `shared/.../vehicle/` (SWI165 only). Gear is `vehiclecondition`
-  code 5, where only 1 = P is confirmed. Charging status: 1 AC, 10 DC, 5 connecting,
+  code 5: 1 P, 2 R, 3 N, 4 D (car test 2026-11-03). Charging status: 1 AC, 10 DC, 5 connecting,
   7 connected not charging, 8 stopped. Day/night: `screen_day_night_mode` follows the headlights, and CarPlay dark mode follows it.
 - Open issues: stream freezes about every 160 s on the car hotspot; Wi-Fi Direct on
   Android 9 is being compared with the hotspot.
