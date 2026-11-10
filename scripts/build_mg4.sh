@@ -31,7 +31,8 @@ if [ ! -f "$KEYS/platform.pk8" ]; then
   exit 1
 fi
 OUT="$ROOT/mobile/build/outputs/apk/debug/mobile-debug.apk"
-VERSION="0.2.9-mg4.98"
+VERSION=$(sed -n 's/^versionName=//p' "$ROOT/version.properties")
+[ -n "$VERSION" ] || { echo "Error: versionName missing in version.properties" >&2; exit 1; }
 ALIGNED="$ROOT/mobile/build/outputs/apk/debug/MG4CPlay-v$VERSION-aligned.apk"
 SIGNED="$ROOT/mobile/build/outputs/apk/debug/MG4CPlay-v$VERSION.apk"
 DELIVERY_DIR="$ROOT/dist"

@@ -1,4 +1,15 @@
-# Unreleased (SWI165 fork)
+# Unreleased
+
+# MG4CPlay 0.3.0 (SWI165 fork), 2026-11-10
+
+First release under the new version scheme (`MAJOR.MINOR.PATCH`, see [docs/VERSIONING.md](docs/VERSIONING.md)). It replaces `0.2.9-mg4.98` and contains the same code, so there is nothing new to test in the car. The in-app update offers it because the numbers compare higher.
+
+- **Version name.** `0.2.9-mg4.N` is retired. The version now lives in `version.properties` and `scripts/bump_version.sh` changes it. `versionCode` carries on from 126.
+- **Still not tried in the car** (from mg4.96 to mg4.98): in-app pairing, the two-pane Settings, vendor-library removal, the Siri microphone clock fix, microphone recording and the Siri PCM option. See test plan sections D, E, F and H.
+
+# Test builds before 0.3.0 (0.2.9-mg4.62 to mg4.98)
+
+The entries below are the old per-build notes, kept as history. Each `mg4.N` was one build; `0.3.0` is the first named release.
 
 mg4.98 (test build). Microphone tests for Siri dictation and calls. Not yet tried in the car: test plan D2c to D2h.
 

@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release (e.g. v0.2.9-mg4.85). Created on the chosen branch if it does not exist yet.'
+        description: 'Tag to release (e.g. v0.3.0). Created on the chosen branch if it does not exist yet.'
         required: true
 permissions:
   contents: write
@@ -36,9 +36,9 @@ jobs:
           fi
       - name: Check tag matches versionName
         run: |
-          version=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' mobile/build.gradle.kts | head -1)
+          version=$(sed -n 's/^versionName=//p' version.properties)
           if [ "v$version" != "$TAG" ]; then
-            echo "::error::Tag $TAG does not match versionName $version in mobile/build.gradle.kts"
+            echo "::error::Tag $TAG does not match versionName $version in version.properties"
             exit 1
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"

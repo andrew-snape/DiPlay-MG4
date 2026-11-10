@@ -5,7 +5,7 @@ Wireless CarPlay for the MG4 head unit. This is a personal fork of
 for an Australian **MG4 on SWI165 firmware** (`SWI165-29176-1100R11`, Android 9,
 AUTUS SAIC MT2712, 1920x720 panel). Upstream is tested on SWI69.
 
-Current build: **0.2.9-mg4.98**. Car-test builds install as
+Current build: **0.3.0**. Car-test builds install as
 `com.shihab.diplay.hudtest`, alongside any upstream `com.shihab.diplay` install.
 Run one at a time.
 
@@ -153,7 +153,7 @@ off; some uploads have arrived empty when copied straight away.
 The in-app update check looks at **this fork's** releases (`andrew-snape/DiPlay-MG4`),
 when the app opens and from the ↻ button on the home screen. It offers the highest
 published release newer than the installed version, comparing only the numbers (so
-`0.2.9-mg4.92` is newer than `0.2.9-mg4.91-hud-test`), and only an `MG4CPlay-…apk` with a
+`0.3.1` is newer than `0.3.0-hud-test`), and only an `MG4CPlay-…apk` with a
 GitHub SHA-256 digest. After download it checks the digest, package name and signing key,
 then installs, or opens Downloads if the head unit refuses. It needs the head unit online
 and the repo public. The diagnostic report shows the last check (`Update check:`). See

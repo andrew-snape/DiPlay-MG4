@@ -14,7 +14,7 @@ keeps accepting it is unresolved. The full caveats are in the [README](../README
 - **USB stick:** to carry the APK into the car.
 - **The APK:** `MG4CPlay-v<version>.apk` from the
   [Releases page](https://github.com/andrew-snape/DiPlay-MG4/releases) of this fork. The
-  current build is 0.2.9-mg4.98.
+  current build is 0.3.0.
 - **Name and clashes:** car-test builds install as `com.shihab.diplay.hudtest`, alongside
   any upstream `com.shihab.diplay` install. Run one at a time.
 

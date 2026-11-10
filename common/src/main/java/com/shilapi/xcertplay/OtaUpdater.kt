@@ -300,7 +300,7 @@ internal object OtaUpdater {
         return best
     }
 
-    /** Compares the numbers in two versions in order, so `0.2.9-mg4.91-hud-test` equals `0.2.9-mg4.91`. */
+    /** Compares the numbers in two versions in order, so `0.3.0-hud-test` equals `0.3.0`, and `0.3.0` is newer than the old `0.2.9-mg4.98`. */
     internal fun compare(left: String, right: String): Int {
         fun parts(value: String) = Regex("\\d+").findAll(value).map { it.value.toIntOrNull() ?: 0 }.toList()
         val a = parts(left); val b = parts(right)

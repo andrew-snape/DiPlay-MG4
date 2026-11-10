@@ -1,6 +1,6 @@
-# Versioning strategy (proposal)
+# Versioning strategy
 
-Status: proposal, not yet adopted. Nothing in the build has changed.
+Status: adopted. Starts at `0.3.0`, `mg4` marker dropped, full migration done (`version.properties`, `scripts/bump_version.sh`, docs, release workflow check).
 
 ## What is wrong now
 
@@ -55,18 +55,17 @@ Today the version lives in three places (`mobile/build.gradle.kts` twice, `scrip
 - A one-line script, `scripts/bump_version.sh minor|patch`, edits the file, adds the changelog heading and makes the commit.
 - CI check: the tag passed to the `Release` workflow must equal `v<versionName>`.
 
-## Migration steps
+## Migration (done)
 
-1. Add `version.properties` (`versionName=0.3.0`, `versionCode=126`) and wire up the build and script.
-2. Collapse the `mg4.62` to `mg4.98` entries in `CHANGELOG.md` into a single `0.3.0` entry (full history stays in git).
-3. Update `CLAUDE.md` ("Each release bumps...") and `docs/RELEASING.md` (version numbering section and the `0.2.9-mg4.54` examples) to the new scheme.
-4. Add a unit test in `OtaUpdaterTest` that `0.3.0` is newer than `0.2.9-mg4.98`, and that `0.3.1` beats `0.3.0`.
-5. Build, then install over mg4.98 from the USB stick and confirm it upgrades in place.
-6. Run the `Release` workflow with tag `v0.3.0`.
-7. Leave the old `v0.2.9-mg4.*` tags and releases alone (they are history, and older than `0.3.0` for OTA).
+- `version.properties` holds `versionName=0.3.0` and `versionCode=126`. Gradle, `scripts/build_mg4.sh` and the `Release` workflow read it.
+- `scripts/bump_version.sh major|minor|patch` bumps both numbers and dates the changelog heading. It does not commit or tag.
+- The Release workflow already fails when the tag differs from `v<versionName>`.
+- `OtaUpdaterTest` checks `0.3.0` is newer than `0.2.9-mg4.98` and that the `-hud-test` suffix is ignored.
+- `CHANGELOG.md` keeps the old `mg4.62` to `mg4.98` notes under a "Test builds before 0.3.0" heading, with one `0.3.0` entry on top.
+- `CLAUDE.md`, `README.md` and `docs/RELEASING.md` describe the new scheme. The old `v0.2.9-mg4.*` tags and releases stay as history.
 
-## Questions for you
+## Still to do before releasing
 
-- Start at `0.3.0` (recommended) or `1.0.0`?
-- Happy to drop the `mg4` marker from the name?
-- Should the `version.properties` and bump script go in as part of this, or just the numbering change first?
+1. Run the CI checks (`./gradlew :shared:testDebugUnitTest :common:testDebugUnitTest :mobile:lintDebug :mobile:assembleDebug`).
+2. Build, then install over mg4.98 from the USB stick and confirm it upgrades in place.
+3. Run the `Release` workflow with tag `v0.3.0`.

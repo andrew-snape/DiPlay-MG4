@@ -60,7 +60,7 @@ The app runs as `android.uid.system`, which requires the MG4 platform key:
 
 ```bash
 BT="$ANDROID_HOME/build-tools/36.0.0"
-VERSION="0.2.9-mg4.54"
+VERSION=$(sed -n 's/^versionName=//p' version.properties)
 
 "$BT/zipalign" -f 4 \
   mobile/build/outputs/apk/debug/mobile-debug.apk \
@@ -113,14 +113,20 @@ adb shell "am start -n com.shihab.diplay.hudtest/com.shilapi.xcertplay.DiPlayAct
 
 ## Version numbering
 
-Bump **both** of these together, in the same commit as the change they ship:
+Versions are `MAJOR.MINOR.PATCH` and live only in `version.properties` (`versionName`,
+`versionCode`). Gradle, `scripts/build_mg4.sh` and the Release workflow all read it. The full
+scheme is in [VERSIONING.md](./VERSIONING.md).
 
-- `mobile/build.gradle.kts` → `versionCode` (integer, +1) and `versionName` (`0.2.9-mg4.NN`).
-- `scripts/build_mg4.sh` → `VERSION` (same string, no `v` prefix).
+```bash
+scripts/bump_version.sh minor     # or major, patch
+```
 
-The debug build type appends `-hud-test` to the name, so `0.2.9-mg4.54` installs as
-`0.2.9-mg4.54-hud-test`. OTA strips non-digits and compares numerically per
-component, so `mg4.9` sorts *below* `mg4.10`.
+This bumps `versionName`, adds 1 to `versionCode` (never reset it) and dates the `CHANGELOG.md`
+heading. Commit it on its own as `chore: release X.Y.Z`.
+
+The debug build type appends `-hud-test` to the name, so `0.3.0` installs as
+`0.3.0-hud-test`. OTA compares only the numbers, in order, so `0.3.10` is newer than `0.3.9`
+and `0.3.0` is newer than the old `0.2.9-mg4.98`.
 
 ## Publishing a release
 
@@ -137,7 +143,7 @@ Rules the updater depends on:
 
 | Requirement | Why |
 | --- | --- |
-| Tag `v0.2.9-mg4.NN` | Parsed for the version comparison. |
+| Tag `v<MAJOR.MINOR.PATCH>` | Parsed for the version comparison. |
 | Not a draft, not a prerelease | Both are skipped during the check. |
 | Exactly one asset, named `MG4CPlay-v<version>.apk` | The asset filter matches `MG4CPlay-*.apk`. |
 | Signed with `tools/platform.pk8` | Signature check compares against the installed app. |
@@ -163,7 +169,7 @@ Conventional-commit prefix, imperative subject, lower case after the colon:
 fix: keep Bluetooth music playing on CarPlay connect
 feat: check for updates at startup
 perf: decouple CarPlay receive and decode processing
-chore: build version 0.2.9-mg4.54
+chore: release 0.3.1
 ```
 
 The body is where the value is. State what was wrong and *why* the fix works,
@@ -199,8 +205,7 @@ git push origin main
 ## Release checklist
 
 ```
-[ ] versionCode + versionName bumped in mobile/build.gradle.kts
-[ ] VERSION bumped in scripts/build_mg4.sh
+[ ] scripts/bump_version.sh run (version.properties and CHANGELOG.md heading)
 [ ] ./gradlew :mobile:assembleStandaloneDebug  (with the three env vars)
 [ ] zipalign + apksigner with tools/platform.pk8
 [ ] apksigner verify shows c8a2e9bc…

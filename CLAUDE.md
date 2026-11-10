@@ -13,7 +13,7 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
 - `common/`: the app: `CarPlayHostActivity` (session), `DiPlayActivity` (settings and
   diagnostics), `AirPlayPersistence` (settings), `Mg4FirmwareProfile` (per-firmware
   defaults).
-- `mobile/`: the APK module; holds `versionName`.
+- `mobile/`: the APK module. The version is in `version.properties` at the root.
 - `shared/.../vehicle/`: MG4 car reads, SWI165 only (`Mg4Firmware` gate). Read-only: `SaicBinder`
   (SAIC hub and services), `CarProperties` (CarPropertyManager), `Mg4CarReader` (sanity bounds).
   No vendor library: battery, speed, gear and charging are read here.
@@ -36,12 +36,14 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
 - Branch from `main`; open PRs against `main` on `andrew-snape/DiPlay-MG4`.
 - Commit subjects: `feat:`, `fix:`, `docs:`, `build:`, `ci:`, `test:`, `chore:`, and
   `port: <what> (upstream DiPlay #N)` for upstream fixes.
-- Each release bumps, in one commit: `versionCode` (+1) and `versionName`
-  (`0.2.9-mg4.N`) in `mobile/build.gradle.kts`, `VERSION` in `scripts/build_mg4.sh`, and
-  adds a `CHANGELOG.md` entry. A build with the same `versionCode` won't install over the
-  last one.
+- Versions are `MAJOR.MINOR.PATCH` (minor: new feature, patch: fix only), kept in
+  `version.properties` only. Don't bump per change: batch work under `# Unreleased` in
+  `CHANGELOG.md` and cut a release when the car needs one. `scripts/bump_version.sh
+  major|minor|patch` bumps `versionName` and `versionCode` (+1, never reset) and dates the
+  changelog heading; commit that on its own. A build with the same `versionCode` won't
+  install over the last one. See [docs/VERSIONING.md](docs/VERSIONING.md).
 - Release: run the `Release` workflow on `main` with tag `v<versionName>`
-  (`gh workflow run release.yml -R andrew-snape/DiPlay-MG4 --ref main -f tag=v0.2.9-mg4.N`).
+  (`gh workflow run release.yml -R andrew-snape/DiPlay-MG4 --ref main -f tag=v<MAJOR.MINOR.PATCH>`).
   See [docs/RELEASING.md](docs/RELEASING.md).
 - MG4-only behaviour is gated on `Mg4FirmwareProfile.detect().isMg4` (or
   `VehicleIntegration.isMg4`). On unknown firmware the car features stay off.
