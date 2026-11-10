@@ -1,10 +1,12 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
 
 // Version lives in version.properties (see docs/VERSIONING.md).
-val versionProps = java.util.Properties().apply {
+val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
 
