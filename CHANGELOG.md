@@ -1,5 +1,9 @@
 # Unreleased
 
+# MG4CPlay 0.3.1 (SWI165 fork), 2026-11-10
+
+- **Call echo fix (not yet tried in the car).** On 2026-11-11 the person on the other end of a call heard themselves, which stock CarPlay in the same car did not do. Calls now turn on Android's echo canceller on the microphone. The log shows `Microphone telephony: started source=VOICE_COMMUNICATION ... aec=on`. If it says `aec=unavailable`, the head unit has no canceller and echo needs another fix. Test plan D2i.
+
 # MG4CPlay 0.3.0 (SWI165 fork), 2026-11-10
 
 First release under the new version scheme (`MAJOR.MINOR.PATCH`, see [docs/VERSIONING.md](docs/VERSIONING.md)). It replaces `0.2.9-mg4.98` and contains the same code, so there is nothing new to test in the car. The in-app update offers it because the numbers compare higher.
