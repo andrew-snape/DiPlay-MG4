@@ -10,7 +10,7 @@ app for his Australian MG4's head unit (SAIC/AUTUS, MediaTek MT2712, Android 9, 
 `SWI165-29176-1100R11`, 1920x720 panel). Repo: `andrew-snape/DiPlay-MG4` on GitHub, at
 `~/Documents/GitHub/DiPlay-MG4` on his Mac. Upstream is `shihabal3amri/DiPlay`.
 
-Current build: 0.2.9-mg4.90 (2026-11-02). Confirmed in the car: wireless CarPlay over the
+Current build: 0.2.9-mg4.98 (2026-11-10). Confirmed in the car: wireless CarPlay over the
 car hotspot, overlay video, music and calls over Wi-Fi, call microphone, steering-wheel
 next/previous, square corners, battery and range to Apple Maps. In mg4.90, not yet tested
 in the car: car GPS with the car's own wheel speed to the iPhone, Apple Maps charging
@@ -20,7 +20,7 @@ Key facts:
 - No ADB on this car. Builds are installed from a USB stick; diagnostics come back as the
   app's report file (USB stick or Download to iPhone).
 - Car data comes from our own read-only code in `shared/.../vehicle/` (SWI165 only). Gear is `vehiclecondition`
-  code 5, where only 1 = P is confirmed. Charging status: 1 AC, 10 DC, 5 connecting,
+  code 5: 1 P, 2 R, 3 N, 4 D (car test 2026-11-03). Charging status: 1 AC, 10 DC, 5 connecting,
   7 connected not charging, 8 stopped. Day/night: `screen_day_night_mode` follows the headlights, and CarPlay dark mode follows it.
 - Open issues: stream freezes about every 160 s on the car hotspot; Wi-Fi Direct on
   Android 9 is being compared with the hotspot.

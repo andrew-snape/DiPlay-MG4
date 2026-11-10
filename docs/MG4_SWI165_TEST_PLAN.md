@@ -114,7 +114,7 @@ Not yet tried in the car. It applies from the first build with the two-pane Sett
 | # | Step | Pass | Log lines |
 |---|---|---|---|
 | H1 | Install over the last build, open MG4CPlay > Settings | Connection type, iPhone, hotspot details, display, sound and location choices all keep their values | n/a |
-| H2 | From Home, open each category (Connection, Display, Sound, Car, Apps, General, Help, About) | Each is reachable in two taps; nothing is clipped at 1920x720 and the list scrolls | n/a |
+| H2 | From Home, open each category (Connection, Display, Sound, Car, General, Help, About) | Each is reachable in two taps; nothing is clipped at 1920x720 and the list scrolls | n/a |
 | H3 | Connected, change **Frame rate** (a Reconnect row) | A **Reconnect** tag shows on the row and the bar appears. **Reconnect now** reconnects, the bar goes, and the new rate is in use | report lines like `FRAME_RATE = 30` and `Reconnect now after FRAME_RATE` |
 | H4 | Connected, change **Dark mode at sunset**, **Car battery on iPhone** or **Video while parked** | Takes effect with no reconnect and no bar | Settings changes list |
 | H5 | Read Settings in daylight and at night | Text and rows are readable in both | n/a |
