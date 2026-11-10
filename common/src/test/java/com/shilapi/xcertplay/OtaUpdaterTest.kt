@@ -34,6 +34,10 @@ class OtaUpdaterTest {
         assertTrue(OtaUpdater.compare("0.2.9-mg4.92", "0.2.9-mg4.91-hud-test") > 0)
         assertTrue(OtaUpdater.compare("0.2.9-mg4.100", "0.2.9-mg4.99") > 0)
         assertTrue(OtaUpdater.compare("0.2.10-mg4.1", "0.2.9-mg4.99") > 0)
+        assertTrue(OtaUpdater.compare("0.3.0", "0.2.9-mg4.98") > 0)
+        assertEquals(0, OtaUpdater.compare("0.3.0", "0.3.0-hud-test"))
+        assertTrue(OtaUpdater.compare("0.3.1", "0.3.0-hud-test") > 0)
+        assertTrue(OtaUpdater.compare("0.4.0", "0.3.12") > 0)
     }
 
     @Test

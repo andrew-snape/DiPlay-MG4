@@ -10,7 +10,7 @@ app for his Australian MG4's head unit (SAIC/AUTUS, MediaTek MT2712, Android 9, 
 `SWI165-29176-1100R11`, 1920x720 panel). Repo: `andrew-snape/DiPlay-MG4` on GitHub, at
 `~/Documents/GitHub/DiPlay-MG4` on his Mac. Upstream is `shihabal3amri/DiPlay`.
 
-Current build: 0.2.9-mg4.98 (2026-11-10). Confirmed in the car: wireless CarPlay over the
+Current build: 0.3.0 (2026-11-10). Confirmed in the car: wireless CarPlay over the
 car hotspot, overlay video, music and calls over Wi-Fi, call microphone, steering-wheel
 next/previous, square corners, battery and range to Apple Maps. In mg4.90, not yet tested
 in the car: car GPS with the car's own wheel speed to the iPhone, Apple Maps charging
