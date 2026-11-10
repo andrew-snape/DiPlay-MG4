@@ -3,6 +3,7 @@ package com.shilapi.xcertplay.vehicle
 import android.content.Context
 import android.os.SystemClock
 import android.util.Log
+import com.shilapi.xcertplay.transport.VehicleGear
 import com.shilapi.xcertplay.transport.VehicleStatusProvider
 import com.shilapi.xcertplay.transport.VehicleStatusSnapshot
 import java.util.concurrent.CountDownLatch
@@ -82,7 +83,7 @@ object Mg4Vehicle : VehicleStatusProvider {
     fun parked(context: Context): Boolean? {
         if (!available(context)) return null
         return runCatching {
-            Mg4CarSignals.rawGear()?.takeIf { it in 1..4 }?.let { it == Mg4WheelSpeed.GEAR_PARK }
+            Mg4WheelSpeed.knownGear(Mg4CarSignals.rawGear())?.let { it == VehicleGear.PARK }
         }
             .onFailure { Log.e(TAG, "Could not read MG4 gear", it) }
             .getOrNull()

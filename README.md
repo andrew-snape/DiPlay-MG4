@@ -49,7 +49,7 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 | Steering wheel | SWI165 sends wheel keys as a SystemUI broadcast, not Android media keys. DiPlay listens for it in Wi-Fi mode and sends next and previous to CarPlay. Volume and mute stay with the car. |
 | Instrument cluster | Test only (mg4.80): sends CarPlay's next turn, distance and street to the cluster's navigation area through the car's `MapService`. |
 | Bluetooth Music mode | Kept as a fallback. Switches the car to Bluetooth Music with the media service's `play` command, as read from the car's own MediaService. |
-| Location | On by default on MG4 (mg4.90). Sends the car's GPS with its own wheel speed and gear (`$PASCD`), read directly from the car, so Apple Maps keeps moving in tunnels. Only gear P is confirmed; others are sent as D. |
+| Location | On by default on MG4 (mg4.90). Sends the car's GPS with its own wheel speed and gear (`$PASCD`), read directly from the car, so Apple Maps keeps moving in tunnels. Gear is 1 P, 2 R, 3 N, 4 D (car test 2026-11-03); an unknown code is sent as D. |
 | Wi-Fi | Holds Android's high-performance Wi-Fi lock during wireless CarPlay (mg4.91, from xcertplay 1.4.1). Location sends each NMEA sentence as its own parameter, only the types the iPhone asked for, at its intervals (mg4.91, from xcertplay 1.4.1). |
 | Charging | Apple Maps' "charging" comes from the car's charging status (1 AC, 10 DC) (mg4.90). Plugged in but stopped or finished is not charging. |
 | Dark mode | Follows the car's day/night (`screen_day_night_mode`), which Android's night mode tracks and which switches with the headlights (found by the mg4.90 probe, 2026-11-03). Optional sunset mode (mg4.90). |
@@ -58,7 +58,7 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 
 ## Settings
 
-On MG4, **Settings** is a two-pane screen like iOS Settings: a list of categories on the left and the chosen category on the right. It has Connection, Display, Sound, Car, Apps, General, Help and About; every setting is two taps from Home. The screen is built but not yet tried in the car. Other head units keep the upstream settings page.
+On MG4, **Settings** is a two-pane screen like iOS Settings: a list of categories on the left and the chosen category on the right. It has Connection, Display, Sound, Car, General, Help and About; every setting is two taps from Home. The screen is built but not yet tried in the car. Other head units keep the upstream settings page.
 
 Some settings only reach a running CarPlay session after it reconnects. Those rows carry a **Reconnect** tag, and changing one while connected shows **Some changes apply after CarPlay reconnects. Reconnect now**. Dark mode at sunset, Car battery on iPhone and Video while parked take effect straight away.
 
@@ -71,7 +71,7 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | Resolution, Frame rate, Efficient video (HEVC) | Display | Native, 60 fps, on. HEVC is half the Wi-Fi data of H.264; turn off to compare colours. |
 | Overlay video renderer, Square corners, Colour range (test) | Display > Advanced | On, on, from the video. |
 | CarPlay audio over Wi-Fi, Calls over CarPlay only | Sound | On, on. Off uses the car's Bluetooth Music; calls-only disconnects the car's hands-free while CarPlay runs. A saved choice still wins. |
-| Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. |
+| Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. 2000 ms (mg4.96) rides out a short dropout and adds about a second of music delay. |
 | Microphone (test) | Sound | Automatic. Plain microphone or call processing can be chosen to compare. |
 | Siri microphone as PCM (test), Record microphone (test) | Sound | Off, off (mg4.98). PCM sends Siri plain audio instead of Opus. Recording keeps the first 10 s of each Siri request and call on the car; **Download to iPhone** sends them with the report as a zip. |
 | Send location to iPhone | Car > Driving | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it. |

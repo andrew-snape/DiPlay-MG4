@@ -57,8 +57,8 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
 
 ## Car facts worth knowing
 
-- USB CarPlay: the head unit has no `com.android.vpndialogs`; the app authorises its own VPN
-  (`VpnSelfAuthorizer`, system uid) when the user picks USB.
+- USB CarPlay: removed from the MG4 UI in mg4.96, because the car's own wired CarPlay holds
+  the iPhone. The USB code and `VpnSelfAuthorizer` stay in the tree, unused.
 - No ADB on this car: builds are installed from a USB stick. Diagnostics come back as
   the report file (USB or **Download to iPhone**).
 - Gear: `vehiclecondition` code 5: 1 P, 2 R, 3 N, 4 D (car test 2026-11-03).

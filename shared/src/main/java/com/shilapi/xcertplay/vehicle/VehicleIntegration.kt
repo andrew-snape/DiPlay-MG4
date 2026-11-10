@@ -71,16 +71,8 @@ object VehicleIntegration {
             appendLine("Pack power: ${value(reading.batteryPowerKw?.let { "%.1f".format(it) }, " kW", "powerKw")}")
             appendLine("Energy: ${value(reading.batteryEnergyKwh?.let { "%.1f".format(it) }, " kWh", "energyKwh")}")
             appendLine("Capacity: ${value(reading.batteryCapacityKwh?.let { "%.1f".format(it) }, " kWh", "capacityKwh")}")
-            appendLine("Gear: ${value(gear, "", "gear")} ${gearName(gear)}")
+            appendLine("Gear: ${value(gear, "", "gear")} ${Mg4WheelSpeed.gearLabel(gear)}")
             append("Speed: ${value(speed?.let { "%.1f".format(it * 3.6f) }, " km/h", "speed")}")
         }
-    }
-
-    private fun gearName(raw: Int?): String = when (raw) {
-        1 -> "(P)"
-        2 -> "(R)"
-        3 -> "(N)"
-        4 -> "(D)"
-        else -> ""
     }
 }
