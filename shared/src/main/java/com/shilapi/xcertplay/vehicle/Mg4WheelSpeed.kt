@@ -23,13 +23,25 @@ internal object Mg4WheelSpeed {
         metersPerSecond?.toDouble()?.takeIf { it.isFinite() && it in 0.0..90.0 }
 
     // Car test 2026-11-03 (mg4.92), moving the selector P, R, P, R, N, D, P: 1 P, 2 R, 3 N, 4 D.
-    fun gear(raw: Int?): VehicleGear? = when (raw) {
+    /** A gear the car test confirmed (1 P, 2 R, 3 N, 4 D); null for any other code. */
+    fun knownGear(raw: Int?): VehicleGear? = when (raw) {
         GEAR_PARK -> VehicleGear.PARK
         2 -> VehicleGear.REVERSE
         3 -> VehicleGear.NEUTRAL
         4 -> VehicleGear.DRIVE
-        null -> null
-        else -> if (raw > 0) VehicleGear.DRIVE else null
+        else -> null
+    }
+
+    /** The gear sent to the iPhone: a known gear, or D for an unknown positive code. */
+    fun gear(raw: Int?): VehicleGear? = knownGear(raw) ?: if (raw != null && raw > 0) VehicleGear.DRIVE else null
+
+    /** "(P)", "(R)", "(N)", "(D)" for a known gear, or an empty string. */
+    fun gearLabel(raw: Int?): String = when (knownGear(raw)) {
+        VehicleGear.PARK -> "(P)"
+        VehicleGear.REVERSE -> "(R)"
+        VehicleGear.NEUTRAL -> "(N)"
+        VehicleGear.DRIVE -> "(D)"
+        else -> ""
     }
 }
 
