@@ -11,7 +11,6 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import com.shilapi.xcertplay.AirPlayPersistence
-import com.shilapi.xcertplay.AppLocale
 import com.shilapi.xcertplay.DiPlayPreferences
 import com.shilapi.xcertplay.Mg4FirmwareProfile
 import com.shilapi.xcertplay.airplay.CarPlaySize
@@ -389,7 +388,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.CAR_BATTERY -> R.string.settings_car_battery
         SettingRow.CHARGING_CONNECTORS -> R.string.charging_connectors
         SettingRow.LOW_CHARGE_WARNING -> R.string.low_charge_warning
-        SettingRow.LANGUAGE -> R.string.language_section_title
         SettingRow.SOFTWARE_UPDATE -> R.string.settings_software_update
         SettingRow.APP_PERMISSIONS -> R.string.app_permissions
         SettingRow.BLUETOOTH -> R.string.bluetooth_settings
@@ -482,7 +480,6 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                     VehicleSettings.setBatteryToIphone(activity, it)
                     if (it) Mg4Vehicle.start(activity.applicationContext)
                 }
-                SettingRow.LANGUAGE -> link(AppLocale.displayName(activity, AppLocale.preference(activity))) { AppLocale.showPicker(activity) }
                 SettingRow.SOFTWARE_UPDATE -> link(host.version()) { host.checkForUpdates() }
                 SettingRow.APP_PERMISSIONS -> link(null) { host.openAppPermissions() }
                 SettingRow.BLUETOOTH -> link(null) { host.openBluetoothSettings() }

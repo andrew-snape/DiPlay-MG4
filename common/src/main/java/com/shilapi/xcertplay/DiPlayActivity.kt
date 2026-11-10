@@ -96,16 +96,9 @@ class DiPlayActivity : ComponentActivity() {
         if (uri != null) exportDiagnostics(uri)
     }
 
-    private var languagePreferenceAtCreate = AppLocale.SYSTEM
-
-    override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(AppLocale.wrap(newBase))
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CrashRecorder.install(this)
-        languagePreferenceAtCreate = AppLocale.preference(this)
         com.shilapi.xcertplay.vehicle.VehicleIntegration.onAppOpened(applicationContext)
         CarHotspotController.enable(applicationContext)
         WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -173,10 +166,6 @@ class DiPlayActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) { super.onConfigurationChanged(newConfig); render() }
     override fun onResume() {
         super.onResume()
-        if (Build.VERSION.SDK_INT < 33 && AppLocale.preference(this) != languagePreferenceAtCreate) {
-            recreate()
-            return
-        }
         handler.removeCallbacks(tick); handler.post(tick)
         // Back from the car settings: refresh the car hotspot reminder on the home page.
         if (!initialLaunch && (page == "home" || page == "settings" || page == "connection")) render()
@@ -466,7 +455,6 @@ class DiPlayActivity : ComponentActivity() {
         section(content, getString(R.string.about), R.drawable.ic_dp_about) { card ->
             card.addView(button(getString(R.string.about_diplay), false) { page = "about"; render() }, matchButton(0, 60))
         }
-        languageSettings(content)
     }
 
     private fun about(content: LinearLayout) {
@@ -1418,16 +1406,6 @@ class DiPlayActivity : ComponentActivity() {
         override fun wirelessHelp() = this@DiPlayActivity.wirelessHelp()
         override fun reconnect() = connect(AirPlayPersistence.loadWirelessEnabled(this@DiPlayActivity))
         override fun version() = this@DiPlayActivity.version()
-    }
-
-    private fun languageSettings(content: LinearLayout) {
-        section(content, getString(R.string.language_section_title)) { card ->
-            card.addView(label(getString(R.string.language_hint), 14, MUTED))
-            val current = AppLocale.preference(this)
-            val languageButton = button("${getString(R.string.language_app_language)} · ${AppLocale.displayName(this, current)}", false) { }
-            languageButton.setOnClickListener { AppLocale.showPicker(this) }
-            card.addView(languageButton, matchButton(12, 60))
-        }
     }
 
     private fun section(parent: LinearLayout, title: String, icon: Int? = null, build: (LinearLayout) -> Unit) {

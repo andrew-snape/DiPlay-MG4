@@ -1,5 +1,9 @@
 # Unreleased (SWI165 fork)
 
+English only. Not yet in a build.
+
+- **Other languages removed.** The Simplified Chinese, Arabic, Russian and Spanish translations were about 130 strings behind English and unchecked, so the app is now English only. The **Language** row (Settings > General) and the App language button in the CarPlay menu are gone. A saved language choice is ignored.
+
 mg4.97 (test build). Siri microphone fix. Not yet tried in the car: test plan D2c, D2d.
 
 - **Siri microphone fix.** The microphone's RTP clock always counted at 48 kHz, so when the iPhone asks for Opus at 24 kHz (usual for Siri) or 16 kHz (usual for calls), each 20 ms packet claimed to be 40 ms or 60 ms long and the iPhone heard speech full of gaps. The microphone now counts at the negotiated rate (the same fix upstream #644 made for playback). The 2026-11-04 report showed the microphone sending clean audio at a good level on all three sources, and Siri still failing on each. Calls get the same fix; check callers still hear you clearly. The log now shows `airplay audio format ... audioFormat=0x... rtpClock=` and the microphone line ends with `rtpClock= tsStep=`.

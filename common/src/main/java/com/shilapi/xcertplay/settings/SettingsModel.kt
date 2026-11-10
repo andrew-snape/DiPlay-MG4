@@ -68,7 +68,6 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     LOW_CHARGE_WARNING(RowKind.PICKER),
 
 
-    LANGUAGE(RowKind.LINK),
     SOFTWARE_UPDATE(RowKind.LINK),
     APP_PERMISSIONS(RowKind.LINK),
     BLUETOOTH(RowKind.LINK),
@@ -132,7 +131,7 @@ internal object SettingsLayout {
             SettingsGroup("battery", listOf(SettingRow.CAR_BATTERY, SettingRow.CHARGING_CONNECTORS, SettingRow.LOW_CHARGE_WARNING)),
         )
         SettingsCategory.GENERAL -> listOf(
-            SettingsGroup("general", listOf(SettingRow.LANGUAGE, SettingRow.SOFTWARE_UPDATE)),
+            SettingsGroup("general", listOf(SettingRow.SOFTWARE_UPDATE)),
             SettingsGroup("system", listOf(SettingRow.APP_PERMISSIONS, SettingRow.BLUETOOTH)),
         )
         SettingsCategory.HELP -> listOf(

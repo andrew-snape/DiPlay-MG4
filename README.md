@@ -76,7 +76,7 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | Video while parked | Car > Driving | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P. DRM video such as Apple TV+ won't play. |
 | Dark mode at sunset | Car > Appearance | Off (mg4.92). Off follows the car's day/night, which changes with the headlights. On uses sunset and sunrise at the car's position. |
 | Car battery on iPhone, Directions on the dashboard (test) | Car | As before. |
-| Diagnostics, updates, language, permissions | General, Help, About | Settings changes are listed in the diagnostic report. |
+| Diagnostics, updates, permissions | General, Help, About | Settings changes are listed in the diagnostic report. |
 
 Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, and the music audio channel.
 
