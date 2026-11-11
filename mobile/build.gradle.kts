@@ -45,8 +45,9 @@ android {
 
     buildTypes {
         debug {
+            // The package name stays `.hudtest` so a new build updates the installed one, with its
+            // settings and pairing. The version name has no suffix (it was `-hud-test` to 0.3.1).
             applicationIdSuffix = ".hudtest"
-            versionNameSuffix = "-hud-test"
         }
         release {
             optimization {

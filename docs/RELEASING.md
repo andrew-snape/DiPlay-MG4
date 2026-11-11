@@ -124,9 +124,10 @@ scripts/bump_version.sh minor     # or major, patch
 This bumps `versionName`, adds 1 to `versionCode` (never reset it) and dates the `CHANGELOG.md`
 heading. Commit it on its own as `chore: release X.Y.Z`.
 
-The debug build type appends `-hud-test` to the name, so `0.3.0` installs as
-`0.3.0-hud-test`. OTA compares only the numbers, in order, so `0.3.10` is newer than `0.3.9`
-and `0.3.0` is newer than the old `0.2.9-mg4.98`.
+The installed version name matches `version.properties` (`0.3.2` installs as `0.3.2`). Up to 0.3.1 the
+debug build type added `-hud-test` to the name, so older installs show `0.3.1-hud-test`. OTA compares only
+the numbers, in order, so `0.3.10` is newer than `0.3.9`, `0.3.2` is newer than `0.3.1-hud-test`, and `0.3.0`
+is newer than the old `0.2.9-mg4.98`. The package name keeps `.hudtest`, so updates install over the old build.
 
 ## Publishing a release
 
