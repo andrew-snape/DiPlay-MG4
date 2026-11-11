@@ -1,5 +1,7 @@
 # Unreleased
 
+- **Call echo suppression (not yet tried in the car).** The 0.3.1 car test (2026-11-11) logged `aec=unavailable`: this head unit has no Android echo canceller, so the other person still heard themselves. Calls now turn the microphone down by about 16 dB while the caller's voice is playing, and bring it back about 0.6 seconds after they stop. If you talk over the caller, you will be quieter for them. The microphone line of the log ends with `echoSuppressedFrames=` (how many 20 ms frames were turned down in each 5 second window); 0 during a call means the suppressor never heard the caller. Test plan D2i.
+
 # MG4CPlay 0.3.1 (SWI165 fork), 2026-11-10
 
 - **Call echo fix (not yet tried in the car).** On 2026-11-11 the person on the other end of a call heard themselves, which stock CarPlay in the same car did not do. Calls now turn on Android's echo canceller on the microphone. The log shows `Microphone telephony: started source=VOICE_COMMUNICATION ... aec=on`. If it says `aec=unavailable`, the head unit has no canceller and echo needs another fix. Test plan D2i.
