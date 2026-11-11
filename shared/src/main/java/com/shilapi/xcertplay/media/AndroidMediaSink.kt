@@ -1323,8 +1323,6 @@ private class AudioRenderer(
             )
         }
         if (!playbackStarted) stage = "writing to the car's audio output"
-        // The caller's voice is the reference for suppressing echo on the call microphone.
-        if (format.audioType == "telephony") CallEchoSuppressor.shared.noteFarEnd(data, offset, length)
         if (!fadeApplied) {
             applyFadeIn(data, offset, length)
             fadeApplied = true

@@ -261,9 +261,6 @@ internal class MicrophoneUplink(
                         "encodeMaxUs=${encodeMaxNs / 1000} readMaxMs=${readMaxNs / 1_000_000L} " +
                         "kbps=${if (elapsedNs > 0) bytesSent * 8_000_000L / elapsedNs else 0} " +
                         level.summary() +
-                        (if (config.audioType == "telephony") {
-                            " echoSuppressedFrames=${CallEchoSuppressor.shared.suppressedFrames}"
-                        } else "") +
                         if (force) " ended=true" else "",
                 )
             }
@@ -275,16 +272,9 @@ internal class MicrophoneUplink(
         readMaxNs = 0L
         bytesSent = 0L
         level.reset()
-        if (config.audioType == "telephony") CallEchoSuppressor.shared.resetCounters()
     }
 
     private fun sendFrame(socket: DatagramSocket, counters: MicrophoneCounters, frame: ByteArray) {
-        // No echo canceller on this head unit, so calls turn the microphone down while the
-        // caller is heard (see CallEchoSuppressor). Before the level meter and test recording,
-        // so both show what the caller is sent.
-        if (config.audioType == "telephony") {
-            CallEchoSuppressor.shared.process(frame, config.sampleRate)
-        }
         level.add(frame)
         recording?.write(frame)
         val encodeStarted = System.nanoTime()
