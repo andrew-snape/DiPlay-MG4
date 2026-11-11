@@ -1,5 +1,7 @@
 # Unreleased
 
+# MG4CPlay 0.3.2 (SWI165 fork), 2026-11-11
+
 - **Cluster turn distance matches CarPlay (not yet tried in the car).** The instrument cluster showed the iPhone's raw distance to the next turn (537 m, then 512 m) while CarPlay's screen showed 600 m, then 500 m. The cluster now gets the value CarPlay shows (the iPhone's display text and units), and if the iPhone does not send one, the raw distance rounded to 100 m above 500 m, 50 m above 100 m and 10 m below. A new distance is sent only when the shown value changes. The log has a `Cluster nav: distance raw=... phoneText=... units=... shown=...m via phone|rounded` line for each change: `via rounded` means the iPhone's display text was missing or not trusted. Test plan D4.
 
 # MG4CPlay 0.3.1 (SWI165 fork), 2026-11-10
