@@ -27,7 +27,7 @@ So "restart" means: restart the **name**, keep the **code** counting.
 
 - Drop the `0.2.9-` prefix and the `mg4.` marker. The package name already says it is the MG4 app.
 - `versionCode` stays a plain +1 per shipped build (126, 127, ...). It is the install counter and has no meaning beyond order.
-- Car-test builds keep the existing `-hud-test` suffix from the debug build type. The OTA compare ignores it.
+- Car-test builds have no name suffix from 0.3.2 (0.3.1 and earlier added `-hud-test`). The OTA compare still ignores that suffix, so older installs update. The package name keeps `.hudtest`.
 
 ### Where to start
 
