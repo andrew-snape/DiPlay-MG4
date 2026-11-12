@@ -103,10 +103,7 @@ class DiPlayActivity : ComponentActivity() {
         CarHotspotController.enable(applicationContext)
         WindowCompat.setDecorFitsSystemWindows(window, true)
         window.statusBarColor = BG; window.navigationBarColor = BG
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = false
-            hide(WindowInsetsCompat.Type.statusBars())
-        }
+        applySystemBars()
         setupError = runCatching { DiPlayBootstrap.ensure(this) }.exceptionOrNull()?.let {
             android.util.Log.e("DiPlaySetup", "CarPlay authentication could not be loaded", it)
             getString(R.string.setup_error_auth)
@@ -164,8 +161,23 @@ class DiPlayActivity : ComponentActivity() {
         super.onSaveInstanceState(outState)
     }
     override fun onConfigurationChanged(newConfig: Configuration) { super.onConfigurationChanged(newConfig); render() }
+    /** Settings follow the Full screen choice, so the car's side bar is hidden here as in CarPlay. */
+    private fun applySystemBars() {
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = false
+            hide(WindowInsetsCompat.Type.statusBars())
+            if (AirPlayPersistence.loadHideBottomBar(this@DiPlayActivity)) {
+                hide(WindowInsetsCompat.Type.navigationBars())
+            } else {
+                show(WindowInsetsCompat.Type.navigationBars())
+            }
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+    }
+
     override fun onResume() {
         super.onResume()
+        applySystemBars()
         handler.removeCallbacks(tick); handler.post(tick)
         // Back from the car settings: refresh the car hotspot reminder on the home page.
         if (!initialLaunch && (page == "home" || page == "settings" || page == "connection")) render()
@@ -1087,6 +1099,8 @@ class DiPlayActivity : ComponentActivity() {
         appendLine(
             "Microphone test: siriFormat=${if (AirPlayPersistence.loadSiriMicrophonePcm(appContext)) "PCM" else "Opus"} " +
                 "recording=${if (AirPlayPersistence.loadMicrophoneRecording(appContext)) "on" else "off"} " +
+                "callEcho=${if (AirPlayPersistence.loadCallEchoSuppression(appContext)) "on" else "off"} " +
+                "callsOverCarPlayOnly=${if (AirPlayPersistence.loadCallsOverCarPlayOnly(appContext)) "on" else "off"} " +
                 "recordings=${MicRecordings.files(appContext).joinToString(",") { "${it.name}(${it.length()})" }.ifEmpty { "none" }}",
         )
         com.shilapi.xcertplay.settings.SettingsChangeLog.lines(appContext).takeIf { it.isNotEmpty() }?.let { lines ->
