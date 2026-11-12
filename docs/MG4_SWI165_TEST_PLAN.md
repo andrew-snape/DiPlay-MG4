@@ -142,6 +142,17 @@ Not yet tried in the car. Each step is MG4 only and, unless noted, behind a sett
 | I13 | Start MG4CPlay with the car's MFi setting off, connect as usual, then save a report | The report header has a `Car MFi chip:` line, and the log has `Car MFi chip:` probe lines. Nothing else changes | `Car MFi chip: probe result working id=0x200 mfi=2 certBytes= signatureBytes=128` (or the exact failure, for example `EACCES`, `ENOENT`, `ECONNREFUSED`, `SocketTimeoutException`), `selinux context=`, `enforce=`, device id, cert size, signature size, and timings. Send the report back whatever it says |
 | I14 | Only if I13 says `working`: turn **Use car's MFi chip (test)** on (Settings > Car > Authentication), reconnect over Wi-Fi as usual. Check CarPlay connects, then try Siri and a call. Turn it off if it fails | CarPlay connects as before. If the chip can't be used the connection still works on the bundled identity | `Car MFi chip: in use for this session`, then `Car MFi chip: signature count=1 digestBytes=20 signatureBytes=128` for the AirPlay auth, and `iap2 mfi tx=0xaa03 signature bytes=` for iAP2. A fallback shows `Car MFi chip: not used, ...; using the bundled identity` or `...; the next connection uses the bundled identity` |
 
+## J. Stock CarPlay driving side patch (not yet tried in the car)
+
+For the patched stock app in `tools/allgo-rhd-patch/`. Install `AllgoCarplay-rhd-v105.apk` from USB first.
+
+| # | Do | Expect | Log |
+|---|---|---|---|
+| J1 | Check the installed version (Apps, CarPlay) | `9-rhd`, versionCode 105 | n/a |
+| J2 | Switch the car off, wait for sleep, start it, then plug the iPhone in by USB | CarPlay starts with the bar on the right | n/a (stock app logs logcat only) |
+| J3 | Repeat J2 five times, noting the side each time | Right every time | n/a |
+| J4 | Uninstall updates for the app | Stock 104 returns | n/a |
+
 ## Known risks to check in code before release
 
 | # | Risk | Why | What to check |
