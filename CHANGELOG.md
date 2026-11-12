@@ -1,6 +1,6 @@
 # Unreleased
 
-Ported from the car's stock AllGo CarPlay app (docs/MG4_SWI165_ALLGO_NOTES.md). All MG4 only and **not yet tried in the car**: test plan section I.
+Ported from the car's stock AllGo CarPlay app (docs/MG4_SWI165_ALLGO_NOTES.md). Also two new options: Screen size reported to iPhone and Narrow-band calls. All MG4 only and **not yet tried in the car**: test plan section I.
 
 - **Show calls to the car (test).** Settings > Sound, off by default. Lists each CarPlay call with the car's Telecom (a `CarPlayPhone` account, as stock does), so the car's phone system and audio policy see a call in progress. Answering or hanging up on the car's call screen presses CarPlay's hook switch. Log lines start `Telecom:`.
 - **Car phone mode for calls (test).** Settings > Sound, off by default. Tells the car's audio policy `carplay_source=phone` while a CarPlay call track plays and clears it afterwards and on session stop, as the stock audio library does. Log: `Audio: car phone mode on|off ... result=`.
