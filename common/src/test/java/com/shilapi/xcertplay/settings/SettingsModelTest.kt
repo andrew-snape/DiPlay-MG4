@@ -21,6 +21,11 @@ class SettingsModelTest {
         assertFalse(SettingRow.CLUSTER_DIRECTIONS in rows(SettingsCategory.CAR, env(Generation.SWI69)))
     }
 
+    @Test fun carMfiChipOnlyOnSwi165() {
+        assertTrue(SettingRow.CAR_MFI_CHIP in rows(SettingsCategory.CAR, env(Generation.SWI165)))
+        assertFalse(SettingRow.CAR_MFI_CHIP in rows(SettingsCategory.CAR, env(Generation.SWI69)))
+    }
+
     @Test fun sendLocationLivesUnderCar() {
         assertTrue(SettingRow.SEND_LOCATION in rows(SettingsCategory.CAR, env()))
         SettingsCategory.entries.filter { it != SettingsCategory.CAR }.forEach {
@@ -78,5 +83,20 @@ class SettingsModelTest {
         assertEquals(SettingsChangeLog.MAX_LINES, lines.size)
         assertEquals("line 5", lines.first())
         assertEquals("line ${SettingsChangeLog.MAX_LINES + 4}", lines.last())
+    }
+
+    @Test fun carTestSettingsOnlyOnSwi165() {
+        val tests = listOf(SettingRow.SHOW_CALLS_TO_CAR, SettingRow.TAG_MUSIC_CARPLAY, SettingRow.CAR_PHONE_MODE, SettingRow.NARROW_BAND_CALLS)
+        tests.forEach {
+            assertTrue(it in rows(SettingsCategory.SOUND, env(Generation.SWI165)))
+            assertFalse(it in rows(SettingsCategory.SOUND, env(Generation.SWI69)))
+            assertFalse(it in rows(SettingsCategory.SOUND, env(Generation.OTHER)))
+        }
+    }
+
+    @Test fun reportedScreenSizeOnlyOnSwi165() {
+        assertTrue(SettingRow.REPORTED_SCREEN_SIZE in rows(SettingsCategory.DISPLAY, env(Generation.SWI165)))
+        assertFalse(SettingRow.REPORTED_SCREEN_SIZE in rows(SettingsCategory.DISPLAY, env(Generation.SWI69)))
+        assertFalse(SettingRow.REPORTED_SCREEN_SIZE in rows(SettingsCategory.DISPLAY, env(Generation.OTHER)))
     }
 }

@@ -93,6 +93,105 @@ The stock app hard-codes a 1920x640 logical screen, 244 x 80 mm physical. It rea
 - `CarPlayTelephoneKey`, `CarPlayPlayKey`, `CarPlayKnob`: how wheel and phone keys go
   to CarPlay.
 
+## Second read, Nov 2026 (R11 APK, jadx)
+
+Same APK, from `Car Exports/apps` (the car's own R11 build). Read only; nothing patched
+or tried in the car.
+
+### Driving side race (the CarPlay bar on the left)
+
+- `onCreate()` calls `Car.createCar(this, mCarConnection, mHandler)` and `connect()`,
+  then `startCarPlayService()` posts `createSession()` to the same `mHandler` thread.
+- `createSession()` copies the static `mRightHandDrive` (default `false`) into
+  `ConfigInfo.setRightHandMode`. It runs once per service start, retrying only on error.
+- The driver position (`CAL_DRIVE_HDL_TYPE`, `0x01` right) is read later, in
+  `mCarConnection.onServiceConnected`, which is queued behind the session start on the
+  same thread.
+- So the first start after a cold boot most likely gets left-hand mode and the bar on the
+  left. `mRightHandDrive` is static, so a service restart in the same process keeps the
+  last read, which would explain why it only happens sometimes.
+- Fix for a patched APK: create the session from `onServiceConnected`, after the read.
+  A simpler patch for this right-hand-drive car is to set `mRightHandDrive = true`.
+- The `Driver position` log line is logcat only, so with no ADB the fix can only be
+  checked by watching which side the bar is on.
+
+### Keys
+
+| Key | Stock behaviour |
+|---|---|
+| 287 voice | Short press: Siri prewarm then button down; release: button up. Long press: button down. Ignored while the car's own voice assistant has voice focus. |
+| 291 phone | Short press: CarPlay telephone hook switch. Long press ignored. |
+| 164 mute | Only acts while Siri is active: borrows audio, and mutes the alert group during an alert. |
+| Volume up | After a mute, gives audio back to CarPlay (unborrow). |
+
+### Display off
+
+The broadcast `com.saic.conn.display.report` (boolean `state`) tells the app the screen
+turned off or on. Off: it gives the screen back to the car (borrow). On: it asks for the
+CarPlay screen again.
+
+### Wireless code
+
+The Java layer has wireless paths: `CLIENTTYPE_WIFI` (2) and `CLIENTTYPE_USB_WIFI` (3),
+`mActiveTransport`, `WirelessCarPlayUpdate`, Wi-Fi credential and Bluetooth out-of-band
+pairing interfaces. Whether the native library and the car's Wi-Fi and Bluetooth
+pairing support it on R11 is unknown. The firewall still drops TCP 7000, where stock
+wireless would listen.
+
+### Not visible
+
+Call audio, Siri audio and the microphone are handled in `libjni_carplay` and
+`libjni_carplayscreen`, which weren't exported. Copying those from `/system/lib*` to
+USB would show which microphone source and processing the stock app uses.
+
+## Native libraries (R11)
+
+Disassembled from the car's own libraries (`libCarPlayPlatformAudio.so`, `libAirPlay.so`, `carplay.rc`, `arp_update.sh`), Nov 2026. Read only. Nothing here has been tried in the car.
+
+- **Call audio.** The stock library plays calls on native stream type `VOICE_CALL` (0). Before it starts it calls `AudioSystem::setDeviceConnectionState(device=0x400, AVAILABLE, address="", name="carplay_source=phone")`, and with `UNAVAILABLE` when the call track stops. This looks like a vendor audio-policy hook that switches the car into CarPlay phone mode (routing, and probably echo cancellation). MG4CPlay now has it behind **Car phone mode for calls (test)**, called by reflection (`(int, int, String, String)` on Android 9), paired on and off, and cleared on session stop.
+- **Microphone.** Calls use `AudioRecord` source 1 (`MIC`) with a vendor input flag `0x200`. Siri uses source 6 (`VOICE_RECOGNITION`) with vendor flag `0x100`. Java cannot set those flags. The **Microphone (stock)** option uses `MIC` for calls and leaves Siri as it is.
+- **Narrow band.** The property `persist.sys.carplay.narrow_band` is read at start (narrow-band call audio). Not used here.
+- **No stock wireless.** `libAirPlay.so` reports `wireless=no` in its `$Features` string, so stock wireless CarPlay is compiled out. `carplay.rc` and `arp_update.sh` show stock CarPlay is IP over USB NCM, with `ip6tables` letting port 7000 through on `usb0` only. That agrees with the firewall dropping TCP 7000 on other interfaces.
+- **Exporting more.** Diagnostics now copy `libjni_carplay*.so` and `libcarplay*.so` from the system and vendor library folders (test plan I1).
+
+## Ported into MG4CPlay (Nov 2026, not yet tried in the car)
+
+Telecom mirroring of calls, vendor `onCallStatusChanged` listener (mask `0x60000`), 200 ms phone focus retry, music source tag 50, display report log, mute key during Siri, car phone mode. Test plan section I. For the display report, the stock code treats `state=true` as the display going off; this is unconfirmed, so the app logs both and only asks for a key frame when the display comes back.
+
+## Car MFi chip
+
+Read from the car's own libraries (`libmfi_cp.so`, `libCarPlayPlatformMFI.so`, `libiap2.so`), Nov 2026. The `mfid` daemon itself was not available, so its side is inferred from what the client accepts. Nothing here has been tried in the car.
+
+The stock CarPlay does not read the Apple authentication chip itself. It asks `/system/bin/mfid` (started as `mfid i2c /dev/i2c-3 0x10 0`) over a Unix socket.
+
+**Socket.** `AF_UNIX`, `SOCK_STREAM`, filesystem path `/dev/socket/MFISocket` (init: `0660 root system`, so uid system is fine by file permissions; SELinux is unknown). The stock client keeps one connection open and has no timeout; MG4CPlay opens one connection per call with a 3 s read timeout.
+
+**Frame, both directions.** A little-endian u32 body length, then a protobuf body. The stock reader uses a 1024-byte buffer, so replies stay under about 1020 bytes.
+
+```
+RPCProtoMessage { int32 tx_id = 1; int32 opcode = 2; repeated ArgMessage argument = 3; }   // proto2, all required
+ArgMessage      { int32 datatype = 1; bytes argument = 2; }
+bytes on the wire: 08 <tx_id> 10 <opcode> { 1A <len> 08 <datatype> 12 <len> <data> }*
+datatype: 4 = u32 LE, 5 = s32 LE, 8 = blob.  At most 12 args.
+```
+
+The reply echoes `tx_id` and `opcode`. Reply arguments come in a fixed order and the last is always an s32 status (0 is OK; an error reply probably has only the status).
+
+| Opcode | Call | Request args | Reply args (then s32 status) |
+|---|---|---|---|
+| 0 | GetDeviceId | none | u32 id: 0x200 is MFi 2.0C, 0x300 is 3.0 (from Apple's register map, unconfirmed here) |
+| 1 | GetCertificate | u32 buffer capacity (the stock app sends 1024) | blob: the DER certificate |
+| 2 | CreateSignature | blob: the digest, raw | blob: the signature |
+| 3 | ReadCertificateSerialNum | none | blob: ASCII hex string, at most 30 characters |
+
+Example frames (tx_id 0): GetDeviceId `04 00 00 00 | 08 00 10 00`; GetCertificate with capacity 1024 `0E 00 00 00 | 08 00 10 01 1A 08 08 04 12 04 00 04 00 00`. CreateSignature of a 20-byte digest with tx_id 1 is `1E 00 00 00 | 08 01 10 02 1A 18 08 08 12 14 <20 bytes>`.
+
+**What is signed.** Neither `libmfi_cp` nor the wrapper hashes anything: the caller hashes and the chip signs the bytes it is given. For CarPlay's AirPlay auth-setup that is SHA-1 over the two X25519 public keys on a 2.0C chip (20 bytes, 128-byte RSA-1024 signature) and SHA-256 on a 3.0 chip (32 bytes, 64-byte ECDSA signature). For iAP2 the phone's challenge goes through unchanged. The chip is probably 2.0C: `libiap2` has a 2.0C register driver, a 128-byte signature buffer and a 20-byte challenge path.
+
+**In MG4CPlay.** `CarMfiClient` speaks this protocol (pure Kotlin protobuf, one call at a time, tx_id and status checked). `CarMfiProbe` runs the four calls once per run on MG4 and logs the result (id, serial, certificate size and a short SHA-256 prefix, signature size, timings, SELinux context, and the exact exception if the socket is refused). `CarMfiAuthenticator` is the `MfiAuthenticator` behind the **Use car's MFi chip (test)** switch. The existing AirPlay and iAP2 code already pick the digest and pass the challenge by `protocolMajor()` (2 or 3), so both paths use the car chip with no other change. An id other than 0x200 or 0x300 is logged as not supported by this build, and the bundled identity (P-256, MFi 3.0 style, 32-byte digest) is used instead. The certificate and signatures always come from one source for a connection.
+
+**Unknowns to settle in the car.** Whether the app's SELinux domain may connect to the socket; whether `mfid` accepts a connection per call, and whether it works while the stock CarPlay runs; the real status codes; and whether the iPhone accepts a 2.0C certificate for wireless CarPlay (not only wired). Test plan I13 and I14.
+
 ## Microphone, from the car's native libraries (2026-11-12)
 
 Pulled from the car: `/system/lib64/libCarPlayPlatformAudio.so` (disassembled; not tried in

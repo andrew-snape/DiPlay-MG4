@@ -31,14 +31,41 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.TimeUnit
 
+/** What the steering-wheel keys need from the sink to mute Siri's voice (stock "borrow audio"). */
+interface SiriAudioControl {
+    /** A Siri request is running: its microphone stream is open or its voice is still playing. */
+    fun isSiriActive(): Boolean
+
+    /** Siri's voice is muted. Cleared by the sink when Siri ends. */
+    fun isSiriMuted(): Boolean
+
+    /** Mutes or restores Siri's output only; music and calls are left alone. */
+    fun setSiriMuted(muted: Boolean)
+}
+
+/** The stock app's phone focus retry: one more request, 200 ms after a refusal. */
+internal object PhoneFocusRetry {
+    const val DELAY_MILLIS = 200L
+
+    fun shouldRetry(enabled: Boolean, channel: AudioChannel, result: Int?): Boolean =
+        enabled && channel == AudioChannel.PHONE && result != null && result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+}
+
 /** Owns one focus request for all eligible tracks in a CarPlay sink. */
 internal class AudioFocusCoordinator(
     context: Context?,
     private val enabled: Boolean,
     private val report: (String) -> Unit = {},
-    /** Puts the car in MODE_IN_CALL while a call track plays, as the stock CarPlay app does. */
+    /**
+     * Puts the car in MODE_IN_CALL while a call track plays, as the stock CarPlay app does. It
+     * also retries a refused phone focus request once after 200 ms, as the stock app does.
+     */
     private val callMode: Boolean = false,
+    /** MG4 test: tell the car's audio policy "carplay_source=phone" while a call track plays. */
+    private val carPhoneMode: Boolean = false,
 ) {
+    private val phoneHook by lazy { Mg4CarPhoneMode.hook(report) }
+
     private data class Entry(val channel: AudioChannel, val attributes: AudioAttributes)
 
     private val manager = context?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
@@ -46,6 +73,10 @@ internal class AudioFocusCoordinator(
     private val callTracks = HashSet<AudioTrack>()
     private var request: AudioFocusRequest? = null
     private var requestedChannel: AudioChannel? = null
+    private val handler by lazy { Handler(Looper.getMainLooper()) }
+    /** A native Bluetooth call owns the car's audio: CarPlay holds no focus until it ends. */
+    private var suspendedForNativeCall = false
+    private val mutedTracks = HashSet<AudioTrack>()
     private val listener = AudioManager.OnAudioFocusChangeListener { change ->
         synchronized(this) {
             runCatching { report("Audio: focus change=$change activeTracks=${active.size}") }
@@ -62,6 +93,7 @@ internal class AudioFocusCoordinator(
     fun acquire(track: AudioTrack, channel: AudioChannel, attributes: AudioAttributes) {
         if (callMode && channel == AudioChannel.PHONE && callTracks.add(track) && callTracks.size == 1) {
             setMode(AudioManager.MODE_IN_CALL)
+            if (carPhoneMode) phoneHook.set(true, "call track started")
         }
         // Focus is only taken when the user asked for it. The MG4 override that used to force it
         // on assumed the classic Bluetooth radio was shut down after handoff; in hybrid mode the
@@ -78,8 +110,49 @@ internal class AudioFocusCoordinator(
 
     @Synchronized
     fun release(track: AudioTrack) {
+        mutedTracks.remove(track)
         if (active.remove(track) != null) refreshRequest()
-        if (callTracks.remove(track) && callTracks.isEmpty()) setMode(AudioManager.MODE_NORMAL)
+        if (callTracks.remove(track) && callTracks.isEmpty()) {
+            setMode(AudioManager.MODE_NORMAL)
+            if (carPhoneMode) phoneHook.release("call track stopped")
+        }
+    }
+
+    /** The session ended: never leave the car in phone mode. */
+    @Synchronized
+    fun shutdown() {
+        if (carPhoneMode) phoneHook.release("session stop")
+    }
+
+    /**
+     * The car's own hands-free call started (vendor onCallStatusChanged type 0): give audio focus
+     * back, as the stock app does, and stay out of the way until [resumeAfterNativeCall].
+     */
+    @Synchronized
+    fun suspendForNativeCall() {
+        if (suspendedForNativeCall) return
+        suspendedForNativeCall = true
+        val held = request
+        request?.let { manager?.abandonAudioFocusRequest(it) }
+        request = null
+        requestedChannel = null
+        runCatching { report("Audio: native call started; CarPlay focus released held=${held != null} activeTracks=${active.size}") }
+    }
+
+    /** The native call ended: take focus again for whatever is still playing. */
+    @Synchronized
+    fun resumeAfterNativeCall() {
+        if (!suspendedForNativeCall) return
+        suspendedForNativeCall = false
+        runCatching { report("Audio: native call ended; CarPlay focus restored activeTracks=${active.size}") }
+        refreshRequest()
+    }
+
+    /** Keeps ducking and focus gain from undoing a mute on [track]. */
+    @Synchronized
+    fun setMuted(track: AudioTrack, muted: Boolean) {
+        if (muted) mutedTracks.add(track) else mutedTracks.remove(track)
+        runCatching { track.setStereoVolume(if (muted) 0f else FULL_VOLUME, if (muted) 0f else FULL_VOLUME) }
     }
 
     private fun setMode(mode: Int) {
@@ -94,6 +167,7 @@ internal class AudioFocusCoordinator(
     }
 
     private fun refreshRequest(added: AudioChannel? = null) {
+        if (suspendedForNativeCall) return
         val primary = active.values.maxByOrNull { it.channel.focusPriority() }
         if (primary == null) {
             request?.let { manager?.abandonAudioFocusRequest(it) }
@@ -124,10 +198,28 @@ internal class AudioFocusCoordinator(
         val line = "Audio: focus requested channel=${primary.channel} gain=$gain granted=$result activeTracks=${active.size}"
         Log.i(TAG, line)
         runCatching { report(line) }
+        if (PhoneFocusRetry.shouldRetry(callMode, primary.channel, result)) {
+            handler.postDelayed({ retryPhoneFocus(next) }, PhoneFocusRetry.DELAY_MILLIS)
+        }
+    }
+
+    /** The stock app's second try at phone focus, 200 ms after a refusal. Runs once. */
+    @Synchronized
+    private fun retryPhoneFocus(original: AudioFocusRequest) {
+        if (request !== original || suspendedForNativeCall) {
+            runCatching { report("Audio: phone focus retry skipped (focus changed)") }
+            return
+        }
+        val result = manager?.requestAudioFocus(original)
+        val line = "Audio: phone focus retry after ${PhoneFocusRetry.DELAY_MILLIS}ms granted=$result"
+        Log.i(TAG, line)
+        runCatching { report(line) }
     }
 
     private fun setVolume(volume: Float) {
-        active.keys.forEach { track -> runCatching { track.setStereoVolume(volume, volume) } }
+        active.keys.forEach { track ->
+            if (track !in mutedTracks) runCatching { track.setStereoVolume(volume, volume) }
+        }
     }
 
     private fun AudioChannel.focusPriority(): Int = when (this) {
@@ -143,6 +235,9 @@ internal class AudioFocusCoordinator(
         const val DUCKED_VOLUME = 0.2f
     }
 }
+
+private const val SIRI_END_GRACE_MILLIS = 2_000L
+private val SIRI_AUDIO_TYPES = setOf("speechrecognition", "alert", "default")
 
 /**
  * Android rendering backend for the CarPlay media engine. Video frames are
@@ -170,7 +265,14 @@ class AndroidMediaSink(
     private val onAudioDiagnostic: (String) -> Unit = {},
     /** True while any music ("media") audio stream is running; called from media threads. */
     private val onMediaAudioChanged: (Boolean) -> Unit = {},
-) : MediaSink {
+    /**
+     * MG4 test: tag the music track as the car's CarPlay source (50), as the stock app does. On
+     * Android 9 this also plays music by usage instead of STREAM_MUSIC, which may change routing.
+     */
+    private val tagMediaAsCarPlay: Boolean = false,
+    /** MG4 test: the car phone mode hook for calls (see [Mg4CarPhoneMode]). */
+    private val carPhoneMode: Boolean = false,
+) : MediaSink, SiriAudioControl {
     private val appContext = context?.applicationContext
     // Wi-Fi audio plays music locally, so it needs focus; hybrid leaves focus to the car.
     private val effectiveAudioFocus = audioFocusEnabled || audioMode == AudioMode.CARPLAY_WIFI
@@ -184,6 +286,7 @@ class AndroidMediaSink(
         effectiveAudioFocus,
         onAudioDiagnostic,
         callMode = Build.VERSION.SDK_INT == Build.VERSION_CODES.P && audioMode == AudioMode.CARPLAY_WIFI,
+        carPhoneMode = carPhoneMode && Build.VERSION.SDK_INT == Build.VERSION_CODES.P && audioMode == AudioMode.CARPLAY_WIFI,
     )
     private val screenStateLock = Any()
     private val activeScreenTypes = mutableSetOf<Int>()
@@ -288,6 +391,7 @@ class AndroidMediaSink(
     override fun onAudioStopped(id: AudioStreamId) {
         audioRenderers.remove(id)?.close()
         updateMediaAudio(id, false)
+        if (siriSession.get()) scheduleSiriEndCheck()
     }
 
     private fun updateMediaAudio(id: AudioStreamId, active: Boolean) {
@@ -300,6 +404,11 @@ class AndroidMediaSink(
     }
 
     override fun onMicrophoneStarted(id: AudioStreamId, config: MicrophoneConfig) {
+        if (config.audioType == "speechrecognition") {
+            siriMicStreams.add(id)
+            mainHandler.removeCallbacks(checkSiriEnded)
+            siriSession.set(true)
+        }
         val uplink = microphoneUplinks.computeIfAbsent(id) { MicrophoneUplink(config, onAudioDiagnostic) }
         val started = uplink.start()
         onAudioDiagnostic(
@@ -314,9 +423,14 @@ class AndroidMediaSink(
 
     override fun onMicrophoneStopped(id: AudioStreamId) {
         microphoneUplinks.remove(id)?.close()
+        if (siriMicStreams.remove(id)) scheduleSiriEndCheck()
     }
 
     fun close() {
+        audioFocusCoordinator.shutdown()
+        runCatching { mainHandler.removeCallbacks(checkSiriEnded) }
+        siriSession.set(false)
+        siriMuted.set(false)
         synchronized(screenStateLock) {
             activeScreenTypes.forEach { screenStreamActiveChanged?.invoke(it, false) }
             activeScreenTypes.clear()
@@ -366,7 +480,44 @@ class AndroidMediaSink(
             mediaBufferMillis,
             onAudioDiagnostic,
             audioMode,
-        ).also { audioRenderers[id] = it }
+            tagMediaAsCarPlay,
+        ).also {
+            if (siriMuted.get() && it.siriAudio) it.setMuted(true)
+            audioRenderers[id] = it
+        }
+    }
+
+    // --- Siri mute (wheel mute key while Siri is active) ---
+    private val siriSession = AtomicBoolean(false)
+    private val siriMuted = AtomicBoolean(false)
+    private val siriMicStreams = ConcurrentHashMap.newKeySet<AudioStreamId>()
+    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+    private val checkSiriEnded = Runnable {
+        if (siriSession.get() && siriMicStreams.isEmpty() && audioRenderers.values.none { it.siriAudio }) {
+            siriSession.set(false)
+            if (siriMuted.getAndSet(false)) onAudioDiagnostic("Siri: ended; mute cleared")
+        }
+    }
+
+    override fun isSiriActive(): Boolean = siriSession.get()
+
+    override fun isSiriMuted(): Boolean = siriMuted.get()
+
+    override fun setSiriMuted(muted: Boolean) {
+        siriMuted.set(muted)
+        val targets = audioRenderers.values.filter { it.siriAudio }
+        targets.forEach { it.setMuted(muted) }
+        onAudioDiagnostic("Siri: audio ${if (muted) "muted" else "restored"} streams=${targets.size}")
+    }
+
+    private fun scheduleSiriEndCheck() {
+        mainHandler.removeCallbacks(checkSiriEnded)
+        mainHandler.postDelayed(checkSiriEnded, SIRI_END_GRACE_MILLIS)
+    }
+
+    /** A native Bluetooth call started or ended (vendor listener, type 0). */
+    fun setNativeCallActive(active: Boolean) {
+        if (active) audioFocusCoordinator.suspendForNativeCall() else audioFocusCoordinator.resumeAfterNativeCall()
     }
 
     companion object {
@@ -761,7 +912,17 @@ private class AudioRenderer(
     private val mediaBufferMillis: Int,
     private val report: (String) -> Unit,
     private val audioMode: AudioMode = AudioMode.HYBRID_BLUETOOTH,
+    private val tagMediaAsCarPlay: Boolean = false,
 ) : Closeable {
+    /** Siri's own streams: its microphone and its spoken replies, which play as alert or default audio. */
+    val siriAudio: Boolean = format.audioType.lowercase() in SIRI_AUDIO_TYPES
+    @Volatile private var muted = false
+
+    fun setMuted(value: Boolean) {
+        muted = value
+        track?.let { audioFocusCoordinator.setMuted(it, value) }
+    }
+
     private data class AudioPacket(val rtp: ByteArray, val sample: Int)
 
     private var trackAttributes: AudioAttributes? = null
@@ -1002,6 +1163,7 @@ private class AudioRenderer(
             )
         }
         track = built
+        if (muted) audioFocusCoordinator.setMuted(built, true)
         lastUnderrunCount = runCatching { built.underrunCount }.getOrNull()
         // AudioTrack.getAudioAttributes() is absent from the MG4/SWI69 Android 9 framework.
         // Keep the attributes used to construct the track instead of querying them back.
@@ -1037,7 +1199,8 @@ private class AudioRenderer(
         // SWI69 does not route a plain USAGE_MEDIA AudioTrack to the speakers once its factory
         // Bluetooth source is disabled. Use Android's concrete music stream unless the user has
         // explicitly selected another legacy vehicle stream.
-        AudioChannel.MEDIA -> if (Build.VERSION.SDK_INT == Build.VERSION_CODES.P && mediaChannel == 0) {
+        // With the CarPlay source tag (test) the track plays by usage, so the tag reaches the policy.
+        AudioChannel.MEDIA -> if (Build.VERSION.SDK_INT == Build.VERSION_CODES.P && mediaChannel == 0 && !tagMediaAsCarPlay) {
             AudioManager.STREAM_MUSIC
         } else mediaChannel
         AudioChannel.NAVIGATION -> navigationChannel
@@ -1088,6 +1251,10 @@ private class AudioRenderer(
         if (stockCallAudio && selection.channel == AudioChannel.PHONE) {
             val tagged = Mg4CarAudioSource.tag(builder, Mg4CarAudioSource.CARPLAY_PHONE)
             report("Audio: call track car source=${if (tagged) Mg4CarAudioSource.CARPLAY_PHONE else "untagged"}")
+        }
+        if (tagMediaAsCarPlay && selection.channel == AudioChannel.MEDIA) {
+            val tagged = Mg4CarAudioSource.tag(builder, Mg4CarAudioSource.CARPLAY_MEDIA)
+            report("Audio: music track car source=${if (tagged) Mg4CarAudioSource.CARPLAY_MEDIA else "untagged"}")
         }
         return builder.build()
     }

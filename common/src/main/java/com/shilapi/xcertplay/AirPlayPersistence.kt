@@ -41,6 +41,12 @@ object AirPlayPersistence {
     private const val KEY_SURFACE_VIDEO = "surface_video_renderer"
     private const val KEY_PLAIN_DISPLAY = "plain_display_area"
     private const val KEY_CALLS_CARPLAY_ONLY = "calls_over_carplay_only"
+    private const val KEY_SHOW_CALLS_TO_CAR = "show_calls_to_car"
+    private const val KEY_CAR_PHONE_MODE = "car_phone_mode"
+    private const val KEY_TAG_MUSIC_CARPLAY = "tag_music_carplay"
+    private const val KEY_STOCK_SCREEN_SIZE = "stock_screen_size"
+    private const val KEY_NARROW_BAND_CALLS = "narrow_band_calls"
+    private const val KEY_USE_CAR_MFI = "use_car_mfi_chip"
     private const val KEY_MIC_SOURCE = "microphone_source"
     private const val KEY_SIRI_MIC_PCM = "siri_microphone_pcm"
     private const val KEY_CALL_ECHO_SUPPRESSION = "call_echo_suppression"
@@ -213,9 +219,9 @@ object AirPlayPersistence {
             .apply()
     }
 
-    /** 0 automatic (plain microphone for calls, voice recognition for Siri, as stock), 1 voice call processing for everything, 2 plain microphone. */
+    /** 0 automatic (as stock), 1 voice call processing for everything, 2 plain microphone, 3 stock (same as automatic). */
     fun loadMicrophoneSource(context: Context): Int =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_MIC_SOURCE, 0).takeIf { it in 0..2 } ?: 0
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_MIC_SOURCE, 0).takeIf { it in 0..3 } ?: 0
 
     fun saveMicrophoneSource(context: Context, choice: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -268,6 +274,94 @@ object AirPlayPersistence {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_CALLS_CARPLAY_ONLY, enabled)
             .apply()
+    }
+
+    /**
+     * MG4 test: mirror each CarPlay call into the car's Telecom, as the stock CarPlay app does.
+     * Off by default (not yet tried in the car). A saved choice wins; on other firmware it is
+     * always off.
+     */
+    fun loadShowCallsToCar(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_SHOW_CALLS_TO_CAR)) prefs.getBoolean(KEY_SHOW_CALLS_TO_CAR, false) else false
+    }
+
+    fun saveShowCallsToCar(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SHOW_CALLS_TO_CAR, enabled).apply()
+    }
+
+    /**
+     * MG4 test: tell the car's audio policy "carplay_source=phone" while a CarPlay call plays, as the
+     * stock audio library does. Off by default (not yet tried in the car). A saved choice wins;
+     * always off on other firmware.
+     */
+    fun loadCarPhoneMode(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_CAR_PHONE_MODE)) prefs.getBoolean(KEY_CAR_PHONE_MODE, false) else false
+    }
+
+    fun saveCarPhoneMode(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CAR_PHONE_MODE, enabled).apply()
+    }
+
+    /**
+     * MG4: report the stock app's 244 x 80 mm screen size to the iPhone instead of DiPlay's own
+     * (Automatic, the default). A saved choice wins; always Automatic on other firmware.
+     */
+    fun loadStockScreenSize(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_STOCK_SCREEN_SIZE)) prefs.getBoolean(KEY_STOCK_SCREEN_SIZE, false) else false
+    }
+
+    fun saveStockScreenSize(context: Context, stock: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_STOCK_SCREEN_SIZE, stock).apply()
+    }
+
+    /**
+     * MG4 test: offer the iPhone only narrow-band (8 kHz) formats for calls, as the stock app's
+     * narrow_band property does. Off by default (not yet tried in the car). A saved choice wins;
+     * always off on other firmware.
+     */
+    fun loadNarrowBandCalls(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_NARROW_BAND_CALLS)) prefs.getBoolean(KEY_NARROW_BAND_CALLS, false) else false
+    }
+
+    fun saveNarrowBandCalls(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_NARROW_BAND_CALLS, enabled).apply()
+    }
+
+    /**
+     * MG4 test: authenticate with the car's own MFi chip instead of the bundled identity. Off by
+     * default (not yet tried in the car). A saved choice wins; always off on other firmware.
+     */
+    fun loadUseCarMfiChip(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_USE_CAR_MFI)) prefs.getBoolean(KEY_USE_CAR_MFI, false) else false
+    }
+
+    fun saveUseCarMfiChip(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_USE_CAR_MFI, enabled).apply()
+    }
+
+    /**
+     * MG4 test: tag CarPlay music as the car's CarPlay source (50), as the stock app does. Off by
+     * default: on Android 9 it changes how music is routed. A saved choice wins; always off
+     * on other firmware.
+     */
+    fun loadTagMusicAsCarPlay(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_TAG_MUSIC_CARPLAY)) prefs.getBoolean(KEY_TAG_MUSIC_CARPLAY, false) else false
+    }
+
+    fun saveTagMusicAsCarPlay(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_TAG_MUSIC_CARPLAY, enabled).apply()
     }
 
     /**

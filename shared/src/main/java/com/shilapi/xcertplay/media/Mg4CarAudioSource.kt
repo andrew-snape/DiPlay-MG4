@@ -18,6 +18,8 @@ import android.util.Log
 internal object Mg4CarAudioSource {
     private const val TAG = "DiPlay-MG4"
     const val KEY = "key_car_source_type"
+    const val CARPLAY_MEDIA = 50
+    const val CARPLAY_NAVIGATION = 52
     const val CARPLAY_PHONE = 53
 
     private val addBundle by lazy {

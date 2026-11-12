@@ -160,6 +160,8 @@ class CarPlayController(
     private val releaseHandsFree: Boolean = false,
     /** MG4 SWI165: send CarPlay turn-by-turn to the instrument cluster's navigation slot. */
     private val clusterDirections: Boolean = false,
+    /** MG4 SWI165 test: authenticate with the car's own MFi chip; falls back to the bundled identity. */
+    private val useCarMfiChip: Boolean = false,
 ) : Closeable {
     @Volatile private var handsFreeReleased = false
 
@@ -215,6 +217,14 @@ class CarPlayController(
 
     /** Told when the iPhone starts or stops playing media; may run on any thread. */
     @Volatile var playbackListener: ((Boolean) -> Unit)? = null
+
+    private val callTracker = com.shilapi.xcertplay.media.CarPlayCallTracker()
+
+    /**
+     * Told when a CarPlay call starts, changes or ends (iAP2 CallStateUpdate); may run on any
+     * thread. MG4 mirrors these into Telecom when the user turns that on.
+     */
+    @Volatile var callListener: ((com.shilapi.xcertplay.media.CarPlayCallChange) -> Unit)? = null
 
     /** Video in car; set before [start] to offer it to the iPhone (with AirPlayConfig.videoInCar). */
     @Volatile var videoListener: CarPlayVideoListener? = null
@@ -294,6 +304,7 @@ class CarPlayController(
                 if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.stop(appContext)
                 videoListener?.onVideoSessionEnded()
                 synchronized(playbackStatus) { playbackStatus.clear() }?.let { playing -> playbackListener?.invoke(playing) }
+                callTracker.clear().forEach { change -> callListener?.invoke(change) }
             }
             debugLog("AirPlay session ended peer=${session.host}")
             uiListener?.onSessionEnded(session)
@@ -568,12 +579,54 @@ class CarPlayController(
     private fun onRouteFrame(frame: com.shilapi.xcertplay.iap2.wire.Iap2Frame) {
         if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.onFrame(frame)
         synchronized(playbackStatus) { playbackStatus.accept(frame) }?.let { playing -> playbackListener?.invoke(playing) }
+        callTracker.accept(frame)?.let { change -> callListener?.invoke(change) }
     }
 
     private fun startMfi() {
         availabilityPollGeneration.incrementAndGet()
         phase = Phase.MFI
         onStatus(CarPlayStatus.DiscoveringMfi)
+        if (useCarMfiChip) {
+            openCarMfi()
+            return
+        }
+        startBundledMfi()
+    }
+
+    /**
+     * Tries the car's MFi chip first. Any failure before the phone has seen anything falls back to
+     * the bundled identity for this session, so the certificate and signatures never come from
+     * two sources.
+     */
+    private fun openCarMfi() {
+        executor.execute {
+            val earlier = com.shilapi.xcertplay.mfi.CarMfiState.failure
+            if (earlier != null) {
+                debugLog("Car MFi chip: skipped, failed earlier this run ($earlier); using the bundled identity")
+                if (!closed && phase == Phase.MFI) startBundledMfi()
+                return@execute
+            }
+            val authenticator = try {
+                com.shilapi.xcertplay.mfi.CarMfiAuthenticator.open(
+                    com.shilapi.xcertplay.mfi.CarMfiClient.local(),
+                ) { debugLog(it) }
+            } catch (error: Throwable) {
+                debugLog("Car MFi chip: not used, ${com.shilapi.xcertplay.mfi.CarMfiClient.describe(error)}; using the bundled identity")
+                null
+            }
+            if (closed || phase != Phase.MFI) return@execute
+            if (authenticator == null) {
+                startBundledMfi()
+                return@execute
+            }
+            mfiSession = MfiSession(authenticator, null)
+            debugLog("Car MFi chip: in use for this session (bundled identity not used)")
+            onStatus(CarPlayStatus.MfiReady)
+            startPhone()
+        }
+    }
+
+    private fun startBundledMfi() {
         val offlineDirectory = java.io.File(appContext.noBackupFilesDir, LocalMfiAuthenticationClient.DIRECTORY)
         if (offlineDirectory.exists()) {
             openLocalMfi(offlineDirectory)
