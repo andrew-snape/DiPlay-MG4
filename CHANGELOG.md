@@ -1,5 +1,7 @@
 # Unreleased
 
+- **Car MFi chip probe fixed for the 3.0 chip (not yet tried in the car).** The 0.4.0 car report (2026-11-13) shows this car has an MFi 3.0 chip (`deviceId=0x300`, 608-byte certificate). Id, serial and certificate read fine, but the probe's test signature used a 20-byte digest, which is the 2.0C size. The chip waits for 32 bytes, so `CreateSignature` timed out after 3 s (`IOException: Try again`), and the session's own chip open then failed the same way and fell back to the bundled identity. The probe now sends 32 bytes to a 3.0 chip. Test plan I13 and I14.
+
 # MG4CPlay 0.4.0 (SWI165 fork), 2026-11-12
 
 - **Car MFi chip probe and test option (not yet tried in the car).** On MG4 the app now asks the car's own MFi authentication chip, through the `mfid` socket, for its device id, serial, certificate size and a signature on a fixed test digest, and logs the result with the exact error if it can't (`Car MFi chip:` lines in the session log, plus a `Car MFi chip:` line in the report header). It is read only and never affects the session. A new switch, **Use car's MFi chip (test)** (Settings > Car > Authentication, off by default), signs the iPhone's authentication (iAP2 and AirPlay auth-setup) with that chip instead of the bundled identity. Applies after reconnect. If the chip can't be read, is a version the app doesn't handle, or fails while signing, that connection (or the rest of the run) uses the bundled identity and the log says why. Test plan I13 and I14.
