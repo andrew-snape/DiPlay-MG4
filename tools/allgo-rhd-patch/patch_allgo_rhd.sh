@@ -1,7 +1,7 @@
 #!/bin/sh
 # Patch the car's stock AllGo CarPlay APK so the CarPlay bar is always on the right.
 # Usage: tools/allgo-rhd-patch/patch_allgo_rhd.sh /path/to/com.allgo.carplay.service.apk
-# Output: dist/AllgoCarplay-rhd-v<versionCode>.apk (signed with the platform key)
+# Output: dist/AllgoCarplay-rhd-v<versionCode>.apk (driving side and cluster directions, signed with the platform key)
 # See tools/allgo-rhd-patch/README.md.
 set -eu
 
@@ -43,18 +43,20 @@ mkdir -p "$WORK"
 echo "Decoding $STOCK"
 apktool d -f -o "$WORK/dec" "$STOCK" >/dev/null
 
-echo "Applying smali patch"
+echo "Applying smali patches and adding ClusterNavBridge"
 patch -p1 -d "$WORK/dec" -i "$HERE/rhd.patch"
+patch -p1 -d "$WORK/dec" -i "$HERE/cluster.patch"
+cp -R "$HERE/smali/." "$WORK/dec/smali_classes4/"
 
-# Bump versionCode by one and tag the versionName, so it installs over the stock app.
+# Bump versionCode by two (105 was the driving-side-only build) and tag the versionName, so it installs over the stock app.
 YML="$WORK/dec/apktool.yml"
 CODE=$(sed -n "s/^  versionCode: *'\{0,1\}\([0-9][0-9]*\)'\{0,1\}$/\1/p" "$YML")
 NAME=$(sed -n "s/^  versionName: *\(.*\)$/\1/p" "$YML" | tr -d "'\"")
 [ -n "$CODE" ] || { echo "Error: versionCode not found in apktool.yml" >&2; exit 1; }
-NEWCODE=$((CODE + 1))
-sed -i.bak "s/^  versionCode: .*/  versionCode: $NEWCODE/; s/^  versionName: .*/  versionName: '${NAME}-rhd'/" "$YML"
+NEWCODE=$((CODE + 2))
+sed -i.bak "s/^  versionCode: .*/  versionCode: $NEWCODE/; s/^  versionName: .*/  versionName: '${NAME}-rhd-cluster'/" "$YML"
 rm -f "$YML.bak"
-echo "versionCode $CODE -> $NEWCODE, versionName ${NAME}-rhd"
+echo "versionCode $CODE -> $NEWCODE, versionName ${NAME}-rhd-cluster"
 
 echo "Rebuilding"
 apktool b -o "$WORK/unsigned.apk" "$WORK/dec" >/dev/null
