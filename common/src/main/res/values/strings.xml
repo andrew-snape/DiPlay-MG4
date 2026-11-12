@@ -464,6 +464,9 @@
     <string name="settings_header_picture">Picture</string>
     <string name="settings_header_driving">Driving</string>
     <string name="settings_header_appearance">Appearance</string>
+    <string name="settings_header_mfi">Authentication</string>
+    <string name="use_car_mfi_chip">Use car’s MFi chip (test)</string>
+    <string name="settings_footer_car_mfi">Uses the car’s own Apple authentication chip to prove to the iPhone that this is a licensed accessory, instead of the identity built into the app. Applies after you reconnect. If the chip can’t be used, the app says so in the report and uses its own identity for that connection. If CarPlay won’t connect, turn it off. Off by default and not yet tried in the car.</string>
     <string name="settings_header_battery">Battery and charging</string>
     <string name="settings_header_permissions">Permissions</string>
     <string name="settings_header_help">Help</string>

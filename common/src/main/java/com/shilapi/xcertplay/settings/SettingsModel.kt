@@ -66,6 +66,7 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     NAVIGATION_CHANNEL(RowKind.LINK, true),
 
     CLUSTER_DIRECTIONS(RowKind.SWITCH, true),
+    CAR_MFI_CHIP(RowKind.SWITCH, true),
     // Turning location on asks for permission and reconnects by itself, as before.
     SEND_LOCATION(RowKind.SWITCH),
     VIDEO_WHILE_PARKED(RowKind.SWITCH, true),
@@ -148,6 +149,8 @@ internal object SettingsLayout {
             SettingsGroup("parked", listOf(SettingRow.VIDEO_WHILE_PARKED)),
             SettingsGroup("appearance", listOf(SettingRow.SUNSET_DARK_MODE)),
             SettingsGroup("battery", listOf(SettingRow.CAR_BATTERY, SettingRow.CHARGING_CONNECTORS, SettingRow.LOW_CHARGE_WARNING)),
+            SettingsGroup("mfi", listOf(SettingRow.CAR_MFI_CHIP))
+                .takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
         )
         SettingsCategory.GENERAL -> listOf(
             SettingsGroup("general", listOf(SettingRow.SOFTWARE_UPDATE)),

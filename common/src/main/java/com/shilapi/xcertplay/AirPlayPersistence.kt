@@ -46,6 +46,7 @@ object AirPlayPersistence {
     private const val KEY_TAG_MUSIC_CARPLAY = "tag_music_carplay"
     private const val KEY_STOCK_SCREEN_SIZE = "stock_screen_size"
     private const val KEY_NARROW_BAND_CALLS = "narrow_band_calls"
+    private const val KEY_USE_CAR_MFI = "use_car_mfi_chip"
     private const val KEY_MIC_SOURCE = "microphone_source"
     private const val KEY_SIRI_MIC_PCM = "siri_microphone_pcm"
     private const val KEY_MIC_RECORDING = "microphone_recording"
@@ -320,6 +321,20 @@ object AirPlayPersistence {
 
     fun saveNarrowBandCalls(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_NARROW_BAND_CALLS, enabled).apply()
+    }
+
+    /**
+     * MG4 test: authenticate with the car's own MFi chip instead of the bundled identity. Off by
+     * default (not yet tried in the car). A saved choice wins; always off on other firmware.
+     */
+    fun loadUseCarMfiChip(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_USE_CAR_MFI)) prefs.getBoolean(KEY_USE_CAR_MFI, false) else false
+    }
+
+    fun saveUseCarMfiChip(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_USE_CAR_MFI, enabled).apply()
     }
 
     /**

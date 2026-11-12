@@ -299,6 +299,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         "location" -> R.string.settings_header_driving.takeIf { env.generation != Mg4FirmwareProfile.Generation.SWI165 }
         "appearance" -> R.string.settings_header_appearance
         "battery" -> R.string.settings_header_battery
+        "mfi" -> R.string.settings_header_mfi
         "system" -> R.string.settings_header_permissions
         "diagnostics" -> R.string.diagnostics
         "help" -> R.string.settings_header_help
@@ -349,6 +350,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
             "parked" -> add(R.string.settings_footer_video_while_parked)
             "appearance" -> add(R.string.mg4_sunset_dark_mode_description)
             "battery" -> add(R.string.settings_footer_battery)
+            "mfi" -> add(R.string.settings_footer_car_mfi)
             "system" -> add(R.string.nearby_devices_connects_your_iphone_microphone_enables_sir)
             "diagnostics" -> {
                 val hint = ui.groupFooter(activity.getString(R.string.download_to_iphone_unavailable))
@@ -399,6 +401,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.MIC_RECORDING -> R.string.microphone_recording
         SettingRow.NAVIGATION_CHANNEL -> R.string.contrib_audio_home_nav_channel_label
         SettingRow.CLUSTER_DIRECTIONS -> R.string.mg4_cluster_directions
+        SettingRow.CAR_MFI_CHIP -> R.string.use_car_mfi_chip
         SettingRow.SEND_LOCATION -> R.string.settings_send_location
         SettingRow.VIDEO_WHILE_PARKED -> R.string.mg4_video_while_parked
         SettingRow.SUNSET_DARK_MODE -> R.string.mg4_sunset_dark_mode
@@ -507,6 +510,11 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 }
                 SettingRow.NAVIGATION_CHANNEL -> link(AirPlayPersistence.loadNavigationAudioChannel(activity).toString()) {
                     host.editNavigationChannel { changed(row, AirPlayPersistence.loadNavigationAudioChannel(activity).toString()); host.render() }
+                }
+                SettingRow.CAR_MFI_CHIP -> switch(AirPlayPersistence.loadUseCarMfiChip(activity)) {
+                    // A fresh choice gets a fresh try, even if the chip failed earlier this run.
+                    com.shilapi.xcertplay.mfi.CarMfiState.reset()
+                    AirPlayPersistence.saveUseCarMfiChip(activity, it)
                 }
                 SettingRow.CLUSTER_DIRECTIONS -> switch(AirPlayPersistence.loadClusterDirections(activity)) { AirPlayPersistence.saveClusterDirections(activity, it) }
                 SettingRow.SEND_LOCATION -> switch(AirPlayPersistence.loadLocationReportingEnabled(activity)) { host.setLocationReporting(it) }

@@ -443,6 +443,7 @@ class CarPlayHostActivity : ComponentActivity() {
             com.shilapi.xcertplay.vehicle.VehicleIntegration.setReportLog(::appendLog)
             dayNightProbe = DayNightProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
             wifiScanProbe = WifiScanProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
+            com.shilapi.xcertplay.mfi.CarMfiProbe.start(::appendLog)
         }
         advancedAudioChannelMappingSupported =
             resources.getBoolean(R.bool.config_advanced_audio_channel_mapping)
@@ -2715,6 +2716,7 @@ class CarPlayHostActivity : ComponentActivity() {
             "${if (AirPlayPersistence.loadStockScreenSize(this)) "stock" else "automatic"} " +
             "physical=${display.widthPhysicalMm}x${display.heightPhysicalMm}mm " +
             "pixels=${display.widthPixels}x${display.heightPixels}")
+        appendLog("Car MFi chip setting: ${if (AirPlayPersistence.loadUseCarMfiChip(this)) "on" else "off (bundled identity)"}")
         val narrowBand = AirPlayPersistence.loadNarrowBandCalls(this)
         appendLog("Call audio formats offered: narrow-band=${if (narrowBand) "on" else "off"} " +
             com.shilapi.xcertplay.airplay.AirPlayInfoPlist.describeTelephonyFormats(
@@ -3181,6 +3183,7 @@ class CarPlayHostActivity : ComponentActivity() {
                 AirPlayPersistence.loadCallsOverCarPlayOnly(this),
             clusterDirections = Mg4FirmwareProfile.detect().generation == Mg4FirmwareProfile.Generation.SWI165 &&
                 AirPlayPersistence.loadClusterDirections(this),
+            useCarMfiChip = AirPlayPersistence.loadUseCarMfiChip(this),
         )
         controller = next
         armStartupWatchdog()
