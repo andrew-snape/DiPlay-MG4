@@ -30,6 +30,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 object MicrophoneSource {
     @Volatile var override: Int? = null
+
+    /**
+     * "Microphone (stock)": calls use the plain microphone source, as the stock CarPlay library
+     * does (AudioRecord source MIC, with a vendor input flag Java cannot set). Siri keeps voice
+     * recognition, which is what the stock library uses too. Ignored when [override] is set.
+     */
+    @Volatile var stockCalls: Boolean = false
 }
 
 internal class MicrophoneUplink(
@@ -75,7 +82,8 @@ internal class MicrophoneUplink(
         }
 
         val source = MicrophoneSource.override ?: when (config.audioType) {
-            "telephony" -> MediaRecorder.AudioSource.VOICE_COMMUNICATION
+            "telephony" ->
+                if (MicrophoneSource.stockCalls) MediaRecorder.AudioSource.MIC else MediaRecorder.AudioSource.VOICE_COMMUNICATION
             "speechrecognition" -> MediaRecorder.AudioSource.VOICE_RECOGNITION
             else -> MediaRecorder.AudioSource.MIC
         }

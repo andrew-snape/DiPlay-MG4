@@ -182,6 +182,11 @@
     <string name="microphone_source_automatic">Automatic · default</string>
     <string name="microphone_source_voice">Call processing for calls and Siri</string>
     <string name="microphone_source_plain">Plain microphone</string>
+    <string name="show_calls_to_car">Show calls to the car (test)</string>
+    <string name="car_phone_mode">Car phone mode for calls (test)</string>
+    <string name="microphone_source_stock">Stock · plain microphone for calls</string>
+    <string name="tag_music_as_carplay">Tag music as CarPlay (test)</string>
+    <string name="settings_footer_car_tests">Three tests that copy the car’s own CarPlay app, both off by default and not yet tried in the car. Show calls to the car lists each CarPlay call with the car’s phone system. Tag music as CarPlay marks the music as the car’s CarPlay source, which may change how it is routed; if music goes silent, turn it off. Car phone mode tells the car’s audio system a CarPlay call is on, as its own app does; if calls go silent, turn it off.</string>
     <string name="siri_microphone_pcm">Siri microphone as PCM (test)</string>
     <string name="microphone_recording">Record microphone (test)</string>
     <string name="settings_footer_microphone">For comparing how well Siri and callers hear you. PCM sends Siri plain audio instead of Opus; if CarPlay loses sound, turn it off. Record microphone keeps the first 10 seconds of each Siri request and call on the car and adds them to Download to iPhone. Turning it off deletes them.</string>

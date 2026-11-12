@@ -216,6 +216,14 @@ class CarPlayController(
     /** Told when the iPhone starts or stops playing media; may run on any thread. */
     @Volatile var playbackListener: ((Boolean) -> Unit)? = null
 
+    private val callTracker = com.shilapi.xcertplay.media.CarPlayCallTracker()
+
+    /**
+     * Told when a CarPlay call starts, changes or ends (iAP2 CallStateUpdate); may run on any
+     * thread. MG4 mirrors these into Telecom when the user turns that on.
+     */
+    @Volatile var callListener: ((com.shilapi.xcertplay.media.CarPlayCallChange) -> Unit)? = null
+
     /** Video in car; set before [start] to offer it to the iPhone (with AirPlayConfig.videoInCar). */
     @Volatile var videoListener: CarPlayVideoListener? = null
     @Volatile private var videoGate: VideoInCarGate? = null
@@ -294,6 +302,7 @@ class CarPlayController(
                 if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.stop(appContext)
                 videoListener?.onVideoSessionEnded()
                 synchronized(playbackStatus) { playbackStatus.clear() }?.let { playing -> playbackListener?.invoke(playing) }
+                callTracker.clear().forEach { change -> callListener?.invoke(change) }
             }
             debugLog("AirPlay session ended peer=${session.host}")
             uiListener?.onSessionEnded(session)
@@ -568,6 +577,7 @@ class CarPlayController(
     private fun onRouteFrame(frame: com.shilapi.xcertplay.iap2.wire.Iap2Frame) {
         if (clusterDirections) com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.onFrame(frame)
         synchronized(playbackStatus) { playbackStatus.accept(frame) }?.let { playing -> playbackListener?.invoke(playing) }
+        callTracker.accept(frame)?.let { change -> callListener?.invoke(change) }
     }
 
     private fun startMfi() {

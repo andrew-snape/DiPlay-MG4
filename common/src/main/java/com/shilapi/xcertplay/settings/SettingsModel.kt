@@ -53,6 +53,9 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
 
     WIFI_AUDIO(RowKind.SWITCH, true),
     CALLS_OVER_CARPLAY(RowKind.SWITCH, true),
+    SHOW_CALLS_TO_CAR(RowKind.SWITCH, true),
+    TAG_MUSIC_CARPLAY(RowKind.SWITCH, true),
+    CAR_PHONE_MODE(RowKind.SWITCH, true),
     MUSIC_BUFFER(RowKind.SEGMENTED, true),
     MICROPHONE(RowKind.PICKER, true),
     SIRI_MIC_PCM(RowKind.SWITCH, true),
@@ -119,7 +122,13 @@ internal object SettingsLayout {
         )
         SettingsCategory.SOUND -> listOf(
             SettingsGroup("wifi_audio", listOf(SettingRow.WIFI_AUDIO)),
-            SettingsGroup("calls", listOf(SettingRow.CALLS_OVER_CARPLAY)),
+            SettingsGroup("calls", listOfNotNull(
+                SettingRow.CALLS_OVER_CARPLAY,
+                // Telecom mirroring and the music source tag copy the stock app's SAIC audio paths.
+                SettingRow.SHOW_CALLS_TO_CAR.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.TAG_MUSIC_CARPLAY.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.CAR_PHONE_MODE.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+            )),
             SettingsGroup("buffer", listOf(SettingRow.MUSIC_BUFFER)),
             SettingsGroup("microphone", listOf(SettingRow.MICROPHONE, SettingRow.SIRI_MIC_PCM, SettingRow.MIC_RECORDING)),
             SettingsGroup("advanced", listOf(SettingRow.SOUND_ADVANCED)),

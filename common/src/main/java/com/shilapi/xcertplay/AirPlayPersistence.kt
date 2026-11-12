@@ -41,6 +41,9 @@ object AirPlayPersistence {
     private const val KEY_SURFACE_VIDEO = "surface_video_renderer"
     private const val KEY_PLAIN_DISPLAY = "plain_display_area"
     private const val KEY_CALLS_CARPLAY_ONLY = "calls_over_carplay_only"
+    private const val KEY_SHOW_CALLS_TO_CAR = "show_calls_to_car"
+    private const val KEY_CAR_PHONE_MODE = "car_phone_mode"
+    private const val KEY_TAG_MUSIC_CARPLAY = "tag_music_carplay"
     private const val KEY_MIC_SOURCE = "microphone_source"
     private const val KEY_SIRI_MIC_PCM = "siri_microphone_pcm"
     private const val KEY_MIC_RECORDING = "microphone_recording"
@@ -212,9 +215,9 @@ object AirPlayPersistence {
             .apply()
     }
 
-    /** 0 automatic, 1 voice call processing for everything, 2 plain microphone. */
+    /** 0 automatic, 1 voice call processing for everything, 2 plain microphone, 3 stock (plain microphone for calls). */
     fun loadMicrophoneSource(context: Context): Int =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_MIC_SOURCE, 0).takeIf { it in 0..2 } ?: 0
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_MIC_SOURCE, 0).takeIf { it in 0..3 } ?: 0
 
     fun saveMicrophoneSource(context: Context, choice: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -256,6 +259,51 @@ object AirPlayPersistence {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_CALLS_CARPLAY_ONLY, enabled)
             .apply()
+    }
+
+    /**
+     * MG4 test: mirror each CarPlay call into the car's Telecom, as the stock CarPlay app does.
+     * Off by default (not yet tried in the car). A saved choice wins; on other firmware it is
+     * always off.
+     */
+    fun loadShowCallsToCar(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_SHOW_CALLS_TO_CAR)) prefs.getBoolean(KEY_SHOW_CALLS_TO_CAR, false) else false
+    }
+
+    fun saveShowCallsToCar(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SHOW_CALLS_TO_CAR, enabled).apply()
+    }
+
+    /**
+     * MG4 test: tell the car's audio policy "carplay_source=phone" while a CarPlay call plays, as the
+     * stock audio library does. Off by default (not yet tried in the car). A saved choice wins;
+     * always off on other firmware.
+     */
+    fun loadCarPhoneMode(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_CAR_PHONE_MODE)) prefs.getBoolean(KEY_CAR_PHONE_MODE, false) else false
+    }
+
+    fun saveCarPhoneMode(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CAR_PHONE_MODE, enabled).apply()
+    }
+
+    /**
+     * MG4 test: tag CarPlay music as the car's CarPlay source (50), as the stock app does. Off by
+     * default: on Android 9 it changes how music is routed. A saved choice wins; always off
+     * on other firmware.
+     */
+    fun loadTagMusicAsCarPlay(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_TAG_MUSIC_CARPLAY)) prefs.getBoolean(KEY_TAG_MUSIC_CARPLAY, false) else false
+    }
+
+    fun saveTagMusicAsCarPlay(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_TAG_MUSIC_CARPLAY, enabled).apply()
     }
 
     /**

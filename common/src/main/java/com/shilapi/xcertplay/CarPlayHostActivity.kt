@@ -2932,6 +2932,8 @@ class CarPlayHostActivity : ComponentActivity() {
                 diagnosticLog?.append(formattedLogLine(message, System.currentTimeMillis()))
             },
             onMediaAudioChanged = CarPlayMediaKeys::onMediaAudioChanged,
+            tagMediaAsCarPlay = AirPlayPersistence.loadTagMusicAsCarPlay(this),
+            carPhoneMode = AirPlayPersistence.loadCarPhoneMode(this),
         )
     }
 
@@ -3156,6 +3158,7 @@ class CarPlayHostActivity : ComponentActivity() {
                         2 -> android.media.MediaRecorder.AudioSource.MIC
                         else -> null
                     }
+                com.shilapi.xcertplay.media.MicrophoneSource.stockCalls = AirPlayPersistence.loadMicrophoneSource(this) == 3
                 MicRecordings.sync(applicationContext)
                 appendLog(
                     "Microphone test: siriFormat=${if (AirPlayPersistence.loadSiriMicrophonePcm(this)) "PCM" else "Opus"} " +
@@ -3174,7 +3177,9 @@ class CarPlayHostActivity : ComponentActivity() {
             next,
             sessionAudioMode == AudioMode.CARPLAY_WIFI,
             callsOnCarPlay = sessionAudioMode == AudioMode.CARPLAY_WIFI && AirPlayPersistence.loadCallsOverCarPlayOnly(this),
+            siriAudio = renderer,
         ) { appendLog(it) }
+        Mg4CarIntegration.attach(this, next, renderer) { appendLog(it) }
         if (airPlayConfig.videoInCar) CarPlayVideo.attach(this, next)
         CarPlayBackgroundSession.store(next, renderer, size.width, size.height, this) { completion ->
             runOnUiThread {
@@ -3456,6 +3461,7 @@ class CarPlayHostActivity : ComponentActivity() {
         val oldController = controller
         val oldSink = sink
         CarPlayMediaKeys.detach(oldController)
+        Mg4CarIntegration.detach(oldController)
         CarPlayBackgroundSession.clear(oldController, keepOwner = true)
         controller = null
         sink = null
@@ -3532,6 +3538,7 @@ class CarPlayHostActivity : ComponentActivity() {
         val oldController = controller
         val oldSink = sink
         CarPlayMediaKeys.detach(oldController)
+        Mg4CarIntegration.detach(oldController)
         CarPlayBackgroundSession.clear(oldController)
         controller = null
         sink = null

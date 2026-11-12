@@ -381,6 +381,7 @@ class DiPlayActivity : ComponentActivity() {
                 getString(R.string.microphone_source_automatic),
                 getString(R.string.microphone_source_voice),
                 getString(R.string.microphone_source_plain),
+                getString(R.string.microphone_source_stock),
             ), AirPlayPersistence.loadMicrophoneSource(this)) {
                 AirPlayPersistence.saveMicrophoneSource(this, it)
             }
@@ -1071,7 +1072,11 @@ class DiPlayActivity : ComponentActivity() {
     }
 
     /** The redacted diagnostic report; reads logs and files, so call it off the main thread. */
-    private fun buildDiagnosticReport(appContext: Context): String = buildString {
+    /**
+     * [inlineNativeLibs] writes the stock CarPlay libraries into the report as base64 (Save report is
+     * one text file). Download to iPhone passes false and puts them in the zip instead.
+     */
+    private fun buildDiagnosticReport(appContext: Context, inlineNativeLibs: Boolean = true): String = buildString {
         appendLine("MG4CPlay ${version()} · private beta diagnostic report")
         appendLine("Android ${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}")
         appendLine("Head unit: ${Build.MANUFACTURER} ${Build.MODEL}")
@@ -1116,6 +1121,7 @@ class DiPlayActivity : ComponentActivity() {
         if (Mg4FirmwareProfile.detect().isMg4) {
             appendLine()
             SystemAppCodeExport.appendTo(this, appContext)
+            SystemNativeLibExport.appendTo(this, inlineNativeLibs)
         }
     }
 
@@ -1186,11 +1192,13 @@ class DiPlayActivity : ComponentActivity() {
         Thread({
             var server: ReportDownloadServer? = null
             val result = runCatching {
-                val report = buildDiagnosticReport(appContext).toByteArray(Charsets.UTF_8)
+                // The stock CarPlay libraries (MG4) travel in the zip, not inside the text report.
+                val report = buildDiagnosticReport(appContext, inlineNativeLibs = false).toByteArray(Charsets.UTF_8)
                 // mg4.98: microphone test recordings travel with the report, as one zip.
-                val recordings = MicRecordings.files(appContext)
-                val bundled = recordings.isNotEmpty()
-                val body = if (bundled) MicRecordings.zip(fileName, report, recordings) else report
+                val entries = MicRecordings.files(appContext).map { it.name to it } +
+                    if (Mg4FirmwareProfile.detect().isMg4) SystemNativeLibExport.zipEntries() else emptyList()
+                val bundled = entries.isNotEmpty()
+                val body = if (bundled) MicRecordings.zipEntries(fileName, report, entries) else report
                 ReportDownloadServer(address, if (bundled) fileName.removeSuffix(".txt") + ".zip" else fileName, body,
                     log = { message -> Log.i("DiPlay", message); controller?.logDiagnostic(message) },
                     onFinished = { outcome -> runOnUiThread { server?.let { onReportDownloadFinished(it, outcome) } } },
