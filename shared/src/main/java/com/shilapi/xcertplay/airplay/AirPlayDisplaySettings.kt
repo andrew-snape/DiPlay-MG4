@@ -25,6 +25,17 @@ object AirPlayDisplaySettings {
     const val MIN_REPORTED_PHYSICAL_MM = 1
     const val MAX_REPORTED_PHYSICAL_MM = 2_000
 
+    /** The physical size the stock MG4 CarPlay app reports (its logical area is 1920 x 640). */
+    const val STOCK_PHYSICAL_WIDTH_MM = 244
+    const val STOCK_PHYSICAL_HEIGHT_MM = 80
+
+    /**
+     * The physical size to send to the iPhone. [stock] reports the stock app's 244 x 80 mm;
+     * otherwise [automatic] (DiPlay's own size) is used. Pixel size is never changed here.
+     */
+    fun reportedPhysicalSizeMm(automatic: AirPlayPhysicalSizeMm, stock: Boolean): AirPlayPhysicalSizeMm =
+        if (stock) AirPlayPhysicalSizeMm(STOCK_PHYSICAL_WIDTH_MM, STOCK_PHYSICAL_HEIGHT_MM) else automatic
+
     fun sanitizeFps(value: Int): Int =
         snapToStep(value, MIN_FPS, MAX_FPS, FPS_STEP)
 

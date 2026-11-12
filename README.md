@@ -57,6 +57,7 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 | Charging | Apple Maps' "charging" comes from the car's charging status (1 AC, 10 DC) (mg4.90). Plugged in but stopped or finished is not charging. |
 | Dark mode | Follows the car's day/night (`screen_day_night_mode`), which Android's night mode tracks and which switches with the headlights (found by the mg4.90 probe, 2026-11-03). Optional sunset mode (mg4.90). |
 | Build fixes | Replaces upstream calls to Bluetooth functions that were never published, so the tree compiles. The build script finds the Android SDK and writes the APK to `dist/`. |
+| Stock app behaviour | Not yet tried in the car: Telecom mirroring of calls, car phone mode, music source tag, vendor call listener, 200 ms phone focus retry, display report log, and the mute key silencing Siri. See the Sound settings and test plan section I. |
 | Diagnostics | Reports record the firmware profile, video renderer, audio mode, car audio source, microphone source and every wheel key. |
 
 ## Settings
@@ -76,7 +77,11 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | CarPlay audio over Wi-Fi, Calls over CarPlay only | Sound | On, on. Off uses the car's Bluetooth Music; calls-only disconnects the car's hands-free while CarPlay runs. A saved choice still wins. |
 | Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. 2000 ms (mg4.96) rides out a short dropout and adds about a second of music delay. |
 | Echo suppression on calls | Sound | On (not yet tried in the car). The head unit has no echo canceller, so DiPlay turns the call microphone down while it only hears the other person's own voice coming back from the speakers. |
-| Microphone (test) | Sound | Automatic. Plain microphone or call processing can be chosen to compare. |
+| Microphone (test) | Sound | Automatic uses the plain microphone for calls and voice recognition for Siri, the same as Stock. Plain microphone for both or call processing can be chosen to compare. |
+| Show calls to the car (test), Car phone mode for calls (test), Tag music as CarPlay (test) | Sound | Off, off, off. Copy the stock CarPlay app: mirror calls into the car's Telecom, tell the car's audio policy a CarPlay call is on, mark music as the car's CarPlay source. Not yet tried in the car. |
+| Screen size reported to iPhone | Display | Automatic. Stock (244 x 80 mm) tells the iPhone the car's own app's physical size, which changes how big CarPlay draws icons and text; the picture size is unchanged. Applies after you reconnect. Not yet tried in the car. |
+| Narrow-band calls (test) | Sound | Off. Offers the iPhone only 8 kHz audio for calls, as the car's own app can. Siri and music are unchanged. Applies after you reconnect. Not yet tried in the car. |
+| Use car's MFi chip (test) | Car > Authentication | Off. Uses the car's own Apple authentication chip instead of the identity built into the app. Applies after you reconnect; if the chip can't be used the app falls back to its own identity for that connection. Not yet tried in the car. The app also always probes the chip read-only and writes the result to the report. |
 | Siri microphone as PCM (test), Record microphone (test) | Sound | Off, off (mg4.98). PCM sends Siri plain audio instead of Opus. Recording keeps the first 10 s of each Siri request and call on the car; **Download to iPhone** sends them with the report as a zip. |
 | Send location to iPhone | Car > Driving | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it. |
 | Video while parked | Car > Driving | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P. DRM video such as Apple TV+ won't play. |

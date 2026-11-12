@@ -48,6 +48,7 @@ object AirPlayInfoPlist {
             info["audioLatencies"] = audioLatencies()
             info["audioFormats"] = audioFormats(
                 config.entertainmentSampleRate, config.microphone, config.microphoneOpus, config.siriMicrophoneOpus,
+                config.narrowBandCalls,
             )
         }
         info["extendedFeatures"] = listOf("vocoderInfo", "enhancedRequestCarUI")
@@ -118,11 +119,38 @@ object AirPlayInfoPlist {
         )
     }
 
+    /** The audio format bit masks offered for the telephony stream. [input] is null without a microphone. */
+    data class TelephonyFormats(val output: Int, val input: Int?)
+
+    /**
+     * Narrow band is 8 kHz mono PCM only (bit 0x4), with no Opus (which starts at 16 kHz), in
+     * both directions. Otherwise the usual mono PCM rates, plus Opus when [microphoneOpus].
+     */
+    fun telephonyFormats(
+        narrowBand: Boolean,
+        microphone: Boolean,
+        microphoneOpus: Boolean = true,
+        entertainmentRate: Int = 48000,
+    ): TelephonyFormats {
+        if (narrowBand) return TelephonyFormats(NARROW_BAND_PCM, if (microphone) NARROW_BAND_PCM else null)
+        val opus = 0x70000000
+        val pcmMono = 0x154 or (if (entertainmentRate == 48000) 0x4000 else 0x400)
+        val input = if (microphone) pcmMono or (if (microphoneOpus) opus else 0) else null
+        return TelephonyFormats(pcmMono or opus, input)
+    }
+
+    fun describeTelephonyFormats(formats: TelephonyFormats): String =
+        "out=0x${Integer.toHexString(formats.output)} " +
+            "in=${formats.input?.let { "0x" + Integer.toHexString(it) } ?: "none"}"
+
+    private const val NARROW_BAND_PCM = 0x4
+
     private fun audioFormats(
         entertainmentRate: Int,
         microphone: Boolean,
         microphoneOpus: Boolean = true,
         siriMicrophoneOpus: Boolean = true,
+        narrowBandCalls: Boolean = false,
     ): List<Map<String, Any?>> {
         fun format(type: Int, audioType: String, outputFormats: Int, inputFormats: Int? = null): Map<String, Any?> {
             val entry = linkedMapOf<String, Any?>(
@@ -145,6 +173,7 @@ object AirPlayInfoPlist {
         val wirelessInput = if (microphone) pcmMono or (if (microphoneOpus) opus else 0) else null
         // Test (mg4.98): Siri's microphone alone can be offered as PCM only; calls keep Opus.
         val siriInput = if (siriMicrophoneOpus) wirelessInput else pcmInput
+        val calls = telephonyFormats(narrowBandCalls, microphone, microphoneOpus, entertainmentRate)
 
         return listOf(
             format(100, "compatibility", pcm, pcmInput),
@@ -152,7 +181,7 @@ object AirPlayInfoPlist {
             format(100, "default", pcm or opus, wirelessInput),
             format(100, "alert", pcm or opus),
             format(100, "media", pcm),
-            format(100, "telephony", pcmMono or opus, wirelessInput),
+            format(100, "telephony", calls.output, calls.input),
             format(100, "speechRecognition", pcmMono or opus, siriInput),
             format(101, "default", pcm or opus),
             format(102, "media", aacLc),

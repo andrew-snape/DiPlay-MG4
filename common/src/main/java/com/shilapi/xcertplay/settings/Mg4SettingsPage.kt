@@ -299,6 +299,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         "location" -> R.string.settings_header_driving.takeIf { env.generation != Mg4FirmwareProfile.Generation.SWI165 }
         "appearance" -> R.string.settings_header_appearance
         "battery" -> R.string.settings_header_battery
+        "mfi" -> R.string.settings_header_mfi
         "system" -> R.string.settings_header_permissions
         "diagnostics" -> R.string.diagnostics
         "help" -> R.string.settings_header_help
@@ -325,13 +326,22 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 add(R.string.wifi_high_performance_description)
                 if (env.connection == ConnectionChoice.WIFI_DIRECT && env.sdkInt < 29) add(R.string.wifi_direct_band_desc)
             }
-            "screen" -> add(R.string.settings_footer_screen)
+            "screen" -> {
+                add(R.string.settings_footer_screen)
+                if (env.generation == Mg4FirmwareProfile.Generation.SWI165) add(R.string.settings_footer_reported_screen_size)
+            }
             "picture" -> add(R.string.settings_footer_picture)
             "overlay" -> add(R.string.overlay_video_renderer_description)
             "colour" -> add(R.string.settings_footer_colour_range)
             "corners" -> add(R.string.plain_display_area_description)
             "wifi_audio" -> add(R.string.carplay_wifi_audio_description)
-            "calls" -> add(R.string.calls_over_carplay_only_description)
+            "calls" -> {
+                add(R.string.calls_over_carplay_only_description)
+                if (env.generation == Mg4FirmwareProfile.Generation.SWI165) {
+                    add(R.string.settings_footer_car_tests)
+                    add(R.string.settings_footer_narrow_band)
+                }
+            }
             "buffer" -> add(R.string.settings_footer_buffer)
             "microphone" -> add(R.string.settings_footer_microphone)
             "navigation" -> add(R.string.contrib_audio_home_nav_channel_note)
@@ -340,6 +350,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
             "parked" -> add(R.string.settings_footer_video_while_parked)
             "appearance" -> add(R.string.mg4_sunset_dark_mode_description)
             "battery" -> add(R.string.settings_footer_battery)
+            "mfi" -> add(R.string.settings_footer_car_mfi)
             "system" -> add(R.string.nearby_devices_connects_your_iphone_microphone_enables_sir)
             "diagnostics" -> {
                 val hint = ui.groupFooter(activity.getString(R.string.download_to_iphone_unavailable))
@@ -368,6 +379,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.OPEN_CAR_WIFI ->
             if (connectionChoice() == ConnectionChoice.CAR_HOTSPOT) R.string.open_car_hotspot_settings else R.string.open_car_wi_fi_settings
         SettingRow.CARPLAY_SIZE -> R.string.carplay_size
+        SettingRow.REPORTED_SCREEN_SIZE -> R.string.reported_screen_size
         SettingRow.RIGHT_HAND_DRIVE -> R.string.right_hand_drive
         SettingRow.FULL_SCREEN -> R.string.full_screen
         SettingRow.RESOLUTION -> R.string.resolution
@@ -379,6 +391,10 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.SQUARE_CORNERS -> R.string.plain_display_area
         SettingRow.WIFI_AUDIO -> R.string.carplay_wifi_audio
         SettingRow.CALLS_OVER_CARPLAY -> R.string.calls_over_carplay_only
+        SettingRow.SHOW_CALLS_TO_CAR -> R.string.show_calls_to_car
+        SettingRow.TAG_MUSIC_CARPLAY -> R.string.tag_music_as_carplay
+        SettingRow.CAR_PHONE_MODE -> R.string.car_phone_mode
+        SettingRow.NARROW_BAND_CALLS -> R.string.narrow_band_calls
         SettingRow.MUSIC_BUFFER -> R.string.music_buffer
         SettingRow.MICROPHONE -> R.string.microphone_source
         SettingRow.SIRI_MIC_PCM -> R.string.siri_microphone_pcm
@@ -386,6 +402,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.MIC_RECORDING -> R.string.microphone_recording
         SettingRow.NAVIGATION_CHANNEL -> R.string.contrib_audio_home_nav_channel_label
         SettingRow.CLUSTER_DIRECTIONS -> R.string.mg4_cluster_directions
+        SettingRow.CAR_MFI_CHIP -> R.string.use_car_mfi_chip
         SettingRow.SEND_LOCATION -> R.string.settings_send_location
         SettingRow.VIDEO_WHILE_PARKED -> R.string.mg4_video_while_parked
         SettingRow.SUNSET_DARK_MODE -> R.string.mg4_sunset_dark_mode
@@ -466,6 +483,18 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 SettingRow.CALLS_OVER_CARPLAY -> switch(AirPlayPersistence.loadCallsOverCarPlayOnly(activity)) {
                     AirPlayPersistence.saveCallsOverCarPlayOnly(activity, it)
                 }
+                SettingRow.SHOW_CALLS_TO_CAR -> switch(AirPlayPersistence.loadShowCallsToCar(activity)) {
+                    AirPlayPersistence.saveShowCallsToCar(activity, it)
+                }
+                SettingRow.CAR_PHONE_MODE -> switch(AirPlayPersistence.loadCarPhoneMode(activity)) {
+                    AirPlayPersistence.saveCarPhoneMode(activity, it)
+                }
+                SettingRow.NARROW_BAND_CALLS -> switch(AirPlayPersistence.loadNarrowBandCalls(activity)) {
+                    AirPlayPersistence.saveNarrowBandCalls(activity, it)
+                }
+                SettingRow.TAG_MUSIC_CARPLAY -> switch(AirPlayPersistence.loadTagMusicAsCarPlay(activity)) {
+                    AirPlayPersistence.saveTagMusicAsCarPlay(activity, it)
+                }
                 SettingRow.SIRI_MIC_PCM -> switch(AirPlayPersistence.loadSiriMicrophonePcm(activity)) {
                     AirPlayPersistence.saveSiriMicrophonePcm(activity, it)
                 }
@@ -485,6 +514,11 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 }
                 SettingRow.NAVIGATION_CHANNEL -> link(AirPlayPersistence.loadNavigationAudioChannel(activity).toString()) {
                     host.editNavigationChannel { changed(row, AirPlayPersistence.loadNavigationAudioChannel(activity).toString()); host.render() }
+                }
+                SettingRow.CAR_MFI_CHIP -> switch(AirPlayPersistence.loadUseCarMfiChip(activity)) {
+                    // A fresh choice gets a fresh try, even if the chip failed earlier this run.
+                    com.shilapi.xcertplay.mfi.CarMfiState.reset()
+                    AirPlayPersistence.saveUseCarMfiChip(activity, it)
                 }
                 SettingRow.CLUSTER_DIRECTIONS -> switch(AirPlayPersistence.loadClusterDirections(activity)) { AirPlayPersistence.saveClusterDirections(activity, it) }
                 SettingRow.SEND_LOCATION -> switch(AirPlayPersistence.loadLocationReportingEnabled(activity)) { host.setLocationReporting(it) }
@@ -546,6 +580,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         content.addView(box, LinearLayout.LayoutParams(-1, -2))
         when (row) {
             SettingRow.COLOUR_RANGE -> R.string.settings_footer_colour_range
+            SettingRow.REPORTED_SCREEN_SIZE -> R.string.settings_footer_reported_screen_size
             SettingRow.WIFI_DIRECT_BAND -> R.string.wifi_direct_band_desc
             else -> null
         }?.let { content.addView(ui.groupFooter(activity.getString(it))) }
@@ -577,6 +612,12 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 AirPlayPersistence.saveWidthPhysicalMm(activity, sizes[it].widthMillimeters)
             }
         }
+        SettingRow.REPORTED_SCREEN_SIZE -> Picker(rowTitle(row), listOf(
+            activity.getString(R.string.reported_screen_size_automatic),
+            activity.getString(R.string.reported_screen_size_stock),
+        ), if (AirPlayPersistence.loadStockScreenSize(activity)) 1 else 0) {
+            AirPlayPersistence.saveStockScreenSize(activity, it == 1)
+        }
         SettingRow.COLOUR_RANGE -> Picker(rowTitle(row), listOf(
             activity.getString(R.string.video_colour_range_stream),
             activity.getString(R.string.video_colour_range_limited),
@@ -586,6 +627,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
             activity.getString(R.string.microphone_source_automatic),
             activity.getString(R.string.microphone_source_voice),
             activity.getString(R.string.microphone_source_plain),
+            activity.getString(R.string.microphone_source_stock),
         ), AirPlayPersistence.loadMicrophoneSource(activity)) { AirPlayPersistence.saveMicrophoneSource(activity, it) }
         SettingRow.CHARGING_CONNECTORS -> {
             val connectors = EvChargingConnectors.entries

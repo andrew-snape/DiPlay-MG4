@@ -48,4 +48,14 @@ class AirPlayDisplaySettingsTest {
         assertEquals(250, size.widthMm)
         assertEquals(141, size.heightMm)
     }
+
+    @Test
+    fun stockScreenSizeReplacesOnlyThePhysicalSize() {
+        val automatic = AirPlayPhysicalSizeMm(200, 75)
+        assertEquals(automatic, AirPlayDisplaySettings.reportedPhysicalSizeMm(automatic, stock = false))
+        assertEquals(
+            AirPlayPhysicalSizeMm(244, 80),
+            AirPlayDisplaySettings.reportedPhysicalSizeMm(automatic, stock = true),
+        )
+    }
 }

@@ -59,6 +59,16 @@
             android:screenOrientation="fullSensor"
             android:theme="@style/Theme.Xcertplay" />
 
+        <!-- MG4 test: shows CarPlay calls to the car's Telecom (setting "Show calls to the car"). -->
+        <service
+            android:name="com.shilapi.xcertplay.CarPlayConnectionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.ConnectionService" />
+            </intent-filter>
+        </service>
+
         <receiver
             android:name="com.shilapi.xcertplay.BootReceiver"
             android:enabled="true"

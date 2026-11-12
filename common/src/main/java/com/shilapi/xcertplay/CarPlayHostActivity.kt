@@ -443,6 +443,7 @@ class CarPlayHostActivity : ComponentActivity() {
             com.shilapi.xcertplay.vehicle.VehicleIntegration.setReportLog(::appendLog)
             dayNightProbe = DayNightProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
             wifiScanProbe = WifiScanProbe(applicationContext, mainHandler, ::appendLog).also { it.start() }
+            com.shilapi.xcertplay.mfi.CarMfiProbe.start(::appendLog)
         }
         advancedAudioChannelMappingSupported =
             resources.getBoolean(R.bool.config_advanced_audio_channel_mapping)
@@ -2711,6 +2712,15 @@ class CarPlayHostActivity : ComponentActivity() {
         appendLog(requestSummary)
         appendLog(support.details)
         appendLog(effectiveSummary)
+        appendLog("Screen size reported to iPhone: " +
+            "${if (AirPlayPersistence.loadStockScreenSize(this)) "stock" else "automatic"} " +
+            "physical=${display.widthPhysicalMm}x${display.heightPhysicalMm}mm " +
+            "pixels=${display.widthPixels}x${display.heightPixels}")
+        appendLog("Car MFi chip setting: ${if (AirPlayPersistence.loadUseCarMfiChip(this)) "on" else "off (bundled identity)"}")
+        val narrowBand = AirPlayPersistence.loadNarrowBandCalls(this)
+        appendLog("Call audio formats offered: narrow-band=${if (narrowBand) "on" else "off"} " +
+            com.shilapi.xcertplay.airplay.AirPlayInfoPlist.describeTelephonyFormats(
+                com.shilapi.xcertplay.airplay.AirPlayInfoPlist.telephonyFormats(narrowBand, microphoneAvailable)))
         return AirPlayConfig(
             deviceName = "MG4CPlay",
             deviceId = DiPlayBootstrap.deviceId(airPlayIdentity),
@@ -2727,6 +2737,7 @@ class CarPlayHostActivity : ComponentActivity() {
             // (mg4.67 lost all CarPlay audio). Android 9 encodes it in software (Concentus).
             microphoneOpus = true,
             siriMicrophoneOpus = !AirPlayPersistence.loadSiriMicrophonePcm(this),
+            narrowBandCalls = AirPlayPersistence.loadNarrowBandCalls(this),
             viewAreas = !(AirPlayPersistence.loadPlainDisplayArea(this) ?: Mg4FirmwareProfile.detect().squareCorners),
             manufacturer = normalizedManufacturer(),
             model = normalizedModel(),
@@ -2807,13 +2818,16 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     private fun resolvePhysicalSize(size: DisplaySize): AirPlayPhysicalSizeMm =
-        AirPlayDisplaySettings.resolvePhysicalSizeMm(
-            currentWidthPixels = size.width,
-            currentHeightPixels = size.height,
-            maximumWidthPixels = maxOf(maximumDetectedWidthPixels, size.width),
-            maximumHeightPixels = maxOf(maximumDetectedHeightPixels, size.height),
-            referenceMillimeters = widthPhysicalMm,
-            basis = physicalSizeBasis,
+        AirPlayDisplaySettings.reportedPhysicalSizeMm(
+            AirPlayDisplaySettings.resolvePhysicalSizeMm(
+                currentWidthPixels = size.width,
+                currentHeightPixels = size.height,
+                maximumWidthPixels = maxOf(maximumDetectedWidthPixels, size.width),
+                maximumHeightPixels = maxOf(maximumDetectedHeightPixels, size.height),
+                referenceMillimeters = widthPhysicalMm,
+                basis = physicalSizeBasis,
+            ),
+            stock = AirPlayPersistence.loadStockScreenSize(this),
         )
 
     private fun safeAreaSummary(): String {
@@ -2932,6 +2946,8 @@ class CarPlayHostActivity : ComponentActivity() {
                 diagnosticLog?.append(formattedLogLine(message, System.currentTimeMillis()))
             },
             onMediaAudioChanged = CarPlayMediaKeys::onMediaAudioChanged,
+            tagMediaAsCarPlay = AirPlayPersistence.loadTagMusicAsCarPlay(this),
+            carPhoneMode = AirPlayPersistence.loadCarPhoneMode(this),
         )
     }
 
@@ -3169,6 +3185,7 @@ class CarPlayHostActivity : ComponentActivity() {
                 AirPlayPersistence.loadCallsOverCarPlayOnly(this),
             clusterDirections = Mg4FirmwareProfile.detect().generation == Mg4FirmwareProfile.Generation.SWI165 &&
                 AirPlayPersistence.loadClusterDirections(this),
+            useCarMfiChip = AirPlayPersistence.loadUseCarMfiChip(this),
         )
         controller = next
         armStartupWatchdog()
@@ -3177,7 +3194,9 @@ class CarPlayHostActivity : ComponentActivity() {
             next,
             sessionAudioMode == AudioMode.CARPLAY_WIFI,
             callsOnCarPlay = sessionAudioMode == AudioMode.CARPLAY_WIFI && AirPlayPersistence.loadCallsOverCarPlayOnly(this),
+            siriAudio = renderer,
         ) { appendLog(it) }
+        Mg4CarIntegration.attach(this, next, renderer) { appendLog(it) }
         if (airPlayConfig.videoInCar) CarPlayVideo.attach(this, next)
         CarPlayBackgroundSession.store(next, renderer, size.width, size.height, this) { completion ->
             runOnUiThread {
@@ -3459,6 +3478,7 @@ class CarPlayHostActivity : ComponentActivity() {
         val oldController = controller
         val oldSink = sink
         CarPlayMediaKeys.detach(oldController)
+        Mg4CarIntegration.detach(oldController)
         CarPlayBackgroundSession.clear(oldController, keepOwner = true)
         controller = null
         sink = null
@@ -3535,6 +3555,7 @@ class CarPlayHostActivity : ComponentActivity() {
         val oldController = controller
         val oldSink = sink
         CarPlayMediaKeys.detach(oldController)
+        Mg4CarIntegration.detach(oldController)
         CarPlayBackgroundSession.clear(oldController)
         controller = null
         sink = null
