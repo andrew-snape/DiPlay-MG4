@@ -1,6 +1,8 @@
 #!/bin/sh
 # Patch the car's stock AllGo CarPlay APK so the CarPlay bar is always on the right.
-# Usage: tools/allgo-rhd-patch/patch_allgo_rhd.sh /path/to/com.allgo.carplay.service.apk
+# Usage: tools/allgo-rhd-patch/patch_allgo_rhd.sh [--rhd-only] /path/to/com.allgo.carplay.service.apk
+#   --rhd-only (or ALLGO_PATCH_CLUSTER=0): driving side only, versionCode 105, name 9-rhd.
+#   Default: driving side and cluster directions, versionCode 106, name 9-rhd-cluster.
 # Output: dist/AllgoCarplay-rhd-v<versionCode>.apk (driving side and cluster directions, signed with the platform key)
 # See tools/allgo-rhd-patch/README.md.
 set -eu
@@ -8,8 +10,13 @@ set -eu
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT=$(CDPATH= cd -- "$HERE/../.." && pwd)
 
+CLUSTER="${ALLGO_PATCH_CLUSTER:-1}"
+if [ "${1:-}" = "--rhd-only" ]; then
+  CLUSTER=0
+  shift
+fi
 STOCK="${1:-}"
-[ -f "$STOCK" ] || { echo "Usage: $0 /path/to/stock-allgo-carplay.apk" >&2; exit 1; }
+[ -f "$STOCK" ] || { echo "Usage: $0 [--rhd-only] /path/to/stock-allgo-carplay.apk" >&2; exit 1; }
 
 command -v apktool >/dev/null 2>&1 || { echo "Error: apktool not found (brew install apktool)" >&2; exit 1; }
 
@@ -45,18 +52,25 @@ apktool d -f -o "$WORK/dec" "$STOCK" >/dev/null
 
 echo "Applying smali patches and adding ClusterNavBridge"
 patch -p1 -d "$WORK/dec" -i "$HERE/rhd.patch"
-patch -p1 -d "$WORK/dec" -i "$HERE/cluster.patch"
-cp -R "$HERE/smali/." "$WORK/dec/smali_classes4/"
+if [ "$CLUSTER" != "0" ]; then
+  patch -p1 -d "$WORK/dec" -i "$HERE/cluster.patch"
+  cp -R "$HERE/smali/." "$WORK/dec/smali_classes4/"
+  BUMP=2
+  SUFFIX=-rhd-cluster
+else
+  BUMP=1
+  SUFFIX=-rhd
+fi
 
-# Bump versionCode by two (105 was the driving-side-only build) and tag the versionName, so it installs over the stock app.
+# Bump versionCode (105 rhd-only, 106 with cluster, so 106 installs over 105) and tag the versionName, so it installs over the stock app.
 YML="$WORK/dec/apktool.yml"
 CODE=$(sed -n "s/^  versionCode: *'\{0,1\}\([0-9][0-9]*\)'\{0,1\}$/\1/p" "$YML")
 NAME=$(sed -n "s/^  versionName: *\(.*\)$/\1/p" "$YML" | tr -d "'\"")
 [ -n "$CODE" ] || { echo "Error: versionCode not found in apktool.yml" >&2; exit 1; }
-NEWCODE=$((CODE + 2))
-sed -i.bak "s/^  versionCode: .*/  versionCode: $NEWCODE/; s/^  versionName: .*/  versionName: '${NAME}-rhd-cluster'/" "$YML"
+NEWCODE=$((CODE + BUMP))
+sed -i.bak "s/^  versionCode: .*/  versionCode: $NEWCODE/; s/^  versionName: .*/  versionName: '${NAME}${SUFFIX}'/" "$YML"
 rm -f "$YML.bak"
-echo "versionCode $CODE -> $NEWCODE, versionName ${NAME}-rhd-cluster"
+echo "versionCode $CODE -> $NEWCODE, versionName ${NAME}${SUFFIX}"
 
 echo "Rebuilding"
 apktool b -o "$WORK/unsigned.apk" "$WORK/dec" >/dev/null
