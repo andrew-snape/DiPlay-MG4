@@ -79,4 +79,13 @@ class SettingsModelTest {
         assertEquals("line 5", lines.first())
         assertEquals("line ${SettingsChangeLog.MAX_LINES + 4}", lines.last())
     }
+
+    @Test fun carTestSettingsOnlyOnSwi165() {
+        val tests = listOf(SettingRow.SHOW_CALLS_TO_CAR, SettingRow.TAG_MUSIC_CARPLAY, SettingRow.CAR_PHONE_MODE)
+        tests.forEach {
+            assertTrue(it in rows(SettingsCategory.SOUND, env(Generation.SWI165)))
+            assertFalse(it in rows(SettingsCategory.SOUND, env(Generation.SWI69)))
+            assertFalse(it in rows(SettingsCategory.SOUND, env(Generation.OTHER)))
+        }
+    }
 }
