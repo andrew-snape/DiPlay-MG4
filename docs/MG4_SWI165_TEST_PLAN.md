@@ -118,6 +118,7 @@ Not yet tried in the car. It applies from the first build with the two-pane Sett
 | H2 | From Home, open each category (Connection, Display, Sound, Car, General, Help, About) | Each is reachable in two taps; nothing is clipped at 1920x720 and the list scrolls | n/a |
 | H3 | Connected, change **Frame rate** (a Reconnect row) | A **Reconnect** tag shows on the row and the bar appears. **Reconnect now** reconnects, the bar goes, and the new rate is in use | report lines like `FRAME_RATE = 30` and `Reconnect now after FRAME_RATE` |
 | H4 | Connected, change **Dark mode at sunset**, **Car battery on iPhone** or **Video while parked** | Takes effect with no reconnect and no bar | Settings changes list |
+| H7 | With **Full screen** on, open MG4CPlay > Settings. Then turn **Full screen** off and reopen Settings | On: the car's white side bar (home, navigation, music, phone, car) is hidden and settings use the full width; swiping from the screen edge shows it briefly. Off: the side bar is shown | n/a |
 | H5 | Read Settings in daylight and at night | Text and rows are readable in both | n/a |
 | H6 | Save the report | The **Settings changes (newest last)** section lists the changes from H3 and H4 | `--- Settings changes (newest last) ---` |
 
