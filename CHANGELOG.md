@@ -1,5 +1,7 @@
 # Unreleased
 
+- **Car MFi chip probe and test option (not yet tried in the car).** On MG4 the app now asks the car's own MFi authentication chip, through the `mfid` socket, for its device id, serial, certificate size and a signature on a fixed test digest, and logs the result with the exact error if it can't (`Car MFi chip:` lines in the session log, plus a `Car MFi chip:` line in the report header). It is read only and never affects the session. A new switch, **Use car's MFi chip (test)** (Settings > Car > Authentication, off by default), signs the iPhone's authentication (iAP2 and AirPlay auth-setup) with that chip instead of the bundled identity. Applies after reconnect. If the chip can't be read, is a version the app doesn't handle, or fails while signing, that connection (or the rest of the run) uses the bundled identity and the log says why. Test plan I13 and I14.
+
 # MG4CPlay 0.4.0 (SWI165 fork), 2026-11-12
 
 Ported from the car's stock AllGo CarPlay app (docs/MG4_SWI165_ALLGO_NOTES.md). Also two new options: Screen size reported to iPhone and Narrow-band calls. All MG4 only and **not yet tried in the car**: test plan section I.
