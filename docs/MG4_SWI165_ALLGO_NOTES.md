@@ -191,3 +191,19 @@ Example frames (tx_id 0): GetDeviceId `04 00 00 00 | 08 00 10 00`; GetCertificat
 **In MG4CPlay.** `CarMfiClient` speaks this protocol (pure Kotlin protobuf, one call at a time, tx_id and status checked). `CarMfiProbe` runs the four calls once per run on MG4 and logs the result (id, serial, certificate size and a short SHA-256 prefix, signature size, timings, SELinux context, and the exact exception if the socket is refused). `CarMfiAuthenticator` is the `MfiAuthenticator` behind the **Use car's MFi chip (test)** switch. The existing AirPlay and iAP2 code already pick the digest and pass the challenge by `protocolMajor()` (2 or 3), so both paths use the car chip with no other change. An id other than 0x200 or 0x300 is logged as not supported by this build, and the bundled identity (P-256, MFi 3.0 style, 32-byte digest) is used instead. The certificate and signatures always come from one source for a connection.
 
 **Unknowns to settle in the car.** Whether the app's SELinux domain may connect to the socket; whether `mfid` accepts a connection per call, and whether it works while the stock CarPlay runs; the real status codes; and whether the iPhone accepts a 2.0C certificate for wireless CarPlay (not only wired). Test plan I13 and I14.
+
+## Microphone, from the car's native libraries (2026-11-12)
+
+Pulled from the car: `/system/lib64/libCarPlayPlatformAudio.so` (disassembled; not tried in
+the car).
+
+- The stock audio platform opens one `AudioRecord` per input stream: telephony uses
+  `AudioSource.MIC` (1) and Siri uses `VOICE_RECOGNITION` (6). It never asks for
+  `VOICE_COMMUNICATION` (7). Both are mono, 16-bit PCM, read in 512-byte chunks (256 bytes for
+  8 kHz narrowband telephony, set by `persist.sys.carplay.narrow_band`).
+- It attaches no echo canceller. Echo handling on stock comes from the head unit's own mic path.
+- It calls `AudioSystem::setDeviceConnectionState`; what for is not yet known.
+- A format table in the same library lists mic formats of 8, 16 and 24 kHz mono for the
+  telephony and Siri streams (reading of the table is tentative).
+- DiPlay's Automatic setting now follows this: plain microphone for calls, voice recognition
+  for Siri.

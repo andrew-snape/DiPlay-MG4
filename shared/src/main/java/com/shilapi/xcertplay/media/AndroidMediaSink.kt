@@ -157,7 +157,10 @@ internal class AudioFocusCoordinator(
 
     private fun setMode(mode: Int) {
         val result = runCatching { manager?.mode = mode; manager?.mode }
-        val line = "Audio: mode set=$mode now=${result.getOrNull()}" +
+        val routing = runCatching {
+            " scoOn=${manager?.isBluetoothScoOn} speaker=${manager?.isSpeakerphoneOn} btA2dp=${manager?.isBluetoothA2dpOn}"
+        }.getOrDefault("")
+        val line = "Audio: mode set=$mode now=${result.getOrNull()}$routing" +
             (result.exceptionOrNull()?.let { " error=${it.javaClass.simpleName}" } ?: "")
         Log.i(TAG, line)
         runCatching { report(line) }
@@ -1526,6 +1529,9 @@ private class AudioRenderer(
                 break
             }
             if (count < writeLength) partialWritesThisWindow++
+            if (format.audioType == "telephony") {
+                EchoReference.shared.push(data, offset + written, count, format.sampleRate, format.channels)
+            }
             written += count
             val framesWritten = count / frameBytes
             totalWrittenFrames += framesWritten

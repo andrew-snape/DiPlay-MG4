@@ -25,18 +25,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 /**
  * Test override for which car microphone path calls and Siri use (an Android AudioSource), or null
- * for the default per stream (call processing for calls, voice recognition for Siri). Set by the
- * host from settings before CarPlay starts.
+ * for the default per stream (plain microphone for calls, voice recognition for Siri, the same as the
+ * car's own CarPlay audio library, which opens AudioSource 1 for telephony and 6 for Siri and never
+ * VOICE_COMMUNICATION). Set by the host from settings before CarPlay starts.
  */
 object MicrophoneSource {
     @Volatile var override: Int? = null
-
-    /**
-     * "Microphone (stock)": calls use the plain microphone source, as the stock CarPlay library
-     * does (AudioRecord source MIC, with a vendor input flag Java cannot set). Siri keeps voice
-     * recognition, which is what the stock library uses too. Ignored when [override] is set.
-     */
-    @Volatile var stockCalls: Boolean = false
 }
 
 internal class MicrophoneUplink(
@@ -58,6 +52,8 @@ internal class MicrophoneUplink(
     private val firstPacketLogged = AtomicBoolean(false)
     @Volatile private var recorder: AudioRecord? = null
     @Volatile private var echoCanceler: AcousticEchoCanceler? = null
+    // Software echo suppression for calls, used when the head unit has no echo canceller.
+    private var echoSuppressor: EchoSuppressor? = null
     @Volatile private var socket: DatagramSocket? = null
     @Volatile private var opusEncoder: OpusEncoder? = null
     private var thread: Thread? = null
@@ -82,8 +78,7 @@ internal class MicrophoneUplink(
         }
 
         val source = MicrophoneSource.override ?: when (config.audioType) {
-            "telephony" ->
-                if (MicrophoneSource.stockCalls) MediaRecorder.AudioSource.MIC else MediaRecorder.AudioSource.VOICE_COMMUNICATION
+            "telephony" -> MediaRecorder.AudioSource.MIC // as stock (libCarPlayPlatformAudio.so)
             "speechrecognition" -> MediaRecorder.AudioSource.VOICE_RECOGNITION
             else -> MediaRecorder.AudioSource.MIC
         }
@@ -108,6 +103,7 @@ internal class MicrophoneUplink(
         if (nextEncoder != null) sourceUsed = "$sourceUsed opus=${nextEncoder.kind}"
         if (nextRecorder != null && config.audioType == "telephony") {
             sourceUsed = "$sourceUsed aec=${attachEchoCanceler(nextRecorder)}"
+            sourceUsed = "$sourceUsed swEcho=${if (CallEchoSuppression.enabled && config.channels == 1) "on" else "off"}"
         }
         if (nextRecorder == null) {
             sourceUsed = "none (${sourceName(source)} and MIC refused)"
@@ -214,6 +210,9 @@ internal class MicrophoneUplink(
         val counters = MicrophoneCounters()
         var filled = 0
         recording = MicrophoneRecording.open(config.audioType, config.sampleRate, config.channels)
+        if (config.audioType == "telephony" && config.channels == 1 && CallEchoSuppression.enabled) {
+            echoSuppressor = EchoSuppressor(EchoReference.shared, config.sampleRate)
+        }
         try {
             while (running.get()) {
                 val readStarted = System.nanoTime()
@@ -269,6 +268,7 @@ internal class MicrophoneUplink(
                         "encodeMaxUs=${encodeMaxNs / 1000} readMaxMs=${readMaxNs / 1_000_000L} " +
                         "kbps=${if (elapsedNs > 0) bytesSent * 8_000_000L / elapsedNs else 0} " +
                         level.summary() +
+                        (echoSuppressor?.let { " " + it.summary() } ?: "") +
                         if (force) " ended=true" else "",
                 )
             }
@@ -283,6 +283,10 @@ internal class MicrophoneUplink(
     }
 
     private fun sendFrame(socket: DatagramSocket, counters: MicrophoneCounters, frame: ByteArray) {
+        echoSuppressor?.let { suppressor ->
+            suppressor.process(frame)
+            suppressor.lockChange()?.let { line -> runCatching { report("Microphone ${config.audioType}: $line") } }
+        }
         level.add(frame)
         recording?.write(frame)
         val encodeStarted = System.nanoTime()

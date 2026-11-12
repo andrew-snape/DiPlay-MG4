@@ -49,6 +49,7 @@ object AirPlayPersistence {
     private const val KEY_USE_CAR_MFI = "use_car_mfi_chip"
     private const val KEY_MIC_SOURCE = "microphone_source"
     private const val KEY_SIRI_MIC_PCM = "siri_microphone_pcm"
+    private const val KEY_CALL_ECHO_SUPPRESSION = "call_echo_suppression"
     private const val KEY_MIC_RECORDING = "microphone_recording"
     private const val KEY_VIDEO_COLOUR_RANGE = "video_colour_range"
     private const val KEY_CLUSTER_DIRECTIONS = "mg4_cluster_directions"
@@ -218,7 +219,7 @@ object AirPlayPersistence {
             .apply()
     }
 
-    /** 0 automatic, 1 voice call processing for everything, 2 plain microphone, 3 stock (plain microphone for calls). */
+    /** 0 automatic (as stock), 1 voice call processing for everything, 2 plain microphone, 3 stock (same as automatic). */
     fun loadMicrophoneSource(context: Context): Int =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_MIC_SOURCE, 0).takeIf { it in 0..3 } ?: 0
 
@@ -234,6 +235,17 @@ object AirPlayPersistence {
 
     fun saveSiriMicrophonePcm(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SIRI_MIC_PCM, enabled).apply()
+    }
+
+    /**
+     * Software echo suppression on the call microphone, so the other person doesn't hear themselves.
+     * On by default: the head unit has no Android echo canceller. A saved choice wins.
+     */
+    fun loadCallEchoSuppression(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CALL_ECHO_SUPPRESSION, true)
+
+    fun saveCallEchoSuppression(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CALL_ECHO_SUPPRESSION, enabled).apply()
     }
 
     /** Test (mg4.98): save the first seconds of each Siri request and call as a WAV. Off by default. */

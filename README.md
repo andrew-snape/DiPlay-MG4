@@ -9,6 +9,9 @@ Current build: **0.3.0**. Car-test builds install as
 `com.shihab.diplay.hudtest`, alongside any upstream `com.shihab.diplay` install.
 Run one at a time.
 
+Versions are `MAJOR.MINOR.PATCH` from 0.3.0 on. Earlier test builds were `0.2.9-mg4.N`,
+so "mg4.N" in the tables below means one of those builds. See [Versions](#versions).
+
 ## What works on SWI165
 
 | Feature | Status |
@@ -73,7 +76,8 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | Overlay video renderer, Square corners, Colour range (test) | Display > Advanced | On, on, from the video. |
 | CarPlay audio over Wi-Fi, Calls over CarPlay only | Sound | On, on. Off uses the car's Bluetooth Music; calls-only disconnects the car's hands-free while CarPlay runs. A saved choice still wins. |
 | Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. 2000 ms (mg4.96) rides out a short dropout and adds about a second of music delay. |
-| Microphone (test) | Sound | Automatic. Plain microphone, call processing or Stock (plain microphone for calls) can be chosen to compare. |
+| Echo suppression on calls | Sound | On (not yet tried in the car). The head unit has no echo canceller, so DiPlay turns the call microphone down while it only hears the other person's own voice coming back from the speakers. |
+| Microphone (test) | Sound | Automatic uses the plain microphone for calls and voice recognition for Siri, the same as Stock. Plain microphone for both or call processing can be chosen to compare. |
 | Show calls to the car (test), Car phone mode for calls (test), Tag music as CarPlay (test) | Sound | Off, off, off. Copy the stock CarPlay app: mirror calls into the car's Telecom, tell the car's audio policy a CarPlay call is on, mark music as the car's CarPlay source. Not yet tried in the car. |
 | Screen size reported to iPhone | Display | Automatic. Stock (244 x 80 mm) tells the iPhone the car's own app's physical size, which changes how big CarPlay draws icons and text; the picture size is unchanged. Applies after you reconnect. Not yet tried in the car. |
 | Narrow-band calls (test) | Sound | Off. Offers the iPhone only 8 kHz audio for calls, as the car's own app can. Siri and music are unchanged. Applies after you reconnect. Not yet tried in the car. |
@@ -86,6 +90,25 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | Diagnostics, updates, permissions | General, Help, About | Settings changes are listed in the diagnostic report. |
 
 Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, and the music audio channel.
+
+## Versions
+
+`MAJOR.MINOR.PATCH`, kept in `version.properties` (`versionName` and `versionCode`).
+Minor is a new feature or setting, patch is a fix only, major needs a manual step or
+breaks saved settings. `versionCode` only ever goes up, because Android refuses to
+install a lower one and the car has no ADB to force it. Debug builds add `-hud-test`
+to the name, which the update check ignores.
+
+Work lands on `main` under `# Unreleased` in `CHANGELOG.md`. A release is cut when the
+car needs one:
+
+```bash
+scripts/bump_version.sh minor    # or major, patch: bumps both numbers, dates the changelog heading
+```
+
+Commit that on its own (`chore: release X.Y.Z`), then run the `Release` workflow on
+`main` with tag `vX.Y.Z`. Details: [docs/VERSIONING.md](docs/VERSIONING.md) and
+[docs/RELEASING.md](docs/RELEASING.md).
 
 ## Building on a Mac
 
@@ -122,14 +145,14 @@ export JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home"
 ./scripts/build_mg4.sh
 ```
 
-The signed APK lands in `dist/MG4CPlay-v<version>.apk` (git-ignored). The first
+The signed APK lands in `dist/MG4CPlay-v<version>.apk` (git-ignored), named from `version.properties`. The first
 build downloads Gradle, the NDK and Android SDK 37, so it takes a few minutes.
 
 ## Installing
 
 **USB stick (no ADB):** copy the APK to a USB stick, open it in the car's file
-manager and tap it to install. Each build has a higher version number, so it
-installs over the last one.
+manager and tap it to install. Each release has a higher `versionCode`, so it
+installs over the last one. A rebuild of the same version will not install over itself.
 
 **ADB:** the APK is platform-signed and installs as a system app, so the usual
 `adb install` is refused by this head unit. Use:
@@ -185,6 +208,7 @@ FairPlay receiver.
 - [Instructions for Claude](CLAUDE.md), and the [claude.ai Project instructions](docs/claude-project-instructions.md)
 - [Platform-signed builds](docs/MG4_PLATFORM_BUILD.md)
 - [Installing over ADB](docs/MG4_PLATFORM_INSTALL.md)
+- [Versioning strategy](docs/VERSIONING.md)
 - [Upstream build, release and OTA notes](docs/RELEASING.md), [OTA](docs/OTA.md)
 
 ## Source and credits

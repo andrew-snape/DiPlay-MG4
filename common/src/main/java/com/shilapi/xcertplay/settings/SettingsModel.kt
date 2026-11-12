@@ -61,6 +61,7 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     MUSIC_BUFFER(RowKind.SEGMENTED, true),
     MICROPHONE(RowKind.PICKER, true),
     SIRI_MIC_PCM(RowKind.SWITCH, true),
+    CALL_ECHO_SUPPRESSION(RowKind.SWITCH, true),
     MIC_RECORDING(RowKind.SWITCH),
     SOUND_ADVANCED(RowKind.PAGE),
     NAVIGATION_CHANNEL(RowKind.LINK, true),
@@ -139,7 +140,7 @@ internal object SettingsLayout {
                 SettingRow.NARROW_BAND_CALLS.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
             )),
             SettingsGroup("buffer", listOf(SettingRow.MUSIC_BUFFER)),
-            SettingsGroup("microphone", listOf(SettingRow.MICROPHONE, SettingRow.SIRI_MIC_PCM, SettingRow.MIC_RECORDING)),
+            SettingsGroup("microphone", listOf(SettingRow.MICROPHONE, SettingRow.SIRI_MIC_PCM, SettingRow.CALL_ECHO_SUPPRESSION, SettingRow.MIC_RECORDING)),
             SettingsGroup("advanced", listOf(SettingRow.SOUND_ADVANCED)),
         )
         SettingsCategory.CAR -> listOfNotNull(
