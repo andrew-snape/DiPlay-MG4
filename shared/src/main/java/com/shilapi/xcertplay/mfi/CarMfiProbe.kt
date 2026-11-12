@@ -23,6 +23,12 @@ object CarMfiProbe {
     /** 20 bytes, the SHA-1 digest size a 2.0C chip signs. Not a real digest of anything. */
     val TEST_DIGEST = ByteArray(20) { (it + 1).toByte() }
 
+    /** 32 bytes, the SHA-256 digest size a 3.0 chip signs. Sending it 20 bytes leaves mfid waiting. */
+    val TEST_DIGEST_3 = ByteArray(32) { (it + 1).toByte() }
+
+    /** The digest the chip with [deviceId] expects: 32 bytes for 0x300, 20 otherwise. */
+    fun testDigestFor(deviceId: Long?): ByteArray = if (deviceId == 0x300L) TEST_DIGEST_3 else TEST_DIGEST
+
     fun start(log: (String) -> Unit) {
         if (!started.compareAndSet(false, true)) {
             synchronized(lines) { lines.toList() }.forEach(log)
@@ -90,9 +96,10 @@ object CarMfiProbe {
             // Short on purpose: the report redactor replaces any hex run of 24 or more.
             emit("Car MFi chip: cert bytes=${cert.size} sha256=${sha.take(8).joinToString("") { "%02x".format(it) }}...")
         }
-        step("CreateSignature") { client.createSignature(TEST_DIGEST) }?.let { signature ->
+        val digest = testDigestFor(id)
+        step("CreateSignature") { client.createSignature(digest) }?.let { signature ->
             signatureBytes = signature.size
-            emit("Car MFi chip: signature bytes=${signature.size} digestBytes=${TEST_DIGEST.size}")
+            emit("Car MFi chip: signature bytes=${signature.size} digestBytes=${digest.size}")
         }
 
         val version = id?.let { CarMfiAuthenticator.supportedMajor(it) }

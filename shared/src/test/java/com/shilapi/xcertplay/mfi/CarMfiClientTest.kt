@@ -342,6 +342,24 @@ class CarMfiClientTest {
         assertFalse(lines.any { it.contains("certificate", ignoreCase = true) || Regex("[0-9a-f]{24,}").containsMatchIn(it) })
     }
 
+    @Test fun probeSendsA32ByteDigestToAnMfi3Chip() {
+        val lines = mutableListOf<String>()
+        val client = client { req ->
+            when (req.opcode) {
+                CarMfiProtocol.OP_GET_DEVICE_ID -> reply(req, Arg(4, u32(0x300)))
+                CarMfiProtocol.OP_READ_CERTIFICATE_SERIAL -> reply(req, Arg(8, "0123456789ABCDEF0123456789AB".toByteArray()))
+                CarMfiProtocol.OP_GET_CERTIFICATE -> reply(req, Arg(8, ByteArray(608) { 1 }))
+                else -> {
+                    assertEquals(32, req.args.single().data.size)
+                    reply(req, Arg(8, ByteArray(64)))
+                }
+            }
+        }
+        CarMfiProbe.run(client) { lines += it }
+        assertTrue(lines.any { it.contains("signature bytes=64 digestBytes=32") })
+        assertTrue(CarMfiProbe.summary.startsWith("working id=0x300"))
+    }
+
     @Test fun probeKeepsGoingAndLogsTheExactFailure() {
         val lines = mutableListOf<String>()
         CarMfiProbe.run(CarMfiClient { throw IOException("connect: EACCES (Permission denied)") }) { lines += it }
