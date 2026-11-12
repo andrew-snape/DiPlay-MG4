@@ -1,0 +1,29 @@
+--- a/smali_classes4/com/allgo/carplay/service/CarPlayService.smali
++++ b/smali_classes4/com/allgo/carplay/service/CarPlayService.smali
+@@ -1415,5 +1415,5 @@
+     invoke-virtual {v15, v0, v5, v7}, Lcom/allgo/android/carplay/CarPlay$ConfigInfo;->setOemIconInfo(ZLjava/lang/String;[Lcom/allgo/android/carplay/CarPlay$OemIcon;)V
+
+     .line 1691
+-    sget-boolean v5, Lcom/allgo/carplay/service/CarPlayService;->mRightHandDrive:Z
++    const/4 v5, 0x1
+
+--- a/smali_classes4/com/allgo/carplay/service/CarPlayService$2.smali
++++ b/smali_classes4/com/allgo/carplay/service/CarPlayService$2.smali
+@@ -214,7 +214,7 @@
+     invoke-virtual {v1, v3}, Lcom/allgo/carplay/service/CarPlayLog;->printDebug(Ljava/lang/String;)V
+
+     .line 773
+-    sput-boolean v2, Lcom/allgo/carplay/service/CarPlayService;->mRightHandDrive:Z
++    nop
+
+     goto :goto_3
+
+@@ -230,7 +230,7 @@
+     invoke-virtual {v1, v3}, Lcom/allgo/carplay/service/CarPlayLog;->printDebug(Ljava/lang/String;)V
+
+     .line 769
+-    sput-boolean v2, Lcom/allgo/carplay/service/CarPlayService;->mRightHandDrive:Z
++    nop
+
+     goto :goto_3
+

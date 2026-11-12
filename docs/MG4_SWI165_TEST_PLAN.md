@@ -121,6 +121,17 @@ Not yet tried in the car. It applies from the first build with the two-pane Sett
 | H5 | Read Settings in daylight and at night | Text and rows are readable in both | n/a |
 | H6 | Save the report | The **Settings changes (newest last)** section lists the changes from H3 and H4 | `--- Settings changes (newest last) ---` |
 
+## I. Stock CarPlay driving side patch (not yet tried in the car)
+
+For the patched stock app in `tools/allgo-rhd-patch/`. Install `AllgoCarplay-rhd-v105.apk` from USB first.
+
+| # | Do | Expect | Log |
+|---|---|---|---|
+| I1 | Check the installed version (Apps, CarPlay) | `9-rhd`, versionCode 105 | n/a |
+| I2 | Switch the car off, wait for sleep, start it, then plug the iPhone in by USB | CarPlay starts with the bar on the right | n/a (stock app logs logcat only) |
+| I3 | Repeat I2 five times, noting the side each time | Right every time | n/a |
+| I4 | Uninstall updates for the app | Stock 104 returns | n/a |
+
 ## Known risks to check in code before release
 
 | # | Risk | Why | What to check |
