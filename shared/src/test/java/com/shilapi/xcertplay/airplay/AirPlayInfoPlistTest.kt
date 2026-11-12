@@ -292,4 +292,38 @@ class AirPlayInfoPlistTest {
             .toSet()
         assertEquals(setOf(100, 101, 102), types)
     }
+
+    @Test
+    fun narrowBandCallsOfferOnly8kHzForTelephony() {
+        val base = AirPlayConfig(
+            deviceName = "test",
+            deviceId = "02:00:00:00:00:02",
+            btMac = "02:00:00:00:00:02",
+            sourceVersion = "366.0",
+            main = AirPlayDisplayConfig(widthPixels = 1280, heightPixels = 720),
+            microphone = true,
+        )
+        fun entry(info: Map<String, Any?>, type: String): Map<*, *> =
+            (info["audioFormats"] as List<*>).map { it as Map<*, *> }.first { it["audioType"] == type }
+
+        val narrow = AirPlayInfoPlist.build(base.copy(narrowBandCalls = true))
+        assertEquals(0x4, entry(narrow, "telephony")["audioOutputFormats"])
+        assertEquals(0x4, entry(narrow, "telephony")["audioInputFormats"])
+
+        // Siri and media are unchanged by the option.
+        val normal = AirPlayInfoPlist.build(base)
+        for (type in listOf("speechRecognition", "media", "default", "alert")) {
+            assertEquals(type, entry(normal, type), entry(narrow, type))
+        }
+        // Off by default: calls keep the wide formats with Opus.
+        assertTrue(entry(normal, "telephony")["audioOutputFormats"] as Int and 0x70000000 != 0)
+    }
+
+    @Test
+    fun narrowBandCallsWithoutMicrophoneHaveNoInput() {
+        val formats = AirPlayInfoPlist.telephonyFormats(narrowBand = true, microphone = false)
+        assertEquals(0x4, formats.output)
+        assertEquals(null, formats.input)
+        assertEquals("out=0x4 in=none", AirPlayInfoPlist.describeTelephonyFormats(formats))
+    }
 }

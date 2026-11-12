@@ -81,11 +81,17 @@ class SettingsModelTest {
     }
 
     @Test fun carTestSettingsOnlyOnSwi165() {
-        val tests = listOf(SettingRow.SHOW_CALLS_TO_CAR, SettingRow.TAG_MUSIC_CARPLAY, SettingRow.CAR_PHONE_MODE)
+        val tests = listOf(SettingRow.SHOW_CALLS_TO_CAR, SettingRow.TAG_MUSIC_CARPLAY, SettingRow.CAR_PHONE_MODE, SettingRow.NARROW_BAND_CALLS)
         tests.forEach {
             assertTrue(it in rows(SettingsCategory.SOUND, env(Generation.SWI165)))
             assertFalse(it in rows(SettingsCategory.SOUND, env(Generation.SWI69)))
             assertFalse(it in rows(SettingsCategory.SOUND, env(Generation.OTHER)))
         }
+    }
+
+    @Test fun reportedScreenSizeOnlyOnSwi165() {
+        assertTrue(SettingRow.REPORTED_SCREEN_SIZE in rows(SettingsCategory.DISPLAY, env(Generation.SWI165)))
+        assertFalse(SettingRow.REPORTED_SCREEN_SIZE in rows(SettingsCategory.DISPLAY, env(Generation.SWI69)))
+        assertFalse(SettingRow.REPORTED_SCREEN_SIZE in rows(SettingsCategory.DISPLAY, env(Generation.OTHER)))
     }
 }
