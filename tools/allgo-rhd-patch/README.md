@@ -62,6 +62,10 @@ The output is `dist/AllgoCarplay-rhd-v106.apk` (versionCode 106, version name `9
 signed with the platform key (v1, v2 and v3). Its certificate SHA-1 should end in `...3D:FA`,
 the same as the stock app. The stock APK is only read.
 
+For the bar only, with no cluster code, pass `--rhd-only` (or set `ALLGO_PATCH_CLUSTER=0`):
+that builds `dist/AllgoCarplay-rhd-v105.apk` (versionCode 105, `9-rhd`). Test the bar-only
+build first. The full build (106) installs over 105.
+
 To change the helper, edit `src/com/allgo/carplay/service/ClusterNavBridge.java`, compile it
 with `javac --release 8` against `android.jar` (API 28) and `stubs/`, run `d8` on the two
 `ClusterNavBridge*.class` files, and turn the dex back into smali (for example by zipping it
