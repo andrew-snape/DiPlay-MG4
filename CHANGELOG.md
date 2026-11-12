@@ -1,6 +1,6 @@
 # Unreleased
 
-- **Patch for the stock CarPlay app's driving side (not yet tried in the car).** `tools/allgo-rhd-patch/` builds a copy of the car's own AllGo CarPlay app (versionCode 105) that always starts in right-hand mode, so the CarPlay bar stays on the right after a cold start. It is a separate APK, not part of MG4CPlay. Test plan I.
+- **Patch for the stock CarPlay app: driving side and cluster directions (not yet tried in the car).** `tools/allgo-rhd-patch/` builds a copy of the car's own AllGo CarPlay app (versionCode 106, `9-rhd-cluster`) that always starts in right-hand mode, so the CarPlay bar stays on the right after a cold start, and sends the iPhone's turn-by-turn (icon, distance, road, time and distance remaining) to the instrument cluster the same way MG4CPlay does. It is a separate APK, not part of MG4CPlay. Directions only start when the stock app holds the car's navigation focus. Test plan I.
 
 # MG4CPlay 0.3.2 (SWI165 fork), 2026-11-11
 

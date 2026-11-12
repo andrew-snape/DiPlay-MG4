@@ -1,0 +1,30 @@
+--- a/smali_classes4/com/allgo/carplay/service/MirroringControllerService$12.smali
++++ b/smali_classes4/com/allgo/carplay/service/MirroringControllerService$12.smali
+@@ -41,3 +41,5 @@
+     .param p1, "mirroringDevice"    # Lcom/allgo/mirroring/control/MirroringDevice;
+     .param p2, "navRouteGuidanceUpdateInfo"    # Lcom/allgo/mirroring/control/NavRouteGuidanceUpdatesController$NavRouteGuidanceUpdateInfo;
++
++    invoke-static {p2}, Lcom/allgo/carplay/service/ClusterNavBridge;->onGuidance(Lcom/allgo/mirroring/control/NavRouteGuidanceUpdatesController$NavRouteGuidanceUpdateInfo;)V
+
+@@ -254,3 +254,5 @@
+     .param p1, "mirroringDevice"    # Lcom/allgo/mirroring/control/MirroringDevice;
+     .param p2, "navRouteManeuverUpdateInfo"    # Lcom/allgo/mirroring/control/NavRouteGuidanceUpdatesController$NavRouteManeuverUpdateInfo;
++
++    invoke-static {p2}, Lcom/allgo/carplay/service/ClusterNavBridge;->onManeuver(Lcom/allgo/mirroring/control/NavRouteGuidanceUpdatesController$NavRouteManeuverUpdateInfo;)V
+
+--- a/smali_classes4/com/allgo/mirroring/control/NavRouteGuidanceUpdatesController.smali
++++ b/smali_classes4/com/allgo/mirroring/control/NavRouteGuidanceUpdatesController.smali
+@@ -597,3 +597,5 @@
+     .locals 4
+
++    invoke-static {}, Lcom/allgo/carplay/service/ClusterNavBridge;->stop()V
++
+     .line 745
+--- a/smali_classes4/com/allgo/carplay/service/MirroringControllerService.smali
++++ b/smali_classes4/com/allgo/carplay/service/MirroringControllerService.smali
+@@ -1699,3 +1699,5 @@
+     .locals 4
+
++    invoke-static {}, Lcom/allgo/carplay/service/ClusterNavBridge;->stop()V
++
+     .line 2362

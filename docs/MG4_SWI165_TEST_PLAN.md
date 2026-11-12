@@ -121,16 +121,20 @@ Not yet tried in the car. It applies from the first build with the two-pane Sett
 | H5 | Read Settings in daylight and at night | Text and rows are readable in both | n/a |
 | H6 | Save the report | The **Settings changes (newest last)** section lists the changes from H3 and H4 | `--- Settings changes (newest last) ---` |
 
-## I. Stock CarPlay driving side patch (not yet tried in the car)
+## I. Stock CarPlay patch: driving side and cluster directions (not yet tried in the car)
 
-For the patched stock app in `tools/allgo-rhd-patch/`. Install `AllgoCarplay-rhd-v105.apk` from USB first.
+For the patched stock app in `tools/allgo-rhd-patch/`. Install `AllgoCarplay-rhd-v106.apk` from USB first.
 
 | # | Do | Expect | Log |
 |---|---|---|---|
-| I1 | Check the installed version (Apps, CarPlay) | `9-rhd`, versionCode 105 | n/a |
+| I1 | Check the installed version (Apps, CarPlay) | `9-rhd-cluster`, versionCode 106 | n/a |
 | I2 | Switch the car off, wait for sleep, start it, then plug the iPhone in by USB | CarPlay starts with the bar on the right | n/a (stock app logs logcat only) |
 | I3 | Repeat I2 five times, noting the side each time | Right every time | n/a |
-| I4 | Uninstall updates for the app | Stock 104 returns | n/a |
+| I4 | With wired CarPlay up, start a route in Apple Maps | The cluster shows its navigation card within a few seconds. If not, note whether the stock app has the car's navigation focus | n/a |
+| I5 | Drive the route past a few turns | The cluster icon matches each turn (left, right, roundabout), the road name is the street you turn onto, and the distance matches CarPlay's screen (600, 500 ...) | n/a |
+| I6 | Check time and distance remaining on the cluster | Close to CarPlay's trip figures (note if the time looks wrong, it is read as hours and minutes) | n/a |
+| I7 | Arrive, or end the route in Apple Maps | The cluster card clears | n/a |
+| I8 | Uninstall updates for the app | Stock 104 returns | n/a |
 
 ## Known risks to check in code before release
 
