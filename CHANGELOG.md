@@ -1,5 +1,17 @@
 # Unreleased
 
+Ported from the car's stock AllGo CarPlay app (docs/MG4_SWI165_ALLGO_NOTES.md). All MG4 only and **not yet tried in the car**: test plan section I.
+
+- **Show calls to the car (test).** Settings > Sound, off by default. Lists each CarPlay call with the car's Telecom (a `CarPlayPhone` account, as stock does), so the car's phone system and audio policy see a call in progress. Answering or hanging up on the car's call screen presses CarPlay's hook switch. Log lines start `Telecom:`.
+- **Car phone mode for calls (test).** Settings > Sound, off by default. Tells the car's audio policy `carplay_source=phone` while a CarPlay call track plays and clears it afterwards and on session stop, as the stock audio library does. Log: `Audio: car phone mode on|off ... result=`.
+- **Microphone (stock).** A new option under Microphone (test): plain microphone for calls, as the stock library uses. Siri keeps voice recognition. The stock library also sets vendor input flags that Java cannot set.
+- **Tag music as CarPlay (test).** Settings > Sound, off by default. Marks the music track as the car's CarPlay source (50), which should switch the cluster to its CarPlay music page. On Android 9 it plays music by usage instead of the music stream, which may change routing: if music goes silent, turn it off. Log: `Audio: music track car source=`.
+- **Vendor call listener.** Logs every `onCallStatusChanged` from the car (`Vendor call status:`). When the car's own Bluetooth call starts, CarPlay gives up audio focus and takes it back when the call ends.
+- **Phone focus retry.** If a call's audio focus request is refused it is asked for once more after 200 ms, as stock does. Both attempts are logged.
+- **Display report.** Logs `com.saic.conn.display.report`. When the display comes back, a key frame is requested. The session is never torn down. Which value means off is unconfirmed.
+- **Mute key during Siri.** The wheel mute key mutes Siri's voice while Siri is active; the next press or volume up restores it. Music and calls are not touched. Log: `Wheel raw key: code=301 ... Siri audio muted`.
+- **Stock native libraries in diagnostics.** Save report and Download to iPhone now include any `libjni_carplay*.so` and `libcarplay*.so` found in `/system/lib`, `/system/lib64`, `/vendor/lib` and `/vendor/lib64` (read only; sizes are listed in the report).
+
 # MG4CPlay 0.3.2 (SWI165 fork), 2026-11-11
 
 - **No more `-hud-test` in the version.** The installed app, its report header and the update check now show `0.3.2`, not `0.3.2-hud-test`. The package name is unchanged (`com.shihab.diplay.hudtest`), so 0.3.2 installs over your current build and keeps its settings and pairing. Older installs showing `0.3.1-hud-test` still get the update offered.

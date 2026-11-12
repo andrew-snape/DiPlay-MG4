@@ -143,3 +143,17 @@ wireless would listen.
 Call audio, Siri audio and the microphone are handled in `libjni_carplay` and
 `libjni_carplayscreen`, which weren't exported. Copying those from `/system/lib*` to
 USB would show which microphone source and processing the stock app uses.
+
+## Native libraries (R11)
+
+Disassembled from the car's own libraries (`libCarPlayPlatformAudio.so`, `libAirPlay.so`, `carplay.rc`, `arp_update.sh`), Nov 2026. Read only. Nothing here has been tried in the car.
+
+- **Call audio.** The stock library plays calls on native stream type `VOICE_CALL` (0). Before it starts it calls `AudioSystem::setDeviceConnectionState(device=0x400, AVAILABLE, address="", name="carplay_source=phone")`, and with `UNAVAILABLE` when the call track stops. This looks like a vendor audio-policy hook that switches the car into CarPlay phone mode (routing, and probably echo cancellation). MG4CPlay now has it behind **Car phone mode for calls (test)**, called by reflection (`(int, int, String, String)` on Android 9), paired on and off, and cleared on session stop.
+- **Microphone.** Calls use `AudioRecord` source 1 (`MIC`) with a vendor input flag `0x200`. Siri uses source 6 (`VOICE_RECOGNITION`) with vendor flag `0x100`. Java cannot set those flags. The **Microphone (stock)** option uses `MIC` for calls and leaves Siri as it is.
+- **Narrow band.** The property `persist.sys.carplay.narrow_band` is read at start (narrow-band call audio). Not used here.
+- **No stock wireless.** `libAirPlay.so` reports `wireless=no` in its `$Features` string, so stock wireless CarPlay is compiled out. `carplay.rc` and `arp_update.sh` show stock CarPlay is IP over USB NCM, with `ip6tables` letting port 7000 through on `usb0` only. That agrees with the firewall dropping TCP 7000 on other interfaces.
+- **Exporting more.** Diagnostics now copy `libjni_carplay*.so` and `libcarplay*.so` from the system and vendor library folders (test plan I1).
+
+## Ported into MG4CPlay (Nov 2026, not yet tried in the car)
+
+Telecom mirroring of calls, vendor `onCallStatusChanged` listener (mask `0x60000`), 200 ms phone focus retry, music source tag 50, display report log, mute key during Siri, car phone mode. Test plan section I. For the display report, the stock code treats `state=true` as the display going off; this is unconfirmed, so the app logs both and only asks for a key frame when the display comes back.

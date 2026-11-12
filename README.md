@@ -54,6 +54,7 @@ The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
 | Charging | Apple Maps' "charging" comes from the car's charging status (1 AC, 10 DC) (mg4.90). Plugged in but stopped or finished is not charging. |
 | Dark mode | Follows the car's day/night (`screen_day_night_mode`), which Android's night mode tracks and which switches with the headlights (found by the mg4.90 probe, 2026-11-03). Optional sunset mode (mg4.90). |
 | Build fixes | Replaces upstream calls to Bluetooth functions that were never published, so the tree compiles. The build script finds the Android SDK and writes the APK to `dist/`. |
+| Stock app behaviour | Not yet tried in the car: Telecom mirroring of calls, car phone mode, music source tag, vendor call listener, 200 ms phone focus retry, display report log, and the mute key silencing Siri. See the Sound settings and test plan section I. |
 | Diagnostics | Reports record the firmware profile, video renderer, audio mode, car audio source, microphone source and every wheel key. |
 
 ## Settings
@@ -72,7 +73,8 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | Overlay video renderer, Square corners, Colour range (test) | Display > Advanced | On, on, from the video. |
 | CarPlay audio over Wi-Fi, Calls over CarPlay only | Sound | On, on. Off uses the car's Bluetooth Music; calls-only disconnects the car's hands-free while CarPlay runs. A saved choice still wins. |
 | Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. 2000 ms (mg4.96) rides out a short dropout and adds about a second of music delay. |
-| Microphone (test) | Sound | Automatic. Plain microphone or call processing can be chosen to compare. |
+| Microphone (test) | Sound | Automatic. Plain microphone, call processing or Stock (plain microphone for calls) can be chosen to compare. |
+| Show calls to the car (test), Car phone mode for calls (test), Tag music as CarPlay (test) | Sound | Off, off, off. Copy the stock CarPlay app: mirror calls into the car's Telecom, tell the car's audio policy a CarPlay call is on, mark music as the car's CarPlay source. Not yet tried in the car. |
 | Siri microphone as PCM (test), Record microphone (test) | Sound | Off, off (mg4.98). PCM sends Siri plain audio instead of Opus. Recording keeps the first 10 s of each Siri request and call on the car; **Download to iPhone** sends them with the report as a zip. |
 | Send location to iPhone | Car > Driving | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it. |
 | Video while parked | Car > Driving | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P. DRM video such as Apple TV+ won't play. |

@@ -121,6 +121,23 @@ Not yet tried in the car. It applies from the first build with the two-pane Sett
 | H5 | Read Settings in daylight and at night | Text and rows are readable in both | n/a |
 | H6 | Save the report | The **Settings changes (newest last)** section lists the changes from H3 and H4 | `--- Settings changes (newest last) ---` |
 
+## I. Stock app ports
+
+Not yet tried in the car. Each step is MG4 only and, unless noted, behind a setting that is off by default (Settings > Sound). Turn one on at a time, reconnect, and note the time.
+
+| # | Step | Pass | Log lines |
+|---|---|---|---|
+| I1 | Save a report and open Download to iPhone, then open the zip | The report has a `Stock native libraries` section listing each `libjni_carplay*.so` or `libcarplay*.so` with its size (or says none found). The zip has them under `native-libs/`. Save report writes them as `BEGIN-FILE` blocks | `found /system/lib64/libjni_carplay.so size=` |
+| I2 | **Show calls to the car** on. Call out from CarPlay, then take an incoming call | Report shows the account registered and each call added; the car's call screen may show the call. Answer and hang up from the car's call screen if it appears. Note any change in call audio | `Telecom: CarPlayPhone account registered`, `Telecom: call INCOMING`, `addNewIncomingCall sent`, `addNewUnknownCall sent`, `Telecom: service create connection ... found=true`, `Telecom: session stopped` |
+| I3 | Same on, end CarPlay (close DiPlay) during a call | The Telecom call ends | `Telecom: session stopped; disconnected 1 call(s)` |
+| I4 | **Car phone mode for calls** on. Make a call, talk, hang up | Call is audible both ways; note any change in volume, echo or routing against C1 | `Audio: car phone mode on (call track started) result=`, then `off (call track stopped) result=`. `failed` means the hidden call was refused |
+| I5 | **Microphone (test)** set to **Stock**. Call someone, then use Siri | Compare how the other person hears you against C8; Siri still works | `Microphone telephony: started source=MIC`, `Microphone speechrecognition: started source=VOICE_RECOGNITION` |
+| I6 | **Tag music as CarPlay** on, reconnect, play music | Music is audible; the cluster may switch to its CarPlay music page. If music is silent, note it and turn the setting off | `Audio: music track car source=50`, `car source:` lines, `Audio: ready audioType=media ... route=usage` |
+| I7 | With the car connected to the iPhone over Bluetooth hands-free, make a native hands-free call (Calls over CarPlay only off) while CarPlay music plays | CarPlay audio steps aside during the call and returns after | `Vendor call status: state=4 type=0`, `Audio: native call started; CarPlay focus released`, `... restored` |
+| I8 | Make a CarPlay call where the car's call focus is busy (for example with the car's own phone ringing) | Note whether the focus retry fires | `Audio: focus requested channel=PHONE ... granted=0`, then `Audio: phone focus retry after 200ms granted=` |
+| I9 | Turn the screen off and on from the car (display off or standby), with CarPlay running | CarPlay picture returns at once; session stays up | `Display report: state=` with `display off` or `on`; `key frame requested`. Note which `state=` value matched the screen |
+| I10 | Hold the voice button, ask Siri a long question, press the wheel mute key while Siri speaks, then press it again | First press silences Siri's voice (music unaffected); the next press, or volume up, restores it. With Siri idle, mute does nothing extra | `Wheel raw key: code=301 ... Siri audio muted`, `Siri: audio muted streams=`, `... restored` |
+
 ## Known risks to check in code before release
 
 | # | Risk | Why | What to check |
@@ -131,6 +148,7 @@ Not yet tried in the car. It applies from the first build with the two-pane Sett
 | R4 | Call and Siri streams can't ask for resends | The iPhone doesn't send a control port for these streams | mg4.84 hides call gaps up to 200 ms (FEC, then concealment); check `call loss` at hang-up |
 | R5 | Bluetooth music doesn't come back after CarPlay | A2DP is released and not reconnected on close | E1: check whether Bluetooth music needs a manual reconnect |
 | R6 | Siri mishears | Microphone source or processing | D2 results per option |
+| R8 | Music tag may silence music | Tag music as CarPlay plays music by usage instead of the music stream, which this firmware once needed (mg4.65) | I6. If silent, leave it off |
 | R7 | Calls sound noisy or echoey | DiPlay adds no noise or echo processing of its own; that comes from the car when the call source (`VOICE_COMMUNICATION`) is used. If the car refuses it, or does no processing for it, the call uses the raw microphone | C8 results per option |
 
 ## What to send back
