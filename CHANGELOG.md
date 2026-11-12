@@ -10,6 +10,8 @@ Ported from the car's stock AllGo CarPlay app (docs/MG4_SWI165_ALLGO_NOTES.md). 
 - **Phone focus retry.** If a call's audio focus request is refused it is asked for once more after 200 ms, as stock does. Both attempts are logged.
 - **Display report.** Logs `com.saic.conn.display.report`. When the display comes back, a key frame is requested. The session is never torn down. Which value means off is unconfirmed.
 - **Mute key during Siri.** The wheel mute key mutes Siri's voice while Siri is active; the next press or volume up restores it. Music and calls are not touched. Log: `Wheel raw key: code=301 ... Siri audio muted`.
+- **Screen size reported to iPhone.** Settings > Display, MG4 only. Automatic (default) is as before. Stock (244 x 80 mm) sends the car's own app's physical size, which changes how big CarPlay draws icons and text. The picture size is unchanged. Applies after reconnect. Log: `Screen size reported to iPhone:`. Test plan I11.
+- **Narrow-band calls (test).** Settings > Sound, off by default. Offers the iPhone only 8 kHz PCM for the call audio stream, in both directions (the stock library reads `persist.sys.carplay.narrow_band` for this). Siri and music are unchanged. Applies after reconnect. Log: `Call audio formats offered:`. Test plan I12.
 - **Stock native libraries in diagnostics.** Save report and Download to iPhone now include any `libjni_carplay*.so` and `libcarplay*.so` found in `/system/lib`, `/system/lib64`, `/vendor/lib` and `/vendor/lib64` (read only; sizes are listed in the report).
 
 # MG4CPlay 0.3.2 (SWI165 fork), 2026-11-11

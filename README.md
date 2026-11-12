@@ -75,6 +75,8 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. 2000 ms (mg4.96) rides out a short dropout and adds about a second of music delay. |
 | Microphone (test) | Sound | Automatic. Plain microphone, call processing or Stock (plain microphone for calls) can be chosen to compare. |
 | Show calls to the car (test), Car phone mode for calls (test), Tag music as CarPlay (test) | Sound | Off, off, off. Copy the stock CarPlay app: mirror calls into the car's Telecom, tell the car's audio policy a CarPlay call is on, mark music as the car's CarPlay source. Not yet tried in the car. |
+| Screen size reported to iPhone | Display | Automatic. Stock (244 x 80 mm) tells the iPhone the car's own app's physical size, which changes how big CarPlay draws icons and text; the picture size is unchanged. Applies after you reconnect. Not yet tried in the car. |
+| Narrow-band calls (test) | Sound | Off. Offers the iPhone only 8 kHz audio for calls, as the car's own app can. Siri and music are unchanged. Applies after you reconnect. Not yet tried in the car. |
 | Siri microphone as PCM (test), Record microphone (test) | Sound | Off, off (mg4.98). PCM sends Siri plain audio instead of Opus. Recording keeps the first 10 s of each Siri request and call on the car; **Download to iPhone** sends them with the report as a zip. |
 | Send location to iPhone | Car > Driving | On (mg4.90). Asks for location permission once. Sends the car's wheel speed with it. |
 | Video while parked | Car > Driving | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P. DRM video such as Apple TV+ won't play. |
