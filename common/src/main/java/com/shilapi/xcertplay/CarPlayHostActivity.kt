@@ -2711,6 +2711,14 @@ class CarPlayHostActivity : ComponentActivity() {
         appendLog(requestSummary)
         appendLog(support.details)
         appendLog(effectiveSummary)
+        appendLog("Screen size reported to iPhone: " +
+            "${if (AirPlayPersistence.loadStockScreenSize(this)) "stock" else "automatic"} " +
+            "physical=${display.widthPhysicalMm}x${display.heightPhysicalMm}mm " +
+            "pixels=${display.widthPixels}x${display.heightPixels}")
+        val narrowBand = AirPlayPersistence.loadNarrowBandCalls(this)
+        appendLog("Call audio formats offered: narrow-band=${if (narrowBand) "on" else "off"} " +
+            com.shilapi.xcertplay.airplay.AirPlayInfoPlist.describeTelephonyFormats(
+                com.shilapi.xcertplay.airplay.AirPlayInfoPlist.telephonyFormats(narrowBand, microphoneAvailable)))
         return AirPlayConfig(
             deviceName = "MG4CPlay",
             deviceId = DiPlayBootstrap.deviceId(airPlayIdentity),
@@ -2727,6 +2735,7 @@ class CarPlayHostActivity : ComponentActivity() {
             // (mg4.67 lost all CarPlay audio). Android 9 encodes it in software (Concentus).
             microphoneOpus = true,
             siriMicrophoneOpus = !AirPlayPersistence.loadSiriMicrophonePcm(this),
+            narrowBandCalls = AirPlayPersistence.loadNarrowBandCalls(this),
             viewAreas = !(AirPlayPersistence.loadPlainDisplayArea(this) ?: Mg4FirmwareProfile.detect().squareCorners),
             manufacturer = normalizedManufacturer(),
             model = normalizedModel(),
@@ -2807,13 +2816,16 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     private fun resolvePhysicalSize(size: DisplaySize): AirPlayPhysicalSizeMm =
-        AirPlayDisplaySettings.resolvePhysicalSizeMm(
-            currentWidthPixels = size.width,
-            currentHeightPixels = size.height,
-            maximumWidthPixels = maxOf(maximumDetectedWidthPixels, size.width),
-            maximumHeightPixels = maxOf(maximumDetectedHeightPixels, size.height),
-            referenceMillimeters = widthPhysicalMm,
-            basis = physicalSizeBasis,
+        AirPlayDisplaySettings.reportedPhysicalSizeMm(
+            AirPlayDisplaySettings.resolvePhysicalSizeMm(
+                currentWidthPixels = size.width,
+                currentHeightPixels = size.height,
+                maximumWidthPixels = maxOf(maximumDetectedWidthPixels, size.width),
+                maximumHeightPixels = maxOf(maximumDetectedHeightPixels, size.height),
+                referenceMillimeters = widthPhysicalMm,
+                basis = physicalSizeBasis,
+            ),
+            stock = AirPlayPersistence.loadStockScreenSize(this),
         )
 
     private fun safeAreaSummary(): String {

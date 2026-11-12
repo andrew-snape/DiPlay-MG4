@@ -44,6 +44,8 @@ object AirPlayPersistence {
     private const val KEY_SHOW_CALLS_TO_CAR = "show_calls_to_car"
     private const val KEY_CAR_PHONE_MODE = "car_phone_mode"
     private const val KEY_TAG_MUSIC_CARPLAY = "tag_music_carplay"
+    private const val KEY_STOCK_SCREEN_SIZE = "stock_screen_size"
+    private const val KEY_NARROW_BAND_CALLS = "narrow_band_calls"
     private const val KEY_MIC_SOURCE = "microphone_source"
     private const val KEY_SIRI_MIC_PCM = "siri_microphone_pcm"
     private const val KEY_MIC_RECORDING = "microphone_recording"
@@ -289,6 +291,35 @@ object AirPlayPersistence {
 
     fun saveCarPhoneMode(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CAR_PHONE_MODE, enabled).apply()
+    }
+
+    /**
+     * MG4: report the stock app's 244 x 80 mm screen size to the iPhone instead of DiPlay's own
+     * (Automatic, the default). A saved choice wins; always Automatic on other firmware.
+     */
+    fun loadStockScreenSize(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_STOCK_SCREEN_SIZE)) prefs.getBoolean(KEY_STOCK_SCREEN_SIZE, false) else false
+    }
+
+    fun saveStockScreenSize(context: Context, stock: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_STOCK_SCREEN_SIZE, stock).apply()
+    }
+
+    /**
+     * MG4 test: offer the iPhone only narrow-band (8 kHz) formats for calls, as the stock app's
+     * narrow_band property does. Off by default (not yet tried in the car). A saved choice wins;
+     * always off on other firmware.
+     */
+    fun loadNarrowBandCalls(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_NARROW_BAND_CALLS)) prefs.getBoolean(KEY_NARROW_BAND_CALLS, false) else false
+    }
+
+    fun saveNarrowBandCalls(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_NARROW_BAND_CALLS, enabled).apply()
     }
 
     /**

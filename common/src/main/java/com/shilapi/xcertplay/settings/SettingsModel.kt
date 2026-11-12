@@ -41,6 +41,7 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     OPEN_CAR_WIFI(RowKind.LINK),
 
     CARPLAY_SIZE(RowKind.PICKER, true),
+    REPORTED_SCREEN_SIZE(RowKind.PICKER, true),
     RIGHT_HAND_DRIVE(RowKind.SWITCH, true),
     FULL_SCREEN(RowKind.SWITCH, true),
     RESOLUTION(RowKind.SEGMENTED, true),
@@ -56,6 +57,7 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     SHOW_CALLS_TO_CAR(RowKind.SWITCH, true),
     TAG_MUSIC_CARPLAY(RowKind.SWITCH, true),
     CAR_PHONE_MODE(RowKind.SWITCH, true),
+    NARROW_BAND_CALLS(RowKind.SWITCH, true),
     MUSIC_BUFFER(RowKind.SEGMENTED, true),
     MICROPHONE(RowKind.PICKER, true),
     SIRI_MIC_PCM(RowKind.SWITCH, true),
@@ -116,7 +118,12 @@ internal object SettingsLayout {
             )),
         )
         SettingsCategory.DISPLAY -> listOf(
-            SettingsGroup("screen", listOf(SettingRow.CARPLAY_SIZE, SettingRow.RIGHT_HAND_DRIVE, SettingRow.FULL_SCREEN)),
+            SettingsGroup("screen", listOfNotNull(
+                SettingRow.CARPLAY_SIZE,
+                SettingRow.REPORTED_SCREEN_SIZE.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.RIGHT_HAND_DRIVE,
+                SettingRow.FULL_SCREEN,
+            )),
             SettingsGroup("picture", listOf(SettingRow.RESOLUTION, SettingRow.FRAME_RATE, SettingRow.EFFICIENT_VIDEO)),
             SettingsGroup("advanced", listOf(SettingRow.DISPLAY_ADVANCED)),
         )
@@ -128,6 +135,7 @@ internal object SettingsLayout {
                 SettingRow.SHOW_CALLS_TO_CAR.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
                 SettingRow.TAG_MUSIC_CARPLAY.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
                 SettingRow.CAR_PHONE_MODE.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.NARROW_BAND_CALLS.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
             )),
             SettingsGroup("buffer", listOf(SettingRow.MUSIC_BUFFER)),
             SettingsGroup("microphone", listOf(SettingRow.MICROPHONE, SettingRow.SIRI_MIC_PCM, SettingRow.MIC_RECORDING)),

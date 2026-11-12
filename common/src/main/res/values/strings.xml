@@ -183,6 +183,12 @@
     <string name="microphone_source_voice">Call processing for calls and Siri</string>
     <string name="microphone_source_plain">Plain microphone</string>
     <string name="show_calls_to_car">Show calls to the car (test)</string>
+    <string name="narrow_band_calls">Narrow-band calls (test)</string>
+    <string name="settings_footer_narrow_band">Narrow-band calls offers the iPhone only 8 kHz audio for calls, as the car’s own CarPlay app can. Calls may sound thinner. Siri and music are unchanged. It applies after you reconnect; if calls go silent, turn it off. Off by default and not yet tried in the car.</string>
+    <string name="reported_screen_size">Screen size reported to iPhone</string>
+    <string name="reported_screen_size_automatic">Automatic</string>
+    <string name="reported_screen_size_stock">Stock (244 x 80 mm)</string>
+    <string name="settings_footer_reported_screen_size">Sets the physical size the iPhone is told, which changes how big CarPlay draws icons and text. Automatic uses the CarPlay size above. Stock sends the car’s own app’s 244 x 80 mm. The picture size stays the same. It applies after you reconnect; not yet tried in the car.</string>
     <string name="car_phone_mode">Car phone mode for calls (test)</string>
     <string name="microphone_source_stock">Stock · plain microphone for calls</string>
     <string name="tag_music_as_carplay">Tag music as CarPlay (test)</string>
