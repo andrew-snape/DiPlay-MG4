@@ -5,7 +5,7 @@ Wireless CarPlay for the MG4 head unit. This is a personal fork of
 for an Australian **MG4 on SWI165 firmware** (`SWI165-29176-1100R11`, Android 9,
 AUTUS SAIC MT2712, 1920x720 panel). Upstream is tested on SWI69.
 
-Current build: **0.3.0**. Car-test builds install as
+Current build: **0.4.0**. Car-test builds install as
 `com.shihab.diplay.hudtest`, alongside any upstream `com.shihab.diplay` install.
 Run one at a time.
 
@@ -37,6 +37,9 @@ so "mg4.N" in the tables below means one of those builds. See [Versions](#versio
 | USB CarPlay | Removed in mg4.96. The car's own wired CarPlay holds the iPhone, so MG4CPlay cannot claim it. Use the car's built-in CarPlay for a cable |
 | Wi-Fi high performance | Test build (mg4.91): keeps the car's Wi-Fi out of power saving during CarPlay (from xcertplay 1.4.1). Being tested against the 160 s freezes |
 | Video while parked | Built in (upstream feature, gated on the MG4's gear P). Not yet tested in the car |
+| Call echo | Test build (0.4.0): software echo suppression on calls, since the head unit has no echo canceller. Not yet tried in the car |
+| Car MFi chip | Test build (0.4.0): read-only probe of the car's MFi chip, plus an optional switch to sign with it. Not yet tried in the car |
+| Stock app ports | Test build (0.4.0): Telecom call mirroring, car phone mode, music source tag, screen size, narrow-band calls and more. Not yet tried in the car |
 | Dark mode | Follows the car's own day/night, which switches with the headlights. Confirmed in the car (2026-11-03): headlights on turned the car, Android and CarPlay dark. Dark mode at sunset is an option (mg4.92: off by default) |
 
 The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
