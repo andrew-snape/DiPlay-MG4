@@ -92,3 +92,54 @@ The stock app hard-codes a 1920x640 logical screen, 244 x 80 mm physical. It rea
   for the cluster.
 - `CarPlayTelephoneKey`, `CarPlayPlayKey`, `CarPlayKnob`: how wheel and phone keys go
   to CarPlay.
+
+## Second read, Nov 2026 (R11 APK, jadx)
+
+Same APK, from `Car Exports/apps` (the car's own R11 build). Read only; nothing patched
+or tried in the car.
+
+### Driving side race (the CarPlay bar on the left)
+
+- `onCreate()` calls `Car.createCar(this, mCarConnection, mHandler)` and `connect()`,
+  then `startCarPlayService()` posts `createSession()` to the same `mHandler` thread.
+- `createSession()` copies the static `mRightHandDrive` (default `false`) into
+  `ConfigInfo.setRightHandMode`. It runs once per service start, retrying only on error.
+- The driver position (`CAL_DRIVE_HDL_TYPE`, `0x01` right) is read later, in
+  `mCarConnection.onServiceConnected`, which is queued behind the session start on the
+  same thread.
+- So the first start after a cold boot most likely gets left-hand mode and the bar on the
+  left. `mRightHandDrive` is static, so a service restart in the same process keeps the
+  last read, which would explain why it only happens sometimes.
+- Fix for a patched APK: create the session from `onServiceConnected`, after the read.
+  A simpler patch for this right-hand-drive car is to set `mRightHandDrive = true`.
+- The `Driver position` log line is logcat only, so with no ADB the fix can only be
+  checked by watching which side the bar is on.
+
+### Keys
+
+| Key | Stock behaviour |
+|---|---|
+| 287 voice | Short press: Siri prewarm then button down; release: button up. Long press: button down. Ignored while the car's own voice assistant has voice focus. |
+| 291 phone | Short press: CarPlay telephone hook switch. Long press ignored. |
+| 164 mute | Only acts while Siri is active: borrows audio, and mutes the alert group during an alert. |
+| Volume up | After a mute, gives audio back to CarPlay (unborrow). |
+
+### Display off
+
+The broadcast `com.saic.conn.display.report` (boolean `state`) tells the app the screen
+turned off or on. Off: it gives the screen back to the car (borrow). On: it asks for the
+CarPlay screen again.
+
+### Wireless code
+
+The Java layer has wireless paths: `CLIENTTYPE_WIFI` (2) and `CLIENTTYPE_USB_WIFI` (3),
+`mActiveTransport`, `WirelessCarPlayUpdate`, Wi-Fi credential and Bluetooth out-of-band
+pairing interfaces. Whether the native library and the car's Wi-Fi and Bluetooth
+pairing support it on R11 is unknown. The firewall still drops TCP 7000, where stock
+wireless would listen.
+
+### Not visible
+
+Call audio, Siri audio and the microphone are handled in `libjni_carplay` and
+`libjni_carplayscreen`, which weren't exported. Copying those from `/system/lib*` to
+USB would show which microphone source and processing the stock app uses.
