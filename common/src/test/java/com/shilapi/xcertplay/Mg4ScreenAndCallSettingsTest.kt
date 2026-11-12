@@ -17,6 +17,10 @@ class Mg4ScreenAndCallSettingsTest {
         assertFalse(AirPlayPersistence.loadStockScreenSize(context))
     }
 
+    @Test fun carMfiChipIsOffByDefault() {
+        assertFalse(AirPlayPersistence.loadUseCarMfiChip(context))
+    }
+
     @Test fun narrowBandCallsAreOffByDefault() {
         assertFalse(AirPlayPersistence.loadNarrowBandCalls(context))
     }

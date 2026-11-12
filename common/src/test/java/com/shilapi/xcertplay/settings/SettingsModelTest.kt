@@ -21,6 +21,11 @@ class SettingsModelTest {
         assertFalse(SettingRow.CLUSTER_DIRECTIONS in rows(SettingsCategory.CAR, env(Generation.SWI69)))
     }
 
+    @Test fun carMfiChipOnlyOnSwi165() {
+        assertTrue(SettingRow.CAR_MFI_CHIP in rows(SettingsCategory.CAR, env(Generation.SWI165)))
+        assertFalse(SettingRow.CAR_MFI_CHIP in rows(SettingsCategory.CAR, env(Generation.SWI69)))
+    }
+
     @Test fun sendLocationLivesUnderCar() {
         assertTrue(SettingRow.SEND_LOCATION in rows(SettingsCategory.CAR, env()))
         SettingsCategory.entries.filter { it != SettingsCategory.CAR }.forEach {
