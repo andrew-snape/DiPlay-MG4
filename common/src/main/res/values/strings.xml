@@ -182,6 +182,17 @@
     <string name="microphone_source_automatic">Automatic · default (as the car’s own CarPlay)</string>
     <string name="microphone_source_voice">Call processing for calls and Siri</string>
     <string name="microphone_source_plain">Plain microphone</string>
+    <string name="show_calls_to_car">Show calls to the car (test)</string>
+    <string name="narrow_band_calls">Narrow-band calls (test)</string>
+    <string name="settings_footer_narrow_band">Narrow-band calls offers the iPhone only 8 kHz audio for calls, as the car’s own CarPlay app can. Calls may sound thinner. Siri and music are unchanged. It applies after you reconnect; if calls go silent, turn it off. Off by default and not yet tried in the car.</string>
+    <string name="reported_screen_size">Screen size reported to iPhone</string>
+    <string name="reported_screen_size_automatic">Automatic</string>
+    <string name="reported_screen_size_stock">Stock (244 x 80 mm)</string>
+    <string name="settings_footer_reported_screen_size">Sets the physical size the iPhone is told, which changes how big CarPlay draws icons and text. Automatic uses the CarPlay size above. Stock sends the car’s own app’s 244 x 80 mm. The picture size stays the same. It applies after you reconnect; not yet tried in the car.</string>
+    <string name="car_phone_mode">Car phone mode for calls (test)</string>
+    <string name="microphone_source_stock">Stock · plain microphone for calls</string>
+    <string name="tag_music_as_carplay">Tag music as CarPlay (test)</string>
+    <string name="settings_footer_car_tests">Three tests that copy the car’s own CarPlay app, both off by default and not yet tried in the car. Show calls to the car lists each CarPlay call with the car’s phone system. Tag music as CarPlay marks the music as the car’s CarPlay source, which may change how it is routed; if music goes silent, turn it off. Car phone mode tells the car’s audio system a CarPlay call is on, as its own app does; if calls go silent, turn it off.</string>
     <string name="siri_microphone_pcm">Siri microphone as PCM (test)</string>
     <string name="call_echo_suppression">Echo suppression on calls</string>
     <string name="microphone_recording">Record microphone (test)</string>
@@ -454,6 +465,9 @@
     <string name="settings_header_picture">Picture</string>
     <string name="settings_header_driving">Driving</string>
     <string name="settings_header_appearance">Appearance</string>
+    <string name="settings_header_mfi">Authentication</string>
+    <string name="use_car_mfi_chip">Use car’s MFi chip (test)</string>
+    <string name="settings_footer_car_mfi">Uses the car’s own Apple authentication chip to prove to the iPhone that this is a licensed accessory, instead of the identity built into the app. Applies after you reconnect. If the chip can’t be used, the app says so in the report and uses its own identity for that connection. If CarPlay won’t connect, turn it off. Off by default and not yet tried in the car.</string>
     <string name="settings_header_battery">Battery and charging</string>
     <string name="settings_header_permissions">Permissions</string>
     <string name="settings_header_help">Help</string>

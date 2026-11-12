@@ -26,16 +26,20 @@ internal object MicRecordings {
     fun files(context: Context): List<File> = runCatching { MicrophoneRecording.files(directory(context)) }.getOrDefault(emptyList())
 
     /** A zip of the report and the recordings. WAV audio barely compresses, so it is stored quickly. */
-    fun zip(reportName: String, report: ByteArray, recordings: List<File>): ByteArray {
+    fun zip(reportName: String, report: ByteArray, recordings: List<File>): ByteArray =
+        zipEntries(reportName, report, recordings.map { it.name to it })
+
+    /** The same, with each file's name inside the zip given (the stock libraries sit in folders). */
+    fun zipEntries(reportName: String, report: ByteArray, entries: List<Pair<String, File>>): ByteArray {
         val bytes = ByteArrayOutputStream()
         ZipOutputStream(bytes).use { zip ->
             zip.setLevel(1)
             zip.putNextEntry(ZipEntry(reportName))
             zip.write(report)
             zip.closeEntry()
-            recordings.forEach { file ->
+            entries.forEach { (name, file) ->
                 val audio = runCatching { file.readBytes() }.getOrNull() ?: return@forEach
-                zip.putNextEntry(ZipEntry(file.name))
+                zip.putNextEntry(ZipEntry(name))
                 zip.write(audio)
                 zip.closeEntry()
             }

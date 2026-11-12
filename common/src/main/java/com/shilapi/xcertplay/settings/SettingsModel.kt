@@ -41,6 +41,7 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     OPEN_CAR_WIFI(RowKind.LINK),
 
     CARPLAY_SIZE(RowKind.PICKER, true),
+    REPORTED_SCREEN_SIZE(RowKind.PICKER, true),
     RIGHT_HAND_DRIVE(RowKind.SWITCH, true),
     FULL_SCREEN(RowKind.SWITCH, true),
     RESOLUTION(RowKind.SEGMENTED, true),
@@ -53,6 +54,10 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
 
     WIFI_AUDIO(RowKind.SWITCH, true),
     CALLS_OVER_CARPLAY(RowKind.SWITCH, true),
+    SHOW_CALLS_TO_CAR(RowKind.SWITCH, true),
+    TAG_MUSIC_CARPLAY(RowKind.SWITCH, true),
+    CAR_PHONE_MODE(RowKind.SWITCH, true),
+    NARROW_BAND_CALLS(RowKind.SWITCH, true),
     MUSIC_BUFFER(RowKind.SEGMENTED, true),
     MICROPHONE(RowKind.PICKER, true),
     SIRI_MIC_PCM(RowKind.SWITCH, true),
@@ -62,6 +67,7 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     NAVIGATION_CHANNEL(RowKind.LINK, true),
 
     CLUSTER_DIRECTIONS(RowKind.SWITCH, true),
+    CAR_MFI_CHIP(RowKind.SWITCH, true),
     // Turning location on asks for permission and reconnects by itself, as before.
     SEND_LOCATION(RowKind.SWITCH),
     VIDEO_WHILE_PARKED(RowKind.SWITCH, true),
@@ -114,13 +120,25 @@ internal object SettingsLayout {
             )),
         )
         SettingsCategory.DISPLAY -> listOf(
-            SettingsGroup("screen", listOf(SettingRow.CARPLAY_SIZE, SettingRow.RIGHT_HAND_DRIVE, SettingRow.FULL_SCREEN)),
+            SettingsGroup("screen", listOfNotNull(
+                SettingRow.CARPLAY_SIZE,
+                SettingRow.REPORTED_SCREEN_SIZE.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.RIGHT_HAND_DRIVE,
+                SettingRow.FULL_SCREEN,
+            )),
             SettingsGroup("picture", listOf(SettingRow.RESOLUTION, SettingRow.FRAME_RATE, SettingRow.EFFICIENT_VIDEO)),
             SettingsGroup("advanced", listOf(SettingRow.DISPLAY_ADVANCED)),
         )
         SettingsCategory.SOUND -> listOf(
             SettingsGroup("wifi_audio", listOf(SettingRow.WIFI_AUDIO)),
-            SettingsGroup("calls", listOf(SettingRow.CALLS_OVER_CARPLAY)),
+            SettingsGroup("calls", listOfNotNull(
+                SettingRow.CALLS_OVER_CARPLAY,
+                // Telecom mirroring and the music source tag copy the stock app's SAIC audio paths.
+                SettingRow.SHOW_CALLS_TO_CAR.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.TAG_MUSIC_CARPLAY.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.CAR_PHONE_MODE.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.NARROW_BAND_CALLS.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+            )),
             SettingsGroup("buffer", listOf(SettingRow.MUSIC_BUFFER)),
             SettingsGroup("microphone", listOf(SettingRow.MICROPHONE, SettingRow.SIRI_MIC_PCM, SettingRow.CALL_ECHO_SUPPRESSION, SettingRow.MIC_RECORDING)),
             SettingsGroup("advanced", listOf(SettingRow.SOUND_ADVANCED)),
@@ -132,6 +150,8 @@ internal object SettingsLayout {
             SettingsGroup("parked", listOf(SettingRow.VIDEO_WHILE_PARKED)),
             SettingsGroup("appearance", listOf(SettingRow.SUNSET_DARK_MODE)),
             SettingsGroup("battery", listOf(SettingRow.CAR_BATTERY, SettingRow.CHARGING_CONNECTORS, SettingRow.LOW_CHARGE_WARNING)),
+            SettingsGroup("mfi", listOf(SettingRow.CAR_MFI_CHIP))
+                .takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
         )
         SettingsCategory.GENERAL -> listOf(
             SettingsGroup("general", listOf(SettingRow.SOFTWARE_UPDATE)),

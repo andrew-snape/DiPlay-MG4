@@ -1,6 +1,7 @@
 package com.shilapi.xcertplay
 
 import com.shilapi.xcertplay.CarPlayMediaKeys.RawKeyAction
+import com.shilapi.xcertplay.CarPlayMediaKeys.SiriMuteAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -38,5 +39,20 @@ class CarPlayMediaKeysTest {
     fun otherKeysDoNothing() {
         assertNull(CarPlayMediaKeys.rawKeyAction(299, down = false, longPress = false, callsOverCarPlay = true))
         assertNull(CarPlayMediaKeys.rawKeyAction(286, down = false, longPress = false, callsOverCarPlay = true))
+    }
+
+    @Test
+    fun muteKeyMutesSiriOnlyWhileSiriIsActiveAndNextPressOrVolumeUpRestores() {
+        // Not active: the mute key does nothing here.
+        assertNull(CarPlayMediaKeys.siriMuteAction(301, down = false, longPress = false, siriActive = false, siriMuted = false))
+        // Active: a short release mutes; the press itself does not.
+        assertNull(CarPlayMediaKeys.siriMuteAction(301, down = true, longPress = false, siriActive = true, siriMuted = false))
+        assertEquals(SiriMuteAction.MUTE, CarPlayMediaKeys.siriMuteAction(301, down = false, longPress = false, siriActive = true, siriMuted = false))
+        assertNull(CarPlayMediaKeys.siriMuteAction(301, down = false, longPress = true, siriActive = true, siriMuted = false))
+        // Muted: the next press restores, even if Siri has just ended; so does volume up.
+        assertEquals(SiriMuteAction.RESTORE, CarPlayMediaKeys.siriMuteAction(301, down = false, longPress = false, siriActive = false, siriMuted = true))
+        assertEquals(SiriMuteAction.RESTORE, CarPlayMediaKeys.siriMuteAction(297, down = true, longPress = false, siriActive = true, siriMuted = true))
+        assertNull(CarPlayMediaKeys.siriMuteAction(297, down = true, longPress = false, siriActive = true, siriMuted = false))
+        assertNull(CarPlayMediaKeys.siriMuteAction(298, down = true, longPress = false, siriActive = true, siriMuted = true))
     }
 }

@@ -15,6 +15,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import com.shilapi.xcertplay.airplay.CarPlayMediaButton
+import com.shilapi.xcertplay.media.SiriAudioControl
 import com.shilapi.xcertplay.orchestration.CarPlayController
 
 /**
@@ -60,6 +61,29 @@ internal object CarPlayMediaKeys {
     private const val ACTION_RAW_HARD_KEY = "com.saic.keyevent.hardkey.report"
     private const val RAW_PHONE_KEY = 291
     private const val RAW_VOICE_KEY = 287
+    private const val RAW_VOLUME_UP_KEY = 297
+    private const val RAW_MUTE_KEY = 301
+
+    internal enum class SiriMuteAction { MUTE, RESTORE }
+
+    /**
+     * The stock app lets the mute key act only while Siri is active (it borrows audio), and gives
+     * audio back on the next press or on volume up. Here the mute key, on a short release, mutes
+     * Siri's voice while Siri is active and restores it on the next press; volume up restores it.
+     * Music and calls are not touched.
+     */
+    internal fun siriMuteAction(
+        code: Int,
+        down: Boolean,
+        longPress: Boolean,
+        siriActive: Boolean,
+        siriMuted: Boolean,
+    ): SiriMuteAction? = when {
+        code == RAW_MUTE_KEY && !down && !longPress ->
+            if (siriMuted) SiriMuteAction.RESTORE else if (siriActive) SiriMuteAction.MUTE else null
+        code == RAW_VOLUME_UP_KEY && down && siriMuted -> SiriMuteAction.RESTORE
+        else -> null
+    }
 
     internal enum class RawKeyAction { CALL_HOOK, SIRI }
 
@@ -89,6 +113,7 @@ internal object CarPlayMediaKeys {
     private var voiceHeld = false
     private var rawKeyReceiver: BroadcastReceiver? = null
     private var callsOverCarPlay = false
+    private var siriAudio: SiriAudioControl? = null
 
     /**
      * @param wifiAudio CarPlay music plays through DiPlay (Wi-Fi audio). The car's Bluetooth
@@ -101,6 +126,8 @@ internal object CarPlayMediaKeys {
         wifiAudio: Boolean = false,
         /** Hands-free is released, so the phone key should drive the CarPlay call. */
         callsOnCarPlay: Boolean = false,
+        /** MG4: lets the wheel mute key silence Siri's voice. */
+        siriAudio: SiriAudioControl? = null,
         log: (String) -> Unit = {},
     ) {
         if (controller !== next) releaseLocked()
@@ -108,6 +135,7 @@ internal object CarPlayMediaKeys {
         controller = next
         report = log
         callsOverCarPlay = callsOnCarPlay
+        this.siriAudio = siriAudio
         if (wifiAudio && Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             registerHardKeysLocked()
             registerRawKeysLocked()
@@ -130,6 +158,7 @@ internal object CarPlayMediaKeys {
         if (expected == null || controller !== expected) return
         expected.playbackListener = null
         controller = null
+        siriAudio = null
         releaseLocked()
     }
 
@@ -241,11 +270,19 @@ internal object CarPlayMediaKeys {
             RawKeyAction.SIRI -> " -> Siri sent=$sent"
             null -> ""
         }
-        report("Wheel raw key: code=$code down=$down long=$longPress$suffix")
+        val siri = synchronized(this) { siriAudio }
+        val muteAction = siri?.let { siriMuteAction(code, down, longPress, it.isSiriActive(), it.isSiriMuted()) }
+        if (siri != null && muteAction != null) siri.setSiriMuted(muteAction == SiriMuteAction.MUTE)
+        val muteSuffix = when (muteAction) {
+            SiriMuteAction.MUTE -> " -> Siri audio muted"
+            SiriMuteAction.RESTORE -> " -> Siri audio restored"
+            null -> if (siri != null && code == RAW_MUTE_KEY && !down && !longPress) " (Siri not active)" else ""
+        }
+        report("Wheel raw key: code=$code down=$down long=$longPress$suffix$muteSuffix")
     }
 
     // Index into AirPlayHid's telephony report: usage 0x20, Hook Switch.
-    private const val TELEPHONY_HOOK_SWITCH = 1
+    internal const val TELEPHONY_HOOK_SWITCH = 1
 
     private fun onHardKey(intent: Intent) {
         val keyCode = intent.getIntExtra("KEY_CODE", -1)

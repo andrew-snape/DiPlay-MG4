@@ -49,6 +49,11 @@ data class AirPlayConfig(
     val microphoneOpus: Boolean = true,
     /** Test (mg4.98): false offers only PCM for Siri's microphone, taking the Opus encoder out of that path. */
     val siriMicrophoneOpus: Boolean = true,
+    /**
+     * MG4 test: offer the iPhone only 8 kHz PCM for the telephony stream, both directions, so
+     * calls run narrow-band as with the stock app's narrow_band property. Siri and media unchanged.
+     */
+    val narrowBandCalls: Boolean = false,
     val manufacturer: String = "xcertplay",
     val model: String = "xcertplay",
     val oemLabel: String = "xcertplay",
