@@ -40,7 +40,7 @@ so "mg4.N" in the tables below means one of those builds. See [Versions](#versio
 | Call echo | Test build (0.4.0): software echo suppression on calls, since the head unit has no echo canceller. Not yet tried in the car |
 | Car MFi chip | Test build (0.4.0): read-only probe of the car's MFi chip, plus an optional switch to sign with it. Not yet tried in the car |
 | Stock app ports | Test build (0.4.0): Telecom call mirroring, car phone mode, music source tag, screen size, narrow-band calls and more. Not yet tried in the car |
-| Dashboard map, song, album art, lane guidance and wheel joystick | Experimental, off by default (Settings > Experimental, ported from kennyvv/DiPlay-MG4-Plus in 0.4.x). Plus's car test (2026-11-08, SWI68): map, song, album art and joystick worked; lanes were not tried. Not yet tried in this SWI165 car |
+| Dashboard map, song, album art, lane guidance and wheel joystick | Experimental, off by default (Settings > Experimental, ported from kennyvv/DiPlay-MG4-Plus, unreleased). Plus's car test (2026-11-08, SWI68): map, song, album art and joystick worked; lanes were not tried. Not yet tried in this SWI165 car |
 | No Bluetooth settings during hands-free | Ported from Plus: with hybrid Bluetooth audio, a phone still on hands-free no longer sends the driver to Bluetooth settings. Not yet tried in the car |
 | Dark mode | Follows the car's own day/night, which switches with the headlights. Confirmed in the car (2026-11-03): headlights on turned the car, Android and CarPlay dark. Dark mode at sunset is an option (mg4.92: off by default) |
 

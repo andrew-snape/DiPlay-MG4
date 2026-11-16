@@ -2761,6 +2761,17 @@ class CarPlayHostActivity : ComponentActivity() {
         )
     }
 
+    /** One line in the session log with what the Experimental settings are, so the report shows what was on. */
+    private fun logExperimentalSettings() {
+        if (!clusterFeaturesSupported()) return
+        appendLog(
+            "Experimental: map=${AirPlayPersistence.loadClusterMap(this)?.name ?: "off"} " +
+                "size=${AirPlayPersistence.loadClusterMapSize(this).name} lanes=${laneGuidanceMode().name} " +
+                "song=${AirPlayPersistence.loadClusterSong(this)} art=${albumArtEnabled()} " +
+                "wheel=${AirPlayPersistence.loadCarPlayWheel(this)}",
+        )
+    }
+
     /** The experimental cluster features run on the MG4 SWI165 cluster only; they are off by default. */
     private fun clusterFeaturesSupported(): Boolean =
         Mg4FirmwareProfile.detect().generation == Mg4FirmwareProfile.Generation.SWI165
@@ -3117,6 +3128,7 @@ class CarPlayHostActivity : ComponentActivity() {
         snapshot.sink.setScreenStreamActiveChangedListener { type, active ->
             onScreenStreamStateChanged(restartGeneration, type, active)
         }
+        logExperimentalSettings()
         if (Mg4ClusterMap.isShown) {
             Mg4ClusterMap.attach(this, snapshot.sink, AirPlayPersistence.loadClusterMapSize(this).sidePixels, ::appendLog)
         }
@@ -3198,6 +3210,7 @@ class CarPlayHostActivity : ComponentActivity() {
             controllerGeneration = controllerGeneration,
         )
         sink = renderer
+        logExperimentalSettings()
         runOnUiThread {
             val cluster = airPlayConfig.cluster
             if (cluster != null) {

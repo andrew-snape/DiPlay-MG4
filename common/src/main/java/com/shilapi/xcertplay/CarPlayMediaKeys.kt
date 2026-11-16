@@ -85,6 +85,13 @@ internal object CarPlayMediaKeys {
         else -> null
     }
 
+    /**
+     * Whether the car's previous/next hard-key broadcast should reach CarPlay: once per short
+     * release, and not while the wheel joystick drives CarPlay's highlight (left and right move it).
+     */
+    internal fun actOnPreviousNext(isPreviousOrNext: Boolean, down: Boolean, longPress: Boolean, joystickActive: Boolean): Boolean =
+        isPreviousOrNext && !down && !longPress && !joystickActive
+
     internal enum class RawKeyAction { CALL_HOOK, SIRI }
 
     /**
@@ -297,7 +304,7 @@ internal object CarPlayMediaKeys {
         // While the wheel joystick drives CarPlay's highlight (Settings > Experimental), left and
         // right move it, so the car's previous/next broadcast must not also skip a track.
         val joystick = CarPlayWheel.joystickActive
-        val act = index != null && !down && !longPress && !joystick
+        val act = actOnPreviousNext(index != null, down, longPress, joystick)
         val note = if (act) " -> CarPlay" else if (joystick && index != null) " (joystick active)" else ""
         report("Wheel key: code=$keyCode down=$down long=$longPress$note")
         if (act) send(index!!, "MG4 wheel $keyCode")
