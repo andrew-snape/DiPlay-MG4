@@ -55,6 +55,7 @@ import com.shilapi.xcertplay.airplay.AirPlayConfig
 import com.shilapi.xcertplay.airplay.AirPlayDisplaySettings
 import com.shilapi.xcertplay.airplay.AirPlayPhysicalSizeBasis
 import com.shilapi.xcertplay.airplay.AirPlayPhysicalSizeMm
+import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
 import com.shilapi.xcertplay.airplay.CarPlayDisplayScale
 import com.shilapi.xcertplay.airplay.CarPlayUiScale
 import com.shilapi.xcertplay.airplay.AirPlayDisplayConfig
@@ -141,6 +142,7 @@ class CarPlayHostActivity : ComponentActivity() {
             vehicleStatusEnabled = com.shilapi.xcertplay.vehicle.VehicleIntegration.vehicleStatusEnabled(this),
             chargingConnectors = com.shilapi.xcertplay.vehicle.VehicleSettings.chargingConnectors(this),
             vehicleSpeedEnabled = locationReportingEnabled && com.shilapi.xcertplay.vehicle.VehicleIntegration.wheelSpeedEnabled(this),
+            laneGuidanceEnabled = laneGuidanceEnabled(),
         ),
         label = "MG4CPlay",
         hostName = "diplay-" + DiPlayBootstrap.deviceId(airPlayIdentity).replace(":", "").lowercase(),
@@ -649,6 +651,7 @@ class CarPlayHostActivity : ComponentActivity() {
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
         maybeStartCarPlay()
         applyFullscreenMode()
+        CarPlayWheel.onScreen = true
     }
 
     // The steering-wheel voice key reaches the focused window; while CarPlay is on screen it opens Siri.
@@ -668,6 +671,7 @@ class CarPlayHostActivity : ComponentActivity() {
 
     override fun onStop() {
         // The controller, USB/iAP2 link, and VPN attachment intentionally outlive the UI.
+        CarPlayWheel.onScreen = false
         super.onStop()
     }
 
@@ -2749,8 +2753,54 @@ class CarPlayHostActivity : ComponentActivity() {
             // the iPhone would hand media over to CarPlay, we would discard it, and the
             // Bluetooth music would cut out and never resume. Wi-Fi audio advertises audio.
             disableAudioOutput = sessionAudioMode == AudioMode.HYBRID_BLUETOOTH,
+            cluster = clusterMapContent()?.let { content ->
+                CarPlayClusterDisplay.config(content, AirPlayPersistence.loadClusterMapSize(this)).also {
+                    appendLog("Cluster map: requesting ${it.widthPixels}x${it.heightPixels} url=${it.initialUrl}")
+                }
+            },
         )
     }
+
+    /** The experimental cluster features run on the MG4 SWI165 cluster only; they are off by default. */
+    private fun clusterFeaturesSupported(): Boolean =
+        Mg4FirmwareProfile.detect().generation == Mg4FirmwareProfile.Generation.SWI165
+
+    /** The experimental cluster song card follows [target]'s songs, on the SWI165 cluster only. */
+    private fun attachClusterSong(target: CarPlayController) {
+        val enabled = AirPlayPersistence.loadClusterSong(this) && clusterFeaturesSupported()
+        target.songListener = if (enabled) { song -> runOnUiThread { Mg4ClusterSong.update(song) } } else null
+        // Covers arrive only when the session was opened with album art on.
+        target.artworkListener = if (enabled) Mg4ClusterSong::updateArtwork else null
+        runOnUiThread {
+            if (enabled) Mg4ClusterSong.attach(this, target.currentSong(), ::appendLog) else Mg4ClusterSong.detach()
+        }
+        if (enabled) target.lastArtwork()?.let(Mg4ClusterSong::updateArtwork)
+    }
+
+    /** Lane guidance from the iPhone, only for the dashboard directions that draw it. */
+    private fun laneGuidanceEnabled(): Boolean = laneGuidanceMode() != AirPlayPersistence.LaneGuidance.OFF
+
+    private fun laneGuidanceMode(): AirPlayPersistence.LaneGuidance =
+        AirPlayPersistence.loadClusterLanes(this).takeIf {
+            AirPlayPersistence.loadClusterDirections(this) && clusterFeaturesSupported()
+        } ?: AirPlayPersistence.LaneGuidance.OFF
+
+    /** With lanes drawn by MG4CPlay, the cluster navigation hands them to [Mg4ClusterLaneStrip]. */
+    private fun attachClusterLanes() {
+        val drawn = laneGuidanceMode() == AirPlayPersistence.LaneGuidance.DRAWN
+        com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.laneListener =
+            if (drawn) { lanes, side -> runOnUiThread { Mg4ClusterLaneStrip.update(lanes, side) } } else null
+        runOnUiThread { if (drawn) Mg4ClusterLaneStrip.attach(this, ::appendLog) else Mg4ClusterLaneStrip.detach() }
+    }
+
+    /** Album art over iAP2 file transfers, only for the cluster song card it feeds. */
+    private fun albumArtEnabled(): Boolean =
+        AirPlayPersistence.loadClusterSong(this) && AirPlayPersistence.loadClusterAlbumArt(this) &&
+            clusterFeaturesSupported()
+
+    /** The experimental cluster map, on the SWI165 cluster only. */
+    private fun clusterMapContent(): CarPlayClusterDisplay.Content? =
+        AirPlayPersistence.loadClusterMap(this)?.takeIf { clusterFeaturesSupported() }
 
     /** Head-unit audio state at session start: a muted or zero-volume stream explains silence. */
     private fun audioEnvironmentSummary(): String = runCatching {
@@ -3067,6 +3117,13 @@ class CarPlayHostActivity : ComponentActivity() {
         snapshot.sink.setScreenStreamActiveChangedListener { type, active ->
             onScreenStreamStateChanged(restartGeneration, type, active)
         }
+        if (Mg4ClusterMap.isShown) {
+            Mg4ClusterMap.attach(this, snapshot.sink, AirPlayPersistence.loadClusterMapSize(this).sidePixels, ::appendLog)
+        }
+        CarPlayWheel.controller = snapshot.controller
+        CarPlayWheel.log = ::appendLog
+        attachClusterSong(snapshot.controller)
+        attachClusterLanes()
         currentSurface?.let(::attachSurface)
         val serviceReused = snapshot.controller.hasActiveAirPlayAttachment()
         appendLog(
@@ -3141,6 +3198,14 @@ class CarPlayHostActivity : ComponentActivity() {
             controllerGeneration = controllerGeneration,
         )
         sink = renderer
+        runOnUiThread {
+            val cluster = airPlayConfig.cluster
+            if (cluster != null) {
+                Mg4ClusterMap.attach(this, renderer, cluster.widthPixels, ::appendLog)
+            } else {
+                Mg4ClusterMap.detach()
+            }
+        }
         currentSurface?.let(::attachSurface)
         val media = createMediaEngine(renderer)
         val pairings = AirPlayPersistence.loadPairings(this) { id, key ->
@@ -3186,8 +3251,13 @@ class CarPlayHostActivity : ComponentActivity() {
             clusterDirections = Mg4FirmwareProfile.detect().generation == Mg4FirmwareProfile.Generation.SWI165 &&
                 AirPlayPersistence.loadClusterDirections(this),
             useCarMfiChip = AirPlayPersistence.loadUseCarMfiChip(this),
+            albumArt = albumArtEnabled(),
         )
         controller = next
+        CarPlayWheel.controller = next
+        CarPlayWheel.log = ::appendLog
+        attachClusterSong(next)
+        attachClusterLanes()
         armStartupWatchdog()
         CarPlayMediaKeys.attach(
             this,
@@ -3480,6 +3550,7 @@ class CarPlayHostActivity : ComponentActivity() {
         CarPlayMediaKeys.detach(oldController)
         Mg4CarIntegration.detach(oldController)
         CarPlayBackgroundSession.clear(oldController, keepOwner = true)
+        releaseClusterFeatures(oldController)
         controller = null
         sink = null
         teardownExecutor.execute {
@@ -3557,6 +3628,7 @@ class CarPlayHostActivity : ComponentActivity() {
         CarPlayMediaKeys.detach(oldController)
         Mg4CarIntegration.detach(oldController)
         CarPlayBackgroundSession.clear(oldController)
+        releaseClusterFeatures(oldController)
         controller = null
         sink = null
         Log.i(TAG, "shutdown reason=$reason terminateProcess=$terminateProcess")
@@ -3576,9 +3648,24 @@ class CarPlayHostActivity : ComponentActivity() {
         }
     }
 
+    /** Takes the experimental dashboard windows and wheel hooks off [old], which is going away. */
+    private fun releaseClusterFeatures(old: CarPlayController?) {
+        if (CarPlayWheel.controller === old) CarPlayWheel.controller = null
+        CarPlayWheel.joystickActive = false
+        old?.songListener = null
+        old?.artworkListener = null
+        com.shilapi.xcertplay.vehicle.Mg4ClusterNavigation.laneListener = null
+        runOnUiThread {
+            Mg4ClusterMap.detach()
+            Mg4ClusterSong.detach()
+            Mg4ClusterLaneStrip.detach()
+        }
+    }
+
     private fun attachSurface(surface: Surface) {
         sink?.setSurface(SCREEN_TYPE_MAIN, surface)
-        sink?.setSurface(SCREEN_TYPE_ALT, surface)
+        // The cluster map owns the alternate screen while it is shown.
+        if (!Mg4ClusterMap.isShown) sink?.setSurface(SCREEN_TYPE_ALT, surface)
     }
 
     private fun onHostTouch(view: View, event: MotionEvent): Boolean {
@@ -3663,6 +3750,7 @@ class CarPlayHostActivity : ComponentActivity() {
             } else {
                 activeScreenStreamTypes.remove(type)
             }
+            if (type == SCREEN_TYPE_ALT) appendLog("Cluster map: stream active=$active")
             updateDebugOverlays()
         }
     }

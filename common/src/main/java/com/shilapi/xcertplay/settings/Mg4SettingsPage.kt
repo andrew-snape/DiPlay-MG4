@@ -13,6 +13,7 @@ import android.widget.TextView
 import com.shilapi.xcertplay.AirPlayPersistence
 import com.shilapi.xcertplay.DiPlayPreferences
 import com.shilapi.xcertplay.Mg4FirmwareProfile
+import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
 import com.shilapi.xcertplay.airplay.CarPlaySize
 import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.localizedLabel
@@ -171,7 +172,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         list.addView(ui.largeTitle(activity.getString(R.string.settings)))
         list.addView(statusCard(), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = ui.dp(20) })
         val selected = if (wide) category else null
-        SettingsLayout.categories.forEach { item ->
+        SettingsLayout.categories(environment()).forEach { item ->
             list.addView(ui.sidebarItem(icon(item), tile(item), title(item), item == selected) { open(item) },
                 LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = ui.dp(4) })
         }
@@ -207,6 +208,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingsCategory.DISPLAY -> R.string.settings_category_display
         SettingsCategory.SOUND -> R.string.settings_category_sound
         SettingsCategory.CAR -> R.string.settings_category_car
+        SettingsCategory.EXPERIMENTAL -> R.string.settings_category_experimental
         SettingsCategory.GENERAL -> R.string.settings_category_general
         SettingsCategory.HELP -> R.string.settings_category_help
         SettingsCategory.ABOUT -> R.string.about
@@ -217,6 +219,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingsCategory.DISPLAY -> R.drawable.ic_dp_display
         SettingsCategory.SOUND -> R.drawable.ic_dp_sound
         SettingsCategory.CAR -> R.drawable.ic_dp_car
+        SettingsCategory.EXPERIMENTAL -> R.drawable.ic_dp_diagnostics
         SettingsCategory.GENERAL -> R.drawable.ic_dp_general
         SettingsCategory.HELP -> R.drawable.ic_dp_diagnostics
         SettingsCategory.ABOUT -> R.drawable.ic_dp_about
@@ -228,6 +231,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingsCategory.DISPLAY -> 0xFF5E5CE6.toInt()
         SettingsCategory.SOUND -> 0xFFFF375F.toInt()
         SettingsCategory.CAR -> 0xFF30D158.toInt()
+        SettingsCategory.EXPERIMENTAL -> 0xFFBF5AF2.toInt()
         SettingsCategory.GENERAL -> 0xFF8E8E93.toInt()
         SettingsCategory.HELP -> 0xFF40C8E0.toInt()
         SettingsCategory.ABOUT -> 0xFF8E8E93.toInt()
@@ -346,6 +350,10 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
             "microphone" -> add(R.string.settings_footer_microphone)
             "navigation" -> add(R.string.contrib_audio_home_nav_channel_note)
             "cluster" -> add(R.string.mg4_cluster_directions_description)
+            "cluster_map" -> add(R.string.mg4_cluster_map_description)
+            "cluster_lanes" -> add(R.string.mg4_cluster_lanes_description)
+            "cluster_song" -> add(R.string.mg4_cluster_song_description)
+            "carplay_wheel" -> add(R.string.mg4_carplay_wheel_description)
             "location" -> add(R.string.sends_precise_android_location_as_carplay_gps_data_when_th)
             "parked" -> add(R.string.settings_footer_video_while_parked)
             "appearance" -> add(R.string.mg4_sunset_dark_mode_description)
@@ -402,6 +410,12 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.MIC_RECORDING -> R.string.microphone_recording
         SettingRow.NAVIGATION_CHANNEL -> R.string.contrib_audio_home_nav_channel_label
         SettingRow.CLUSTER_DIRECTIONS -> R.string.mg4_cluster_directions
+        SettingRow.CLUSTER_MAP -> R.string.mg4_cluster_map
+        SettingRow.CLUSTER_MAP_SIZE -> R.string.mg4_cluster_map_size
+        SettingRow.CLUSTER_LANES -> R.string.mg4_cluster_lanes
+        SettingRow.CLUSTER_SONG -> R.string.mg4_cluster_song
+        SettingRow.CLUSTER_ALBUM_ART -> R.string.mg4_cluster_album_art
+        SettingRow.CARPLAY_WHEEL -> R.string.mg4_carplay_wheel
         SettingRow.CAR_MFI_CHIP -> R.string.use_car_mfi_chip
         SettingRow.SEND_LOCATION -> R.string.settings_send_location
         SettingRow.VIDEO_WHILE_PARKED -> R.string.mg4_video_while_parked
@@ -521,6 +535,33 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                     AirPlayPersistence.saveUseCarMfiChip(activity, it)
                 }
                 SettingRow.CLUSTER_DIRECTIONS -> switch(AirPlayPersistence.loadClusterDirections(activity)) { AirPlayPersistence.saveClusterDirections(activity, it) }
+                SettingRow.CLUSTER_MAP_SIZE -> {
+                    val sizes = CarPlayClusterDisplay.Size.entries
+                    segmented(
+                        listOf(R.string.mg4_cluster_map_size_large, R.string.mg4_cluster_map_size_medium, R.string.mg4_cluster_map_size_small).map(activity::getString),
+                        sizes.indexOf(AirPlayPersistence.loadClusterMapSize(activity)),
+                    ) { AirPlayPersistence.saveClusterMapSize(activity, sizes[it]) }
+                }
+                SettingRow.CLUSTER_LANES -> {
+                    val modes = AirPlayPersistence.LaneGuidance.entries
+                    segmented(
+                        listOf(R.string.mg4_cluster_map_off, R.string.mg4_cluster_lanes_car, R.string.mg4_cluster_lanes_drawn).map(activity::getString),
+                        modes.indexOf(AirPlayPersistence.loadClusterLanes(activity)),
+                    ) { AirPlayPersistence.saveClusterLanes(activity, modes[it]) }
+                }
+                SettingRow.CLUSTER_SONG -> switch(AirPlayPersistence.loadClusterSong(activity)) { AirPlayPersistence.saveClusterSong(activity, it) }
+                SettingRow.CLUSTER_ALBUM_ART -> switch(AirPlayPersistence.loadClusterAlbumArt(activity)) { AirPlayPersistence.saveClusterAlbumArt(activity, it) }
+                SettingRow.CARPLAY_WHEEL -> switch(AirPlayPersistence.loadCarPlayWheel(activity)) {
+                    AirPlayPersistence.saveCarPlayWheel(activity, it)
+                    com.shilapi.xcertplay.CarPlayWheel.setServiceEnabled(activity, it)
+                }
+                SettingRow.CLUSTER_MAP -> {
+                    val choices = listOf(null) + CarPlayClusterDisplay.Content.entries
+                    segmented(
+                        listOf(R.string.mg4_cluster_map_off, R.string.mg4_cluster_map_map, R.string.mg4_cluster_map_turn_card).map(activity::getString),
+                        choices.indexOf(AirPlayPersistence.loadClusterMap(activity)).coerceAtLeast(0),
+                    ) { AirPlayPersistence.saveClusterMap(activity, choices[it]) }
+                }
                 SettingRow.SEND_LOCATION -> switch(AirPlayPersistence.loadLocationReportingEnabled(activity)) { host.setLocationReporting(it) }
                 SettingRow.VIDEO_WHILE_PARKED -> switch(VehicleSettings.videoWhileParked(activity)) { VehicleSettings.setVideoWhileParked(activity, it) }
                 SettingRow.SUNSET_DARK_MODE -> switch(AirPlayPersistence.loadSunsetDarkMode(activity)) { AirPlayPersistence.saveSunsetDarkMode(activity, it) }

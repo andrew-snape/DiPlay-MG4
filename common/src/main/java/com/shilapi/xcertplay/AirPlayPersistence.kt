@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import com.shilapi.xcertplay.airplay.AirPlayDisplaySettings
 import com.shilapi.xcertplay.airplay.AirPlayPhysicalSizeBasis
+import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
 import com.shilapi.xcertplay.airplay.CarPlayDisplayScale
 import com.shilapi.xcertplay.airplay.CarPlayUiScale
 import com.shilapi.xcertplay.airplay.AirPlayIdentity
@@ -53,6 +54,12 @@ object AirPlayPersistence {
     private const val KEY_MIC_RECORDING = "microphone_recording"
     private const val KEY_VIDEO_COLOUR_RANGE = "video_colour_range"
     private const val KEY_CLUSTER_DIRECTIONS = "mg4_cluster_directions"
+    private const val KEY_CLUSTER_MAP = "mg4_cluster_map"
+    private const val KEY_CLUSTER_MAP_SIZE = "mg4_cluster_map_size"
+    private const val KEY_CLUSTER_SONG = "mg4_cluster_song"
+    private const val KEY_CLUSTER_ALBUM_ART = "mg4_cluster_album_art"
+    private const val KEY_CLUSTER_LANES = "mg4_cluster_lanes"
+    private const val KEY_CARPLAY_WHEEL = "mg4_carplay_wheel"
     private const val KEY_AUDIO_MODE = "audio_mode"
     private const val KEY_ADVANCED_AUDIO_CHANNEL_MAPPING = "advanced_audio_channel_mapping"
     private const val KEY_AUDIO_FOCUS_ENABLED = "audio_focus_enabled"
@@ -197,6 +204,74 @@ object AirPlayPersistence {
     fun saveWifiHighPerformanceEnabled(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_WIFI_HIGH_PERFORMANCE_ENABLED, enabled)
+            .apply()
+    }
+
+    /** Experimental CarPlay map in the cluster square, or null when off (the default). */
+    fun loadClusterMap(context: Context): CarPlayClusterDisplay.Content? {
+        val name = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_CLUSTER_MAP, null)
+        return CarPlayClusterDisplay.Content.entries.firstOrNull { it.name == name }
+    }
+
+    fun saveClusterMap(context: Context, content: CarPlayClusterDisplay.Content?) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_CLUSTER_MAP, content?.name)
+            .apply()
+    }
+
+    /** How large Apple Maps draws in the cluster square; smaller than the 1:1 stream by default. */
+    fun loadClusterMapSize(context: Context): CarPlayClusterDisplay.Size {
+        val name = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_CLUSTER_MAP_SIZE, null)
+        return CarPlayClusterDisplay.Size.entries.firstOrNull { it.name == name } ?: CarPlayClusterDisplay.Size.MEDIUM
+    }
+
+    fun saveClusterMapSize(context: Context, size: CarPlayClusterDisplay.Size) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_CLUSTER_MAP_SIZE, size.name)
+            .apply()
+    }
+
+    /** Experimental CarPlay song card in the cluster square, off by default. */
+    fun loadClusterSong(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CLUSTER_SONG, false)
+
+    fun saveClusterSong(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_CLUSTER_SONG, enabled)
+            .apply()
+    }
+
+    /** How CarPlay lane guidance reaches the cluster's navigation card; off by default. */
+    enum class LaneGuidance { OFF, CAR_ICONS, DRAWN }
+
+    fun loadClusterLanes(context: Context): LaneGuidance {
+        val name = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_CLUSTER_LANES, null)
+        return LaneGuidance.entries.firstOrNull { it.name == name } ?: LaneGuidance.OFF
+    }
+
+    fun saveClusterLanes(context: Context, mode: LaneGuidance) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_CLUSTER_LANES, mode.name)
+            .apply()
+    }
+
+    /** Experimental album art (iAP2 file transfers) on the cluster song card, off by default. */
+    fun loadClusterAlbumArt(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CLUSTER_ALBUM_ART, false)
+
+    fun saveClusterAlbumArt(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_CLUSTER_ALBUM_ART, enabled)
+            .apply()
+    }
+
+    /** Experimental steering-wheel joystick for CarPlay ([CarPlayWheelService]), off by default. */
+    fun loadCarPlayWheel(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CARPLAY_WHEEL, false)
+
+    fun saveCarPlayWheel(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_CARPLAY_WHEEL, enabled)
             .apply()
     }
 

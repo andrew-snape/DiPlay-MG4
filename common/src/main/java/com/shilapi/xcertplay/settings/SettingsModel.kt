@@ -7,7 +7,7 @@ import com.shilapi.xcertplay.Mg4FirmwareProfile
  * Which settings the MG4 Settings screen shows, and where. Plain Kotlin, so the layout for each
  * firmware can be unit-tested. [Mg4SettingsPage] turns it into views and reads and saves values.
  */
-internal enum class SettingsCategory { CONNECTION, DISPLAY, SOUND, CAR, GENERAL, HELP, ABOUT }
+internal enum class SettingsCategory { CONNECTION, DISPLAY, SOUND, CAR, EXPERIMENTAL, GENERAL, HELP, ABOUT }
 
 internal enum class RowKind {
     /** On/off switch. */
@@ -67,6 +67,13 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     NAVIGATION_CHANNEL(RowKind.LINK, true),
 
     CLUSTER_DIRECTIONS(RowKind.SWITCH, true),
+    CLUSTER_MAP(RowKind.SEGMENTED, true),
+    CLUSTER_MAP_SIZE(RowKind.SEGMENTED, true),
+    CLUSTER_LANES(RowKind.SEGMENTED, true),
+    CLUSTER_SONG(RowKind.SWITCH, true),
+    CLUSTER_ALBUM_ART(RowKind.SWITCH, true),
+    // Takes effect straight away: the key filter checks the switch on every press.
+    CARPLAY_WHEEL(RowKind.SWITCH),
     CAR_MFI_CHIP(RowKind.SWITCH, true),
     // Turning location on asks for permission and reconnects by itself, as before.
     SEND_LOCATION(RowKind.SWITCH),
@@ -103,6 +110,10 @@ internal data class SettingsEnvironment(
 
 internal object SettingsLayout {
     val categories: List<SettingsCategory> = SettingsCategory.entries
+
+    /** The categories with something to show here; Experimental is empty off the SWI165 cluster. */
+    fun categories(env: SettingsEnvironment): List<SettingsCategory> =
+        categories.filter { it != SettingsCategory.EXPERIMENTAL || groups(it, env).isNotEmpty() }
 
     fun groups(category: SettingsCategory, env: SettingsEnvironment): List<SettingsGroup> = when (category) {
         SettingsCategory.CONNECTION -> listOfNotNull(
@@ -153,6 +164,14 @@ internal object SettingsLayout {
             SettingsGroup("mfi", listOf(SettingRow.CAR_MFI_CHIP))
                 .takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
         )
+        // Features not yet tried in our car, each off by default and in the order they were added.
+        // Ported from kennyvv/DiPlay-MG4-Plus; only SWI165 has them.
+        SettingsCategory.EXPERIMENTAL -> listOf(
+            SettingsGroup("cluster_map", listOf(SettingRow.CLUSTER_MAP, SettingRow.CLUSTER_MAP_SIZE)),
+            SettingsGroup("cluster_lanes", listOf(SettingRow.CLUSTER_LANES)),
+            SettingsGroup("cluster_song", listOf(SettingRow.CLUSTER_SONG, SettingRow.CLUSTER_ALBUM_ART)),
+            SettingsGroup("carplay_wheel", listOf(SettingRow.CARPLAY_WHEEL)),
+        ).takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 }.orEmpty()
         SettingsCategory.GENERAL -> listOf(
             SettingsGroup("general", listOf(SettingRow.SOFTWARE_UPDATE)),
             SettingsGroup("system", listOf(SettingRow.APP_PERMISSIONS, SettingRow.BLUETOOTH)),
