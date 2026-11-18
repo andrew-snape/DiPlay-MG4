@@ -12,6 +12,25 @@ Run one at a time. The version has no test suffix from 0.3.2 on.
 Versions are `MAJOR.MINOR.PATCH` from 0.3.0 on. Earlier test builds were `0.2.9-mg4.N`,
 so "mg4.N" in the tables below means one of those builds. See [Versions](#versions).
 
+## Screenshots
+
+Taken from the 0.4.0 debug build in an Android emulator at 1778x720, with the SWI165
+firmware property set so the MG4 Settings screen shows. There is no car, hotspot or iPhone,
+so the status row reads "Setup needs attention". The emulator build has the system user ID
+removed. Car screens are not shown.
+
+![Home](docs/screenshots/home.png)
+
+Settings is two panes, like iPad Settings: categories on the left, the chosen one on the right.
+
+![Settings: Connection](docs/screenshots/settings-connection.png)
+![Settings: Display](docs/screenshots/settings-display.png)
+![Settings: Sound](docs/screenshots/settings-sound.png)
+![Settings: Car](docs/screenshots/settings-car.png)
+![Settings: General](docs/screenshots/settings-general.png)
+![Settings: Help](docs/screenshots/settings-help.png)
+![Settings: About](docs/screenshots/settings-about.png)
+
 ## What works on SWI165
 
 | Feature | Status |
