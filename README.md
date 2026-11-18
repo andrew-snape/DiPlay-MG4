@@ -14,7 +14,7 @@ so "mg4.N" in the tables below means one of those builds. See [Versions](#versio
 
 ## Screenshots
 
-Taken from the 0.4.0 debug build in an Android emulator at 1778x720, with the SWI165
+Taken from a debug build of `main` (0.4.0 plus unreleased changes) in an Android emulator at 1778x720, with the SWI165
 firmware property set so the MG4 Settings screen shows. There is no car, hotspot or iPhone,
 so the status row reads "Setup needs attention". The emulator build has the system user ID
 removed. Car screens are not shown.
@@ -57,7 +57,7 @@ Settings is two panes, like iPad Settings: categories on the left, the chosen on
 | Wi-Fi high performance | Test build (mg4.91): keeps the car's Wi-Fi out of power saving during CarPlay (from xcertplay 1.4.1). Being tested against the 160 s freezes |
 | Video while parked | Built in (upstream feature, gated on the MG4's gear P). Not yet tested in the car |
 | Call echo | Test build (0.4.0): software echo suppression on calls, since the head unit has no echo canceller. Not yet tried in the car |
-| Car MFi chip | Test build (0.4.0): read-only probe of the car's MFi chip, plus an optional switch to sign with it. Not yet tried in the car |
+| Car MFi chip | Test build (0.4.0): read-only probe of the car's MFi chip, plus an optional switch to sign with it. The car has an MFi 3.0 chip, and the probe's signature test is fixed for it in `main` (unreleased). Not yet tried in the car |
 | Stock app ports | Test build (0.4.0): Telecom call mirroring, car phone mode, music source tag, screen size, narrow-band calls and more. Not yet tried in the car |
 | Dark mode | Follows the car's own day/night, which switches with the headlights. Confirmed in the car (2026-11-03): headlights on turned the car, Android and CarPlay dark. Dark mode at sunset is an option (mg4.92: off by default) |
 
