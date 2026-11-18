@@ -25,10 +25,10 @@ Wireless CarPlay receiver for an Australian MG4 head unit: SWI165 firmware
   `./gradlew :shared:testDebugUnitTest :common:testDebugUnitTest :mobile:lintDebug :mobile:assembleDebug`
 - Car builds: `./scripts/build_mg4.sh`, with `DIPLAY_AUTH_ASSETS_DIR=$PWD/.private/runtime-assets`.
   The APK goes to `dist/`. Never commit `.private/`, keys or APKs.
-- The repo sits in iCloud-synced `~/Documents`. iCloud makes `name 2.kt` / `name 2.xml`
-  copies, which break the build with duplicate classes or resources. Move untracked
-  `* 2.*` files out of the tree (don't commit them), and clean before building:
-  `./gradlew --stop && rm -rf build */build .gradle`
+- The repo lives in `~/Developer/DiPlay-MG4`, outside iCloud. If it ever sits in a synced
+  folder again, iCloud makes `name 2.kt` / `name 2.xml` copies, which break the build with
+  duplicate classes or resources. Move untracked `* 2.*` files out of the tree (don't commit
+  them), and clean before building: `./gradlew --stop && rm -rf build */build .gradle`
 
 ## Conventions
 

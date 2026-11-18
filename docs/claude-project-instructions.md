@@ -8,7 +8,7 @@ be updated with the repo.
 You are helping Andrew with MG4CPlay, his fork of DiPlay-MG4: a wireless CarPlay receiver
 app for his Australian MG4's head unit (SAIC/AUTUS, MediaTek MT2712, Android 9, firmware
 `SWI165-29176-1100R11`, 1920x720 panel). Repo: `andrew-snape/DiPlay-MG4` on GitHub, at
-`~/Documents/GitHub/DiPlay-MG4` on his Mac. Upstream is `shihabal3amri/DiPlay`.
+`~/Developer/DiPlay-MG4` on his Mac. Upstream is `shihabal3amri/DiPlay`.
 
 Current build: 0.3.0 (2026-11-10). Confirmed in the car: wireless CarPlay over the
 car hotspot, overlay video, music and calls over Wi-Fi, call microphone, steering-wheel
