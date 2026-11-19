@@ -43,6 +43,21 @@ object VehicleIntegration {
     fun parked(context: Context): Boolean? = if (isMg4(context)) Mg4Vehicle.parked(context) else null
 
     /**
+     * The page the instrument cluster shows (IPK_CLUSTER_TAB_BTN_STS 0x21407b18, as the SWI68 and
+     * SWI165 cluster app reads it: 0 trip computer, 1 navigation, 2 media, 3 call, 4 warnings,
+     * 5 settings, 6 active safety), or null when unreadable. SWI165 only; makes a car-property
+     * call, so call it off the UI thread.
+     */
+    fun clusterTab(context: Context): Int? {
+        if (!Mg4Firmware.supported()) return null
+        CarProperties.connect(context.applicationContext)
+        return CarProperties.int(PROP_CLUSTER_TAB)?.takeIf { it >= 0 }
+            ?: CarProperties.int(PROP_CLUSTER_TAB, 0)?.takeIf { it >= 0 }
+    }
+
+    private const val PROP_CLUSTER_TAB = 0x21407b18
+
+    /**
      * The Car data page: each signal read now and the source that answered. Makes binder and
      * car-property calls, so call it off the UI thread. Nothing here is a guess: a missing value
      * reads "unavailable".

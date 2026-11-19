@@ -5,6 +5,16 @@ cluster shows a CarPlay song only when the car's audio source is **50** and the 
 `com.allgo.remoteui.mediabrowserservice` media session carries the song. DiPlay does
 neither yet. Nothing here has been tried in the car.
 
+**Update (2026-11-16): go/no-go resolved, we draw our own.** kennyvv/DiPlay-MG4-Plus found
+(SWI68 firmware) that the cluster's song card takes CarPlay songs only from the stock AllGo
+media browser, which gets them only from the stock AllGo CarPlay service, both bound by fixed
+package names. So the stock card can't show a song from MG4CPlay without replacing those
+packages, which we don't do. Instead MG4CPlay now draws its own song card over the cluster's
+centre square on the Music page (Settings > Experimental > Song on the dashboard, with
+optional album art), ported from Plus. It worked in Plus's car test on SWI68 (2026-11-08);
+not yet tried in this car. The steps below are kept as a record and are no longer needed for
+this route.
+
 ## 0. Read the stock media browser's code (blocker)
 
 The feed into the stock browser is probably its exported

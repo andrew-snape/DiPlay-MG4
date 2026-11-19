@@ -1,0 +1,52 @@
+package com.shilapi.xcertplay.airplay
+
+/**
+ * CarPlay's instrument-cluster screen (stream type 111), sized for the MG4 cluster square.
+ *
+ * On SWI68 and SWI165 the cluster shows a 260 px square from the head unit's second Android
+ * display in its Navigation and Music pages; see `Mg4ClusterMap`. The iPhone lists the cluster
+ * content it offers in its /info request (`altScreenURLs`); without an initial URL it streams a
+ * black frame. The cluster has no input.
+ *
+ * Restored in MG4 form from upstream DiPlay's BYD cluster map (removed with the BYD code), where
+ * the same stream drew Apple Maps on BYD clusters.
+ */
+object CarPlayClusterDisplay {
+    enum class Content(val url: String) {
+        /** The map with the next-turn card on it ("instrumentcluster" on BYD). */
+        MAP("maps:/car/instrumentcluster"),
+        /** Only the next-turn card: a few kbit/s against megabits for the map. */
+        TURN_CARD("maps:/car/instrumentcluster/instructioncard"),
+    }
+
+    /** A multiple of 8 just over the 260 px square; the cluster window scales it to fit. */
+    const val SIDE_PIXELS = 264
+
+    /**
+     * How big Apple Maps draws its elements in the square. Apple lays out the stream by its pixel
+     * size, so a larger stream scaled down into the same 260 px draws everything smaller: at 264 px
+     * the elements were far too large in the car (2026-11-08). Sides are multiples of 8.
+     */
+    enum class Size(val sidePixels: Int) {
+        LARGE(SIDE_PIXELS),
+        MEDIUM(400),
+        SMALL(528),
+    }
+
+    // An estimate (not measured): 260 px of an 800x480 panel about 7 inches across. Apple Maps
+    // ignored the physical size on BYD; it is sent to keep the panel's density plausible.
+    private const val SIDE_PHYSICAL_MM = 49
+    private const val FPS = 30
+
+    fun config(content: Content, size: Size = Size.LARGE): AirPlayDisplayConfig = AirPlayDisplayConfig(
+        widthPixels = size.sidePixels,
+        heightPixels = size.sidePixels,
+        widthPhysicalMm = SIDE_PHYSICAL_MM,
+        heightPhysicalMm = SIDE_PHYSICAL_MM,
+        fps = FPS,
+        primaryInputDevice = 0,
+        features = 0,
+        initialUrl = content.url,
+        safeAreaDrawOutside = true,
+    )
+}

@@ -55,4 +55,13 @@ class CarPlayMediaKeysTest {
         assertNull(CarPlayMediaKeys.siriMuteAction(297, down = true, longPress = false, siriActive = true, siriMuted = false))
         assertNull(CarPlayMediaKeys.siriMuteAction(298, down = true, longPress = false, siriActive = true, siriMuted = true))
     }
+
+    @Test
+    fun previousAndNextActOnShortReleaseButNotWhileTheJoystickDrivesCarPlay() {
+        org.junit.Assert.assertTrue(CarPlayMediaKeys.actOnPreviousNext(true, down = false, longPress = false, joystickActive = false))
+        org.junit.Assert.assertFalse(CarPlayMediaKeys.actOnPreviousNext(true, down = false, longPress = false, joystickActive = true))
+        org.junit.Assert.assertFalse(CarPlayMediaKeys.actOnPreviousNext(true, down = true, longPress = false, joystickActive = false))
+        org.junit.Assert.assertFalse(CarPlayMediaKeys.actOnPreviousNext(true, down = false, longPress = true, joystickActive = false))
+        org.junit.Assert.assertFalse(CarPlayMediaKeys.actOnPreviousNext(false, down = false, longPress = false, joystickActive = false))
+    }
 }

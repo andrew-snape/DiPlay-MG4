@@ -59,6 +59,8 @@ Settings is two panes, like iPad Settings: categories on the left, the chosen on
 | Call echo | Test build (0.4.0): software echo suppression on calls, since the head unit has no echo canceller. Not yet tried in the car |
 | Car MFi chip | Test build (0.4.0): read-only probe of the car's MFi chip, plus an optional switch to sign with it. The car has an MFi 3.0 chip, and the probe's signature test is fixed for it in `main` (unreleased). Not yet tried in the car |
 | Stock app ports | Test build (0.4.0): Telecom call mirroring, car phone mode, music source tag, screen size, narrow-band calls and more. Not yet tried in the car |
+| Dashboard map, song, album art, lane guidance and wheel joystick | Experimental, off by default (Settings > Experimental, ported from kennyvv/DiPlay-MG4-Plus, unreleased). Plus's car test (2026-11-08, SWI68): map, song, album art and joystick worked; lanes were not tried. Not yet tried in this SWI165 car |
+| No Bluetooth settings during hands-free | Ported from Plus: with hybrid Bluetooth audio, a phone still on hands-free no longer sends the driver to Bluetooth settings. Not yet tried in the car |
 | Dark mode | Follows the car's own day/night, which switches with the headlights. Confirmed in the car (2026-11-03): headlights on turned the car, Android and CarPlay dark. Dark mode at sunset is an option (mg4.92: off by default) |
 
 The full test record is in [docs/MG4_SWI165.md](docs/MG4_SWI165.md).
@@ -109,6 +111,10 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | Video while parked | Car > Driving | Off. Lets iOS 27 video apps play on the car screen, only while the car reads gear P. DRM video such as Apple TV+ won't play. |
 | Dark mode at sunset | Car > Appearance | Off (mg4.92). Off follows the car's day/night, which changes with the headlights. On uses sunset and sunrise at the car's position. |
 | Car battery on iPhone, Directions on the dashboard (test) | Car | As before. |
+| Map on the dashboard (Off, Map, Next turn), Map element size (Large, Medium, Small) | Experimental | Off, Medium. Shows CarPlay's cluster screen in the square in the middle of the cluster's Navigation page. Applies after you reconnect. Not yet tried in this car. |
+| Lane guidance on the dashboard (Off, Car icons, Drawn by MG4CPlay) | Experimental | Off. Needs Directions on the dashboard. Applies after you reconnect. Not yet tried in a car. |
+| Song on the dashboard, Album art on the song card | Experimental | Off, off. Draws the CarPlay song, and the cover, on the cluster's Music page. Album art changes the iAP2 link, so turn it off first if CarPlay misbehaves. Applies after you reconnect. Not yet tried in this car. |
+| Steering-wheel joystick for CarPlay | Experimental | Off. Hold the joystick centre in CarPlay to move CarPlay's highlight with the joystick. Takes effect at once. Adds an accessibility service. Not yet tried in this car. |
 | Diagnostics, updates, permissions | General, Help, About | Settings changes are listed in the diagnostic report. |
 
 Hidden on MG4 because the firmware profile sets them: audio focus, advanced audio channel mapping, and the music audio channel.
@@ -247,6 +253,10 @@ The Android 9 call microphone uses [Concentus](https://github.com/lostromb/conce
 SWI165 media and steering-wheel details were read from the car's own MediaService
 APK and cross-checked against [MG4Control](https://github.com/SliDeeN/MG4Control),
 [MG4Dash](https://github.com/Skittle6938/MG4Dash) and an SWI68 launcher project.
+
+The dashboard map, song, album art and lane guidance, the steering-wheel joystick and the
+hands-free Bluetooth fix are ported from [kennyvv/DiPlay-MG4-Plus](https://github.com/kennyvv/DiPlay-MG4-Plus)
+(GPLv3), which forked from the same mg4.96 code. Thanks to kennyvv.
 
 CarPlay and its icon belong to Apple Inc.; no affiliation or endorsement is implied.
 Accessory and signing keys are excluded from source archives; a car build selects

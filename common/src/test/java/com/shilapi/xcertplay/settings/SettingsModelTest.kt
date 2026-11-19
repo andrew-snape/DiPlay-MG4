@@ -26,6 +26,32 @@ class SettingsModelTest {
         assertFalse(SettingRow.CAR_MFI_CHIP in rows(SettingsCategory.CAR, env(Generation.SWI69)))
     }
 
+    @Test fun dashboardMapLanesSongArtAndWheelAreExperimentalOnSwi165() {
+        val experimental = rows(SettingsCategory.EXPERIMENTAL, env(Generation.SWI165))
+        val added = listOf(
+            SettingRow.CLUSTER_MAP, SettingRow.CLUSTER_MAP_SIZE, SettingRow.CLUSTER_LANES, SettingRow.CLUSTER_SONG, SettingRow.CLUSTER_ALBUM_ART,
+            SettingRow.CARPLAY_WHEEL,
+        )
+        // In the order they were added.
+        assertEquals(added, experimental)
+        // The wheel switch is read on every key press; the others need a reconnect.
+        assertFalse(SettingRow.CARPLAY_WHEEL.appliesOnReconnect)
+        for (row in added) {
+            if (row != SettingRow.CARPLAY_WHEEL) assertTrue(row.name, row.appliesOnReconnect)
+            SettingsCategory.entries.filter { it != SettingsCategory.EXPERIMENTAL }.forEach {
+                assertFalse(row.name, row in rows(it, env(Generation.SWI165)))
+            }
+        }
+        assertTrue(rows(SettingsCategory.EXPERIMENTAL, env(Generation.SWI69)).isEmpty())
+        assertTrue(rows(SettingsCategory.EXPERIMENTAL, env(Generation.OTHER)).isEmpty())
+    }
+
+    @Test fun experimentalIsListedOnlyWhereItHasSettings() {
+        assertTrue(SettingsCategory.EXPERIMENTAL in SettingsLayout.categories(env(Generation.SWI165)))
+        assertFalse(SettingsCategory.EXPERIMENTAL in SettingsLayout.categories(env(Generation.SWI69)))
+        assertEquals(SettingsCategory.entries.size - 1, SettingsLayout.categories(env(Generation.SWI69)).size)
+    }
+
     @Test fun sendLocationLivesUnderCar() {
         assertTrue(SettingRow.SEND_LOCATION in rows(SettingsCategory.CAR, env()))
         SettingsCategory.entries.filter { it != SettingsCategory.CAR }.forEach {
