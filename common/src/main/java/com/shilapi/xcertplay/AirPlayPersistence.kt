@@ -43,6 +43,7 @@ object AirPlayPersistence {
     private const val KEY_CALLS_CARPLAY_ONLY = "calls_over_carplay_only"
     private const val KEY_SHOW_CALLS_TO_CAR = "show_calls_to_car"
     private const val KEY_CAR_PHONE_MODE = "car_phone_mode"
+    private const val KEY_CAR_ECHO_CANCELLER = "car_echo_canceller"
     private const val KEY_TAG_MUSIC_CARPLAY = "tag_music_carplay"
     private const val KEY_STOCK_SCREEN_SIZE = "stock_screen_size"
     private const val KEY_NARROW_BAND_CALLS = "narrow_band_calls"
@@ -304,6 +305,22 @@ object AirPlayPersistence {
 
     fun saveCarPhoneMode(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CAR_PHONE_MODE, enabled).apply()
+    }
+
+    /**
+     * MG4 test: CarPlay calls play on the head unit's own phone output and record from its phone
+     * microphone, as the stock CarPlay app does, so the audio HAL cancels the echo. Off by default
+     * (worked in an SWI68 car in kennyvv/DiPlay-MG4-Plus; not yet tried on SWI165). A saved choice
+     * wins; always off on other firmware.
+     */
+    fun loadCarEchoCanceller(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_CAR_ECHO_CANCELLER)) prefs.getBoolean(KEY_CAR_ECHO_CANCELLER, false) else false
+    }
+
+    fun saveCarEchoCanceller(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CAR_ECHO_CANCELLER, enabled).apply()
     }
 
     /**

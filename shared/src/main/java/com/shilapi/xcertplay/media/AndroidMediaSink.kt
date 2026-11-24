@@ -69,8 +69,9 @@ internal class AudioFocusCoordinator(
     private data class Entry(val channel: AudioChannel, val attributes: AudioAttributes)
 
     private val manager = context?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-    private val active = LinkedHashMap<AudioTrack, Entry>()
-    private val callTracks = HashSet<AudioTrack>()
+    // Keys are AudioTracks, or a StockCallAudio.Output for a call on the car's own phone output.
+    private val active = LinkedHashMap<Any, Entry>()
+    private val callTracks = HashSet<Any>()
     private var request: AudioFocusRequest? = null
     private var requestedChannel: AudioChannel? = null
     private val handler by lazy { Handler(Looper.getMainLooper()) }
@@ -90,17 +91,18 @@ internal class AudioFocusCoordinator(
     }
 
     @Synchronized
-    fun acquire(track: AudioTrack, channel: AudioChannel, attributes: AudioAttributes) {
+    fun acquire(track: Any, channel: AudioChannel, attributes: AudioAttributes) {
         if (callMode && channel == AudioChannel.PHONE && callTracks.add(track) && callTracks.size == 1) {
             setMode(AudioManager.MODE_IN_CALL)
-            if (carPhoneMode) phoneHook.set(true, "call track started")
+            // The car's own phone output connects device 0x400 itself (native library).
+            if (carPhoneMode && track is AudioTrack) phoneHook.set(true, "call track started")
         }
         // Focus is only taken when the user asked for it. The MG4 override that used to force it
         // on assumed the classic Bluetooth radio was shut down after handoff; in hybrid mode the
         // radio stays up, so grabbing focus here makes the factory AVRCP owner pause the music.
         if (!enabled || manager == null || channel == AudioChannel.NAVIGATION) {
             if (channel != AudioChannel.NAVIGATION) {
-                runCatching { report("Audio: focus not requested channel=$channel enabled=$enabled") }
+                runCatching { report("Audio: focus not requested channel=${channel.logName()} enabled=$enabled") }
             }
             return
         }
@@ -109,12 +111,12 @@ internal class AudioFocusCoordinator(
     }
 
     @Synchronized
-    fun release(track: AudioTrack) {
+    fun release(track: Any) {
         mutedTracks.remove(track)
         if (active.remove(track) != null) refreshRequest()
         if (callTracks.remove(track) && callTracks.isEmpty()) {
             setMode(AudioManager.MODE_NORMAL)
-            if (carPhoneMode) phoneHook.release("call track stopped")
+            if (carPhoneMode && track is AudioTrack) phoneHook.release("call track stopped")
         }
     }
 
@@ -177,7 +179,7 @@ internal class AudioFocusCoordinator(
         }
         if (request != null && requestedChannel == primary.channel) {
             if (added != null) {
-                runCatching { report("Audio: focus kept channel=${primary.channel} for $added activeTracks=${active.size}") }
+                runCatching { report("Audio: focus kept channel=${primary.channel.logName()} for ${added.logName()} activeTracks=${active.size}") }
             }
             return
         }
@@ -195,7 +197,7 @@ internal class AudioFocusCoordinator(
         request = next
         requestedChannel = primary.channel
         val result = manager?.requestAudioFocus(next)
-        val line = "Audio: focus requested channel=${primary.channel} gain=$gain granted=$result activeTracks=${active.size}"
+        val line = "Audio: focus requested channel=${primary.channel.logName()} gain=$gain granted=$result activeTracks=${active.size}"
         Log.i(TAG, line)
         runCatching { report(line) }
         if (PhoneFocusRetry.shouldRetry(callMode, primary.channel, result)) {
@@ -218,9 +220,12 @@ internal class AudioFocusCoordinator(
 
     private fun setVolume(volume: Float) {
         active.keys.forEach { track ->
-            if (track !in mutedTracks) runCatching { track.setStereoVolume(volume, volume) }
+            if (track !in mutedTracks) runCatching { (track as? AudioTrack)?.setStereoVolume(volume, volume) }
         }
     }
+
+    /** The channel for the session log: the report redactor drops any line containing "PHONE ", so calls are CALL. */
+    private fun AudioChannel.logName(): String = if (this == AudioChannel.PHONE) "CALL" else name
 
     private fun AudioChannel.focusPriority(): Int = when (this) {
         AudioChannel.MEDIA -> 3
@@ -936,6 +941,12 @@ private class AudioRenderer(
         audioMode == AudioMode.CARPLAY_WIFI && format.audioType == "telephony"
     private var callDecoder: OpusCallDecoder? = null
     private var track: AudioTrack? = null
+    /** Calls on the head unit's own phone output, with its echo canceller (test switch, MG4 only). */
+    private var stockCallOutput: StockCallAudio.Output? = null
+    /** The car phone output stalled during this call; the rest of the call uses the normal track. */
+    @Volatile private var stockCallStalled = false
+    private var stockCallDownsampler: HalfRateDownsampler? = null
+    private var stockCallPcm = ByteArray(0)
     private var pcm = ByteArray(64 * 1024)
     @Volatile private var playbackStarted = false
     /** Last step the worker reached, so a stalled stream says where it stopped. */
@@ -1114,6 +1125,7 @@ private class AudioRenderer(
     }
 
     private fun createTrack() {
+        if (!stockCallStalled && openStockCallOutput()) return
         val encoding = AndroidAudioFormat.ENCODING_PCM_16BIT
         val channelMask = if (format.channels >= 2) AndroidAudioFormat.CHANNEL_OUT_STEREO
         else AndroidAudioFormat.CHANNEL_OUT_MONO
@@ -1264,6 +1276,11 @@ private class AudioRenderer(
      * Navigation guidance intentionally takes no focus: it overlays media without ducking it.
      */
     private fun requestAudioFocus() {
+        stockCallOutput?.let { output ->
+            val attributes = trackAttributes ?: return
+            audioFocusCoordinator.acquire(output, AudioChannel.PHONE, attributes)
+            return
+        }
         val channel = mappedChannel ?: return
         val attributes = trackAttributes ?: return
         if (channel == AudioChannel.NAVIGATION) {
@@ -1275,6 +1292,116 @@ private class AudioRenderer(
 
     private fun abandonAudioFocus() {
         track?.let(audioFocusCoordinator::release)
+        stockCallOutput?.let(audioFocusCoordinator::release)
+    }
+
+    /**
+     * Test switch: a 48 kHz mono call plays on the head unit's direct phone output at 24 kHz, as the
+     * stock CarPlay app does, so the audio HAL can cancel its echo. Falls back to the AudioTrack path.
+     */
+    private fun openStockCallOutput(): Boolean {
+        if (format.audioType != "telephony" || !StockCallAudio.enabled) return false
+        val carRate = StockCallAudio.carRate(format.sampleRate)
+        if (carRate == null || format.channels != 1) {
+            report("Audio: car call path not used: call is ${format.sampleRate} Hz ${format.channels} ch, needs 8, 16, 24 or 48 kHz mono")
+            return false
+        }
+        val result = StockCallAudio.Output.open(carRate)
+        val output = result.getOrNull()
+        if (output == null) {
+            report("Audio: car call path failed (${result.exceptionOrNull()?.message}); using the normal call track")
+            return false
+        }
+        stockCallOutput = output
+        // A 48 kHz call is halved to the output's 24 kHz; 8, 16 and 24 kHz calls play at their own rate, as stock.
+        stockCallDownsampler = if (format.sampleRate == 2 * carRate) HalfRateDownsampler() else null
+        mappedChannel = AudioChannel.PHONE
+        trackAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .build()
+        bytesPerSecond = format.sampleRate * frameBytes
+        playbackStarted = true
+        stage = "playing"
+        report(
+            "Audio: ready audioType=telephony route=car phone output (direct, VOICE_CALL, " +
+                "$carRate Hz, device 0x400) output=${output.ioHandle}",
+        )
+        return true
+    }
+
+    private fun writeStockCall(output: StockCallAudio.Output, data: ByteArray, offset: Int, length: Int) {
+        val downsampler = stockCallDownsampler
+        if (stockCallPcm.size < length + 2) stockCallPcm = ByteArray(length + 2)
+        val bytes = if (downsampler != null) {
+            downsampler.process(data, offset, length, stockCallPcm)
+        } else {
+            System.arraycopy(data, offset, stockCallPcm, 0, length)
+            length
+        }
+        val started = System.nanoTime()
+        // Non-blocking, so a stalled car phone output is noticed: on 2026-11-18 the head unit's direct phone output
+        // took ~14 packets, then its HAL write jammed while the Nuance canceller started, a blocking write never
+        // returned and the call was static, then silence.
+        var count = 0
+        var lastProgressNs = started
+        while (count < bytes) {
+            // A full track answers WOULD_BLOCK (-11) in non-blocking mode; that is "no room yet", not an error.
+            val n = output.write(stockCallPcm, count, bytes - count, blocking = false).let { if (it == WOULD_BLOCK) 0 else it }
+            if (n < 0) {
+                count = n
+                break
+            }
+            val now = System.nanoTime()
+            if (n > 0) {
+                count += n
+                lastProgressNs = now
+                continue
+            }
+            if (now - lastProgressNs > STOCK_CALL_STALL_NS) {
+                fallBackFromStockCall(output, "no audio taken for ${(now - lastProgressNs) / 1_000_000L} ms")
+                writePcm(data, offset, length)
+                return
+            }
+            try {
+                Thread.sleep(STOCK_CALL_RETRY_MS)
+            } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+                return
+            }
+        }
+        maxWriteMs = maxOf(maxWriteMs, (System.nanoTime() - started) / 1_000_000L)
+        if (count < 0) {
+            writeErrorsThisWindow++
+            lastWriteErrorCode = count
+            if (!writeErrorReported) {
+                writeErrorReported = true
+                report("Audio: car call path write error code=$count")
+            }
+            return
+        }
+        EchoReference.shared.push(data, offset, length, format.sampleRate, format.channels)
+        val frames = length / frameBytes
+        totalWrittenFrames += frames
+        writtenFramesThisWindow += frames
+        bufferProgress.written(length)
+        lastPcmWriteNs = System.nanoTime()
+    }
+
+    /**
+     * The car phone output stopped taking audio: close it and play the rest of the call on the normal call track,
+     * which is what the switch falls back to when the output cannot open.
+     */
+    private fun fallBackFromStockCall(output: StockCallAudio.Output, reason: String) {
+        stockCallStalled = true
+        audioFocusCoordinator.release(output)
+        stockCallOutput = null
+        stockCallDownsampler = null
+        runCatching { output.close() }
+        playbackStarted = false
+        report("Audio: car call path stalled ($reason); the call continues on the normal call track")
+        createTrack()
+        requestAudioFocus()
     }
 
     private fun pcmFormat(encoding: Int, channelMask: Int) = AndroidAudioFormat.Builder()
@@ -1475,6 +1602,17 @@ private class AudioRenderer(
     }
 
     private fun writePcm(data: ByteArray, offset: Int = 0, length: Int = data.size) {
+        stockCallOutput?.let { output ->
+            if (!firstPcmReported && length > 0) {
+                firstPcmReported = true
+                report(
+                    "Audio: first sound decoded audioType=${format.audioType} bytes=$length " +
+                        "afterMs=${(System.nanoTime() - startedNs.get()) / 1_000_000L} route=car phone output",
+                )
+            }
+            writeStockCall(output, data, offset, length)
+            return
+        }
         val track = track ?: return
         if (!firstPcmLogged && length > 0) {
             firstPcmLogged = true
@@ -1657,6 +1795,11 @@ private class AudioRenderer(
                 // Best effort.
             }
         }
+        stockCallOutput?.let { output ->
+            stockCallOutput = null
+            runCatching { output.close() }
+            report("Audio: car phone output closed")
+        }
         val track = track
         this.track = null
         if (track != null) {
@@ -1694,5 +1837,8 @@ private class AudioRenderer(
         const val STATS_WINDOW_NS = 5_000_000_000L
         const val DECODED_BUFFER_LOG_INTERVAL = 50
         const val STALL_REPORT_MILLIS = 6_000L
+        const val STOCK_CALL_STALL_NS = 500_000_000L
+        const val STOCK_CALL_RETRY_MS = 5L
+        const val WOULD_BLOCK = -11
     }
 }

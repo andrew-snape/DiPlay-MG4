@@ -56,7 +56,7 @@ Settings is two panes, like iPad Settings: categories on the left, the chosen on
 | USB CarPlay | Removed in mg4.96. The car's own wired CarPlay holds the iPhone, so MG4CPlay cannot claim it. Use the car's built-in CarPlay for a cable |
 | Wi-Fi high performance | Test build (mg4.91): keeps the car's Wi-Fi out of power saving during CarPlay (from xcertplay 1.4.1). Being tested against the 160 s freezes |
 | Video while parked | Built in (upstream feature, gated on the MG4's gear P). Not yet tested in the car |
-| Call echo | Test build (0.4.0): software echo suppression on calls, since the head unit has no echo canceller. Not yet tried in the car |
+| Call echo | Test build (0.4.0): software echo suppression on calls. Unreleased: **Car echo canceller for calls (test)** uses the car's own phone audio path so the head unit cancels echo (worked in an SWI68 car in kennyvv's fork; not yet tried on SWI165) |
 | Car MFi chip | Test build (0.4.0): read-only probe of the car's MFi chip, plus an optional switch to sign with it. The car has an MFi 3.0 chip, and the probe's signature test is fixed for it in `main` (unreleased). Not yet tried in the car |
 | Stock app ports | Test build (0.4.0): Telecom call mirroring, car phone mode, music source tag, screen size, narrow-band calls and more. Not yet tried in the car |
 | Dark mode | Follows the car's own day/night, which switches with the headlights. Confirmed in the car (2026-11-03): headlights on turned the car, Android and CarPlay dark. Dark mode at sunset is an option (mg4.92: off by default) |
@@ -100,6 +100,7 @@ Some settings only reach a running CarPlay session after it reconnects. Those ro
 | Music buffer | Sound | 750 ms. Try 1000 ms if music skips on a weak Wi-Fi link. 2000 ms (mg4.96) rides out a short dropout and adds about a second of music delay. |
 | Echo suppression on calls | Sound | On (not yet tried in the car). The head unit has no echo canceller, so DiPlay turns the call microphone down while it only hears the other person's own voice coming back from the speakers. |
 | Microphone (test) | Sound | Automatic uses the plain microphone for calls and voice recognition for Siri, the same as Stock. Plain microphone for both or call processing can be chosen to compare. |
+| Car echo canceller for calls (test) | Sound | Off (not yet tried on SWI165). Calls play on the car's own phone output and record from its phone microphone, as the car's own CarPlay does, so the car removes the echo. Falls back to the normal path if that doesn't work. **Test call echo** compares both paths without a call. |
 | Show calls to the car (test), Car phone mode for calls (test), Tag music as CarPlay (test) | Sound | Off, off, off. Copy the stock CarPlay app: mirror calls into the car's Telecom, tell the car's audio policy a CarPlay call is on, mark music as the car's CarPlay source. Not yet tried in the car. |
 | Screen size reported to iPhone | Display | Automatic. Stock (244 x 80 mm) tells the iPhone the car's own app's physical size, which changes how big CarPlay draws icons and text; the picture size is unchanged. Applies after you reconnect. Not yet tried in the car. |
 | Narrow-band calls (test) | Sound | Off. Offers the iPhone only 8 kHz audio for calls, as the car's own app can. Siri and music are unchanged. Applies after you reconnect. Not yet tried in the car. |
@@ -240,6 +241,10 @@ by [@fatihdonmezdev](https://github.com/fatihdonmezdev). Based on
 [xcertplay](https://github.com/shilapi/xcertplay), GPL-3.0. The home/settings UI
 adapts [DiAuto](https://github.com/shihabal3amri/DiAuto), AGPL-3.0; that license is
 included in `docs/licenses`. Preserve those notices when distributing modifications.
+
+The car echo canceller for calls (`libmg4_call_audio`, `StockCallAudio`, Test call echo) is
+ported from [kennyvv/DiPlay-MG4-Plus](https://github.com/kennyvv/DiPlay-MG4-Plus) by
+[@kennyvv](https://github.com/kennyvv).
 
 The Android 9 call microphone uses [Concentus](https://github.com/lostromb/concentus)
 (BSD-3-Clause), a pure-Java Opus encoder.
