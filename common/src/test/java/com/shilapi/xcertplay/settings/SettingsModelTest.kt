@@ -86,7 +86,8 @@ class SettingsModelTest {
     }
 
     @Test fun carTestSettingsOnlyOnSwi165() {
-        val tests = listOf(SettingRow.SHOW_CALLS_TO_CAR, SettingRow.TAG_MUSIC_CARPLAY, SettingRow.CAR_PHONE_MODE, SettingRow.NARROW_BAND_CALLS)
+        val tests = listOf(SettingRow.SHOW_CALLS_TO_CAR, SettingRow.TAG_MUSIC_CARPLAY, SettingRow.CAR_PHONE_MODE,
+            SettingRow.CAR_ECHO_CANCELLER, SettingRow.CALL_ECHO_TEST, SettingRow.NARROW_BAND_CALLS)
         tests.forEach {
             assertTrue(it in rows(SettingsCategory.SOUND, env(Generation.SWI165)))
             assertFalse(it in rows(SettingsCategory.SOUND, env(Generation.SWI69)))

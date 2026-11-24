@@ -3173,12 +3173,16 @@ class CarPlayHostActivity : ComponentActivity() {
                         else -> null
                     }
                 com.shilapi.xcertplay.media.CallEchoSuppression.enabled = AirPlayPersistence.loadCallEchoSuppression(this)
+                com.shilapi.xcertplay.media.StockCallAudio.packageName = packageName
+                com.shilapi.xcertplay.media.StockCallAudio.enabled =
+                    Mg4FirmwareProfile.detect().isMg4 && AirPlayPersistence.loadCarEchoCanceller(this)
                 MicRecordings.sync(applicationContext)
                 appendLog(
                     "Microphone test: siriFormat=${if (AirPlayPersistence.loadSiriMicrophonePcm(this)) "PCM" else "Opus"} " +
                         "recording=${if (AirPlayPersistence.loadMicrophoneRecording(this)) "on" else "off"} " +
                         "callEcho=${if (AirPlayPersistence.loadCallEchoSuppression(this)) "on" else "off"} " +
-                        "callsOverCarPlayOnly=${if (AirPlayPersistence.loadCallsOverCarPlayOnly(this)) "on" else "off"}",
+                        "callsOverCarPlayOnly=${if (AirPlayPersistence.loadCallsOverCarPlayOnly(this)) "on" else "off"} " +
+                        "carEchoCanceller=${if (com.shilapi.xcertplay.media.StockCallAudio.enabled) com.shilapi.xcertplay.media.StockCallAudio.status() else "off"}",
                 )
                 sessionAudioMode == com.shilapi.xcertplay.media.AudioMode.CARPLAY_WIFI
             } &&

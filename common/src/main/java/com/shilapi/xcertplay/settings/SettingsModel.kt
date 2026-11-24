@@ -57,6 +57,8 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     SHOW_CALLS_TO_CAR(RowKind.SWITCH, true),
     TAG_MUSIC_CARPLAY(RowKind.SWITCH, true),
     CAR_PHONE_MODE(RowKind.SWITCH, true),
+    CAR_ECHO_CANCELLER(RowKind.SWITCH, true),
+    CALL_ECHO_TEST(RowKind.ACTION),
     NARROW_BAND_CALLS(RowKind.SWITCH, true),
     MUSIC_BUFFER(RowKind.SEGMENTED, true),
     MICROPHONE(RowKind.PICKER, true),
@@ -137,6 +139,9 @@ internal object SettingsLayout {
                 SettingRow.SHOW_CALLS_TO_CAR.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
                 SettingRow.TAG_MUSIC_CARPLAY.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
                 SettingRow.CAR_PHONE_MODE.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                // The car's own phone output and microphone, so the head unit cancels call echo (test).
+                SettingRow.CAR_ECHO_CANCELLER.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.CALL_ECHO_TEST.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
                 SettingRow.NARROW_BAND_CALLS.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
             )),
             SettingsGroup("buffer", listOf(SettingRow.MUSIC_BUFFER)),

@@ -190,6 +190,11 @@
     <string name="reported_screen_size_stock">Stock (244 x 80 mm)</string>
     <string name="settings_footer_reported_screen_size">Sets the physical size the iPhone is told, which changes how big CarPlay draws icons and text. Automatic uses the CarPlay size above. Stock sends the car’s own app’s 244 x 80 mm. The picture size stays the same. It applies after you reconnect; not yet tried in the car.</string>
     <string name="car_phone_mode">Car phone mode for calls (test)</string>
+    <string name="car_echo_canceller">Car echo canceller for calls (test)</string>
+    <string name="call_echo_test">Test call echo</string>
+    <string name="call_echo_test_running">Testing call echo… (about 20 seconds)</string>
+    <string name="call_echo_test_disconnect">Disconnect CarPlay first, then run the echo test.</string>
+    <string name="settings_footer_car_echo_canceller">Car echo canceller plays calls on the car’s own phone output and records from its phone microphone, as the car’s own CarPlay does, so the car removes the echo the other person hears. If that path doesn’t work, the call carries on the normal way. It applies after you reconnect; off by default and not yet tried on this car. Test call echo plays a test sound through both paths (no call needed) and shows how much came back; turn the volume up first.</string>
     <string name="microphone_source_stock">Stock · plain microphone for calls</string>
     <string name="tag_music_as_carplay">Tag music as CarPlay (test)</string>
     <string name="settings_footer_car_tests">Three tests that copy the car’s own CarPlay app, both off by default and not yet tried in the car. Show calls to the car lists each CarPlay call with the car’s phone system. Tag music as CarPlay marks the music as the car’s CarPlay source, which may change how it is routed; if music goes silent, turn it off. Car phone mode tells the car’s audio system a CarPlay call is on, as its own app does; if calls go silent, turn it off.</string>

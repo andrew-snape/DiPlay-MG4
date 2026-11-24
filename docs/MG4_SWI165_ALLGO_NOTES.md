@@ -192,6 +192,19 @@ Example frames (tx_id 0): GetDeviceId `04 00 00 00 | 08 00 10 00`; GetCertificat
 
 **Unknowns to settle in the car.** Whether the app's SELinux domain may connect to the socket; whether `mfid` accepts a connection per call, and whether it works while the stock CarPlay runs; the real status codes; and whether the iPhone accepts a 2.0C certificate for wireless CarPlay (not only wired). Test plan I13 and I14.
 
+## Car echo canceller for calls (ported 2026-11-25)
+
+kennyvv/DiPlay-MG4-Plus (SWI68) read the audio policy and HAL as well as the stock library and found
+why our calls echo: the HAL's Nuance ECNR only runs for call audio on the direct `carplay_phone`
+output to `Phone Direct Out` (`AUDIO_DEVICE_OUT_HDMI` = `0x400`), while the `Carplay Phone input`
+(input flag `0x200`) is open. The car's `AudioPolicyManager::getOutputForAttr` forces device `0x400`
+for a `DIRECT` output. Setting `carplay_source=phone` alone (Car phone mode) doesn't get there.
+Java can't ask for a direct PCM output or set vendor input flags on Android 9, so
+`shared/src/main/jni/mg4_call_audio.c` finds `android::AudioTrack` and `android::AudioRecord` in
+the already loaded `libaudioclient.so` and opens both as stock does. `StockCallAudio` wraps it.
+Behind **Car echo canceller for calls (test)**; not yet tried on SWI165. The HAL path has to be
+the same on R11 for it to work: the first car test (I15) settles that.
+
 ## Microphone, from the car's native libraries (2026-11-12)
 
 Pulled from the car: `/system/lib64/libCarPlayPlatformAudio.so` (disassembled; not tried in

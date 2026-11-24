@@ -32,6 +32,40 @@ import com.shilapi.xcertplay.settings.SettingsUi.Companion as Colors
  * [SettingsLayout] decides which rows appear; this class reads and saves their values.
  */
 internal class Mg4SettingsPage(private val activity: Activity, private val host: Host) {
+    /**
+     * Plays a test sound through the call output and records the call microphone, on the normal call
+     * path and then the car's own phone path, without a phone call. Results go to the report.
+     */
+    private fun runCallEchoTest(row: android.widget.TextView, title: String) {
+        if (!row.isEnabled || host.sessionRunning) {
+            if (host.sessionRunning) android.widget.Toast.makeText(activity, R.string.call_echo_test_disconnect, android.widget.Toast.LENGTH_LONG).show()
+            return
+        }
+        row.isEnabled = false
+        row.text = activity.getString(R.string.call_echo_test_running)
+        val app = activity.applicationContext
+        com.shilapi.xcertplay.media.StockCallAudio.packageName = activity.packageName
+        Thread({
+            val lines = mutableListOf<String>()
+            com.shilapi.xcertplay.media.CallEchoSelfTest.runBoth(app, com.shilapi.xcertplay.MicRecordings.directory(app)) { line ->
+                lines += line
+                android.util.Log.i("DiPlay-EchoTest", line)
+                SettingsChangeLog.note(app, line)
+            }
+            activity.runOnUiThread {
+                row.isEnabled = true
+                row.text = title
+                if (!activity.isFinishing) {
+                    android.app.AlertDialog.Builder(activity)
+                        .setTitle(title)
+                        .setMessage(lines.joinToString("\n\n"))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                }
+            }
+        }, "call-echo-test").apply { isDaemon = true }.start()
+    }
+
     /** What the page needs from [com.shilapi.xcertplay.DiPlayActivity]: dialogs, system screens, reconnecting. */
     interface Host {
         val sessionRunning: Boolean
@@ -339,6 +373,7 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 add(R.string.calls_over_carplay_only_description)
                 if (env.generation == Mg4FirmwareProfile.Generation.SWI165) {
                     add(R.string.settings_footer_car_tests)
+                    add(R.string.settings_footer_car_echo_canceller)
                     add(R.string.settings_footer_narrow_band)
                 }
             }
@@ -394,6 +429,8 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.SHOW_CALLS_TO_CAR -> R.string.show_calls_to_car
         SettingRow.TAG_MUSIC_CARPLAY -> R.string.tag_music_as_carplay
         SettingRow.CAR_PHONE_MODE -> R.string.car_phone_mode
+        SettingRow.CAR_ECHO_CANCELLER -> R.string.car_echo_canceller
+        SettingRow.CALL_ECHO_TEST -> R.string.call_echo_test
         SettingRow.NARROW_BAND_CALLS -> R.string.narrow_band_calls
         SettingRow.MUSIC_BUFFER -> R.string.music_buffer
         SettingRow.MICROPHONE -> R.string.microphone_source
@@ -488,6 +525,12 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 }
                 SettingRow.CAR_PHONE_MODE -> switch(AirPlayPersistence.loadCarPhoneMode(activity)) {
                     AirPlayPersistence.saveCarPhoneMode(activity, it)
+                }
+                SettingRow.CAR_ECHO_CANCELLER -> switch(AirPlayPersistence.loadCarEchoCanceller(activity)) {
+                    AirPlayPersistence.saveCarEchoCanceller(activity, it)
+                }
+                SettingRow.CALL_ECHO_TEST -> ui.actionRow(title) {}.also { row ->
+                    row.setOnClickListener { runCallEchoTest(row, title) }
                 }
                 SettingRow.NARROW_BAND_CALLS -> switch(AirPlayPersistence.loadNarrowBandCalls(activity)) {
                     AirPlayPersistence.saveNarrowBandCalls(activity, it)
