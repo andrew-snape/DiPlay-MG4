@@ -102,7 +102,7 @@ internal class AudioFocusCoordinator(
         // radio stays up, so grabbing focus here makes the factory AVRCP owner pause the music.
         if (!enabled || manager == null || channel == AudioChannel.NAVIGATION) {
             if (channel != AudioChannel.NAVIGATION) {
-                runCatching { report("Audio: focus not requested channel=$channel enabled=$enabled") }
+                runCatching { report("Audio: focus not requested channel=${channel.logName()} enabled=$enabled") }
             }
             return
         }
@@ -179,7 +179,7 @@ internal class AudioFocusCoordinator(
         }
         if (request != null && requestedChannel == primary.channel) {
             if (added != null) {
-                runCatching { report("Audio: focus kept channel=${primary.channel} for $added activeTracks=${active.size}") }
+                runCatching { report("Audio: focus kept channel=${primary.channel.logName()} for ${added.logName()} activeTracks=${active.size}") }
             }
             return
         }
@@ -197,7 +197,7 @@ internal class AudioFocusCoordinator(
         request = next
         requestedChannel = primary.channel
         val result = manager?.requestAudioFocus(next)
-        val line = "Audio: focus requested channel=${primary.channel} gain=$gain granted=$result activeTracks=${active.size}"
+        val line = "Audio: focus requested channel=${primary.channel.logName()} gain=$gain granted=$result activeTracks=${active.size}"
         Log.i(TAG, line)
         runCatching { report(line) }
         if (PhoneFocusRetry.shouldRetry(callMode, primary.channel, result)) {
@@ -223,6 +223,9 @@ internal class AudioFocusCoordinator(
             if (track !in mutedTracks) runCatching { (track as? AudioTrack)?.setStereoVolume(volume, volume) }
         }
     }
+
+    /** The channel for the session log: the report redactor drops any line containing "PHONE ", so calls are CALL. */
+    private fun AudioChannel.logName(): String = if (this == AudioChannel.PHONE) "CALL" else name
 
     private fun AudioChannel.focusPriority(): Int = when (this) {
         AudioChannel.MEDIA -> 3

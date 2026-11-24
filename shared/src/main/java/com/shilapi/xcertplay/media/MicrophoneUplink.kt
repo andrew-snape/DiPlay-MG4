@@ -96,9 +96,7 @@ internal class MicrophoneUplink(
         }
         val bufferSize = maxOf(minBuffer * 2, config.frameBytes * 4)
         val callCarRate = StockCallAudio.carRate(config.sampleRate)
-        if (config.audioType == "telephony" && config.channels == 1 && StockCallAudio.enabled && callCarRate != null &&
-            MicrophoneSource.override == null
-        ) {
+        if (config.audioType == "telephony" && config.channels == 1 && StockCallAudio.enabled && callCarRate != null) {
             val opened = StockCallAudio.Input.open(callCarRate)
             val input = opened.getOrNull()
             if (input != null) {

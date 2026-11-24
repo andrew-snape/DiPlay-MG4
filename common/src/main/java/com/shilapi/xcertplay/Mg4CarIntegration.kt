@@ -96,6 +96,7 @@ internal object Mg4CarIntegration {
         log("Car integration: show calls to the car=${if (showCalls) "on" else "off"} " +
             "music tag=${if (AirPlayPersistence.loadTagMusicAsCarPlay(app)) "on" else "off"} " +
             "car phone mode=${if (AirPlayPersistence.loadCarPhoneMode(app)) "on" else "off"} " +
+            "car echo canceller=${if (AirPlayPersistence.loadCarEchoCanceller(app)) "on" else "off"} " +
             "microphone=${if (AirPlayPersistence.loadMicrophoneSource(app) == 3) "stock" else "other"}")
         if (showCalls) {
             CarPlayTelephony.start(app, log) { next.sendTelephonyButton(CarPlayMediaKeys.TELEPHONY_HOOK_SWITCH) }

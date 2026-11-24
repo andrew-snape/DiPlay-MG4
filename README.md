@@ -242,6 +242,10 @@ by [@fatihdonmezdev](https://github.com/fatihdonmezdev). Based on
 adapts [DiAuto](https://github.com/shihabal3amri/DiAuto), AGPL-3.0; that license is
 included in `docs/licenses`. Preserve those notices when distributing modifications.
 
+The car echo canceller for calls (`libmg4_call_audio`, `StockCallAudio`, Test call echo) is
+ported from [kennyvv/DiPlay-MG4-Plus](https://github.com/kennyvv/DiPlay-MG4-Plus) by
+[@kennyvv](https://github.com/kennyvv).
+
 The Android 9 call microphone uses [Concentus](https://github.com/lostromb/concentus)
 (BSD-3-Clause), a pure-Java Opus encoder.
 
