@@ -44,6 +44,8 @@ object AirPlayPersistence {
     private const val KEY_SHOW_CALLS_TO_CAR = "show_calls_to_car"
     private const val KEY_CAR_PHONE_MODE = "car_phone_mode"
     private const val KEY_CAR_ECHO_CANCELLER = "car_echo_canceller"
+    private const val KEY_SIRI_CAR_MIC = "siri_car_mic"
+    private const val KEY_CALL_OWN_FOCUS = "call_own_focus"
     private const val KEY_TAG_MUSIC_CARPLAY = "tag_music_carplay"
     private const val KEY_STOCK_SCREEN_SIZE = "stock_screen_size"
     private const val KEY_NARROW_BAND_CALLS = "narrow_band_calls"
@@ -321,6 +323,37 @@ object AirPlayPersistence {
 
     fun saveCarEchoCanceller(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CAR_ECHO_CANCELLER, enabled).apply()
+    }
+
+    /**
+     * MG4 test: Siri records from the car's Siri microphone path (VOICE_RECOGNITION with the car's
+     * 0x100 input flag), so the car's noise reduction runs, as the stock CarPlay app does. Off by
+     * default (worked in an SWI68 car in kennyvv/DiPlay-MG4-Plus; not yet tried on SWI165). A saved
+     * choice wins; always off on other firmware.
+     */
+    fun loadSiriCarMic(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_SIRI_CAR_MIC)) prefs.getBoolean(KEY_SIRI_CAR_MIC, false) else false
+    }
+
+    fun saveSiriCarMic(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SIRI_CAR_MIC, enabled).apply()
+    }
+
+    /**
+     * MG4 test: a CarPlay call holds the car's audio focus for the whole call, ahead of music, as the
+     * stock CarPlay app asks. Off by default (worked in an SWI68 car in kennyvv/DiPlay-MG4-Plus; not
+     * yet tried on SWI165). A saved choice wins; always off on other firmware.
+     */
+    fun loadCallOwnFocus(context: Context): Boolean {
+        if (!Mg4FirmwareProfile.detect().isMg4) return false
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return if (prefs.contains(KEY_CALL_OWN_FOCUS)) prefs.getBoolean(KEY_CALL_OWN_FOCUS, false) else false
+    }
+
+    fun saveCallOwnFocus(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CALL_OWN_FOCUS, enabled).apply()
     }
 
     /**
