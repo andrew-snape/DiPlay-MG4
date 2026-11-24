@@ -374,11 +374,15 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 if (env.generation == Mg4FirmwareProfile.Generation.SWI165) {
                     add(R.string.settings_footer_car_tests)
                     add(R.string.settings_footer_car_echo_canceller)
+                    add(R.string.settings_footer_call_own_focus)
                     add(R.string.settings_footer_narrow_band)
                 }
             }
             "buffer" -> add(R.string.settings_footer_buffer)
-            "microphone" -> add(R.string.settings_footer_microphone)
+            "microphone" -> {
+                add(R.string.settings_footer_microphone)
+                if (env.generation == Mg4FirmwareProfile.Generation.SWI165) add(R.string.settings_footer_siri_car_mic)
+            }
             "navigation" -> add(R.string.contrib_audio_home_nav_channel_note)
             "cluster" -> add(R.string.mg4_cluster_directions_description)
             "location" -> add(R.string.sends_precise_android_location_as_carplay_gps_data_when_th)
@@ -431,6 +435,8 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
         SettingRow.CAR_PHONE_MODE -> R.string.car_phone_mode
         SettingRow.CAR_ECHO_CANCELLER -> R.string.car_echo_canceller
         SettingRow.CALL_ECHO_TEST -> R.string.call_echo_test
+        SettingRow.CALL_OWN_FOCUS -> R.string.call_own_focus
+        SettingRow.SIRI_CAR_MIC -> R.string.siri_car_mic
         SettingRow.NARROW_BAND_CALLS -> R.string.narrow_band_calls
         SettingRow.MUSIC_BUFFER -> R.string.music_buffer
         SettingRow.MICROPHONE -> R.string.microphone_source
@@ -528,6 +534,12 @@ internal class Mg4SettingsPage(private val activity: Activity, private val host:
                 }
                 SettingRow.CAR_ECHO_CANCELLER -> switch(AirPlayPersistence.loadCarEchoCanceller(activity)) {
                     AirPlayPersistence.saveCarEchoCanceller(activity, it)
+                }
+                SettingRow.CALL_OWN_FOCUS -> switch(AirPlayPersistence.loadCallOwnFocus(activity)) {
+                    AirPlayPersistence.saveCallOwnFocus(activity, it)
+                }
+                SettingRow.SIRI_CAR_MIC -> switch(AirPlayPersistence.loadSiriCarMic(activity)) {
+                    AirPlayPersistence.saveSiriCarMic(activity, it)
                 }
                 SettingRow.CALL_ECHO_TEST -> ui.actionRow(title) {}.also { row ->
                     row.setOnClickListener { runCallEchoTest(row, title) }

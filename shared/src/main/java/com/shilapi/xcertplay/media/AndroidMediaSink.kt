@@ -63,6 +63,11 @@ internal class AudioFocusCoordinator(
     private val callMode: Boolean = false,
     /** MG4 test: tell the car's audio policy "carplay_source=phone" while a call track plays. */
     private val carPhoneMode: Boolean = false,
+    /**
+     * MG4 test: a call holds the focus request for the whole call, ahead of music, as the stock app
+     * asks (GAIN_TRANSIENT, voice communication, car source 53). Off: music outranks the call.
+     */
+    private val callOwnFocus: Boolean = false,
 ) {
     private val phoneHook by lazy { Mg4CarPhoneMode.hook(report) }
 
@@ -197,7 +202,8 @@ internal class AudioFocusCoordinator(
         request = next
         requestedChannel = primary.channel
         val result = manager?.requestAudioFocus(next)
-        val line = "Audio: focus requested channel=${primary.channel.logName()} gain=$gain granted=$result activeTracks=${active.size}"
+        val line = "Audio: focus requested channel=${primary.channel.logName()} gain=$gain granted=$result activeTracks=${active.size}" +
+            " tracks=${active.values.joinToString(",") { it.channel.logName() }}" + (if (callOwnFocus) " callOwnFocus=on" else "")
         Log.i(TAG, line)
         runCatching { report(line) }
         if (PhoneFocusRetry.shouldRetry(callMode, primary.channel, result)) {
@@ -229,7 +235,7 @@ internal class AudioFocusCoordinator(
 
     private fun AudioChannel.focusPriority(): Int = when (this) {
         AudioChannel.MEDIA -> 3
-        AudioChannel.PHONE -> 2
+        AudioChannel.PHONE -> if (callOwnFocus) 4 else 2
         AudioChannel.ASSISTANT -> 1
         AudioChannel.NAVIGATION -> 0
     }
@@ -277,6 +283,8 @@ class AndroidMediaSink(
     private val tagMediaAsCarPlay: Boolean = false,
     /** MG4 test: the car phone mode hook for calls (see [Mg4CarPhoneMode]). */
     private val carPhoneMode: Boolean = false,
+    /** MG4 test: calls take the car's audio focus ahead of music (see [AudioFocusCoordinator]). */
+    private val callOwnFocus: Boolean = false,
 ) : MediaSink, SiriAudioControl {
     private val appContext = context?.applicationContext
     // Wi-Fi audio plays music locally, so it needs focus; hybrid leaves focus to the car.
@@ -292,6 +300,7 @@ class AndroidMediaSink(
         onAudioDiagnostic,
         callMode = Build.VERSION.SDK_INT == Build.VERSION_CODES.P && audioMode == AudioMode.CARPLAY_WIFI,
         carPhoneMode = carPhoneMode && Build.VERSION.SDK_INT == Build.VERSION_CODES.P && audioMode == AudioMode.CARPLAY_WIFI,
+        callOwnFocus = callOwnFocus && Build.VERSION.SDK_INT == Build.VERSION_CODES.P && audioMode == AudioMode.CARPLAY_WIFI,
     )
     private val screenStateLock = Any()
     private val activeScreenTypes = mutableSetOf<Int>()
@@ -1319,6 +1328,7 @@ private class AudioRenderer(
         trackAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
             .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .also { Mg4CarAudioSource.tag(it, Mg4CarAudioSource.CARPLAY_PHONE) }
             .build()
         bytesPerSecond = format.sampleRate * frameBytes
         playbackStarted = true

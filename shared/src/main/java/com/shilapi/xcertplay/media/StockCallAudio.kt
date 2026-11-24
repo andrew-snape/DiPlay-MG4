@@ -18,8 +18,13 @@ object StockCallAudio {
     /** Set by the host from settings before CarPlay starts. MG4 only. */
     @Volatile var enabled: Boolean = false
 
+    /** Test switch: Siri records through the car's Siri microphone path (Nuance processing). MG4 only. */
+    @Volatile var siriEnabled: Boolean = false
+
     /** android.media.MediaRecorder.AudioSource and the car's vendor input flags. */
     const val SOURCE_MIC = 1
+    const val SOURCE_VOICE_RECOGNITION = 6
+    const val FLAG_CARPLAY_SIRI = 0x100
     const val FLAG_CARPLAY_PHONE = 0x200
 
     /** Package name for the microphone's app-ops check. Set by the host. */
@@ -150,6 +155,12 @@ object StockCallAudio {
             fun open(rate: Int): Result<Input> {
                 if (!active) return Result.failure(IllegalStateException(status()))
                 return openForTest(rate)
+            }
+
+            /** The Siri microphone: voice recognition with the car's Siri flag, as the stock library opens it. */
+            fun openSiri(rate: Int): Result<Input> {
+                if (!siriEnabled || status() != "ok") return Result.failure(IllegalStateException(if (siriEnabled) status() else "off"))
+                return openSource(rate, SOURCE_VOICE_RECOGNITION, FLAG_CARPLAY_SIRI)
             }
 
             /** Opens whether or not the switch is on (call echo self-test). */

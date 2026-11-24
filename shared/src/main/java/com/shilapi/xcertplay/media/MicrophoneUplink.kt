@@ -107,6 +107,29 @@ internal class MicrophoneUplink(
             }
             runCatching { report("Microphone telephony: car phone input failed (${opened.exceptionOrNull()?.message}); using the normal microphone") }
         }
+        // Siri on the car's Siri input (VOICE_RECOGNITION, flag 0x100) at 24 kHz, doubled for a 48 kHz stream.
+        val siriCarRateOk = config.sampleRate == StockCallAudio.INPUT_RATE || config.sampleRate == 2 * StockCallAudio.INPUT_RATE
+        if (config.audioType == "speechrecognition" && config.channels == 1 && StockCallAudio.siriEnabled && siriCarRateOk &&
+            MicrophoneSource.override == null
+        ) {
+            val opened = StockCallAudio.Input.openSiri(StockCallAudio.INPUT_RATE)
+            val input = opened.getOrNull()
+            if (input != null) {
+                carInputRate = StockCallAudio.INPUT_RATE
+                sourceUsed = "car Siri input (VOICE_RECOGNITION, flag 0x100, ${StockCallAudio.INPUT_RATE} Hz)" +
+                    (nextEncoder?.let { " opus=${it.kind}" } ?: "")
+                return startCapture(
+                    carPhoneReader(input, channelMask, bufferSize, MediaRecorder.AudioSource.VOICE_RECOGNITION),
+                    nextEncoder,
+                    stockInputHolder = input,
+                )
+            }
+            runCatching { report("Microphone speechrecognition: car Siri input failed (${opened.exceptionOrNull()?.message}); using the normal microphone") }
+        } else if (config.audioType == "speechrecognition" && StockCallAudio.siriEnabled) {
+            runCatching {
+                report("Microphone speechrecognition: car Siri input not used (rate=${config.sampleRate} channels=${config.channels} override=${MicrophoneSource.override ?: "none"})")
+            }
+        }
         // Head units can refuse the call-processing source outside their own hands-free call
         // (seen as silent calls with Wi-Fi audio on an MG4); fall back to the plain microphone.
         val nextRecorder = createRecorder(source, channelMask, bufferSize)?.also { sourceUsed = sourceName(source) }
@@ -197,11 +220,11 @@ internal class MicrophoneUplink(
         }
     }
 
-    /** The rate the car's phone microphone was opened at for this call (24 kHz for a 48 kHz call). */
+    /** The rate the car's microphone was opened at for this stream (24 kHz for Siri and 48 kHz calls). */
     private var carInputRate = StockCallAudio.INPUT_RATE
 
     /**
-     * Reads the car's phone microphone and doubles it to the call's 48 kHz when needed. If the HAL never
+     * Reads the car's phone or Siri microphone and doubles it to the stream's 48 kHz when needed. If the HAL never
      * starts that capture, switches to the plain microphone so the caller still hears the driver.
      */
     private fun carPhoneReader(

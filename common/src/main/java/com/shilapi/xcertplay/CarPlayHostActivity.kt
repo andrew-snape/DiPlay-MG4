@@ -2948,6 +2948,7 @@ class CarPlayHostActivity : ComponentActivity() {
             onMediaAudioChanged = CarPlayMediaKeys::onMediaAudioChanged,
             tagMediaAsCarPlay = AirPlayPersistence.loadTagMusicAsCarPlay(this),
             carPhoneMode = AirPlayPersistence.loadCarPhoneMode(this),
+            callOwnFocus = AirPlayPersistence.loadCallOwnFocus(this),
         )
     }
 
@@ -3176,13 +3177,17 @@ class CarPlayHostActivity : ComponentActivity() {
                 com.shilapi.xcertplay.media.StockCallAudio.packageName = packageName
                 com.shilapi.xcertplay.media.StockCallAudio.enabled =
                     Mg4FirmwareProfile.detect().isMg4 && AirPlayPersistence.loadCarEchoCanceller(this)
+                com.shilapi.xcertplay.media.StockCallAudio.siriEnabled =
+                    Mg4FirmwareProfile.detect().isMg4 && AirPlayPersistence.loadSiriCarMic(this)
                 MicRecordings.sync(applicationContext)
                 appendLog(
                     "Microphone test: siriFormat=${if (AirPlayPersistence.loadSiriMicrophonePcm(this)) "PCM" else "Opus"} " +
                         "recording=${if (AirPlayPersistence.loadMicrophoneRecording(this)) "on" else "off"} " +
                         "callEcho=${if (AirPlayPersistence.loadCallEchoSuppression(this)) "on" else "off"} " +
                         "callsOverCarPlayOnly=${if (AirPlayPersistence.loadCallsOverCarPlayOnly(this)) "on" else "off"} " +
-                        "carEchoCanceller=${if (com.shilapi.xcertplay.media.StockCallAudio.enabled) com.shilapi.xcertplay.media.StockCallAudio.status() else "off"}",
+                        "carEchoCanceller=${if (com.shilapi.xcertplay.media.StockCallAudio.enabled) com.shilapi.xcertplay.media.StockCallAudio.status() else "off"} " +
+                        "siriCarMic=${if (com.shilapi.xcertplay.media.StockCallAudio.siriEnabled) com.shilapi.xcertplay.media.StockCallAudio.status() else "off"} " +
+                        "callOwnFocus=${if (AirPlayPersistence.loadCallOwnFocus(this)) "on" else "off"}",
                 )
                 sessionAudioMode == com.shilapi.xcertplay.media.AudioMode.CARPLAY_WIFI
             } &&

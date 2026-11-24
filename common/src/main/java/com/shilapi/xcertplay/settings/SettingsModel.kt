@@ -59,10 +59,12 @@ internal enum class SettingRow(val kind: RowKind, val appliesOnReconnect: Boolea
     CAR_PHONE_MODE(RowKind.SWITCH, true),
     CAR_ECHO_CANCELLER(RowKind.SWITCH, true),
     CALL_ECHO_TEST(RowKind.ACTION),
+    CALL_OWN_FOCUS(RowKind.SWITCH, true),
     NARROW_BAND_CALLS(RowKind.SWITCH, true),
     MUSIC_BUFFER(RowKind.SEGMENTED, true),
     MICROPHONE(RowKind.PICKER, true),
     SIRI_MIC_PCM(RowKind.SWITCH, true),
+    SIRI_CAR_MIC(RowKind.SWITCH, true),
     CALL_ECHO_SUPPRESSION(RowKind.SWITCH, true),
     MIC_RECORDING(RowKind.SWITCH),
     SOUND_ADVANCED(RowKind.PAGE),
@@ -142,10 +144,17 @@ internal object SettingsLayout {
                 // The car's own phone output and microphone, so the head unit cancels call echo (test).
                 SettingRow.CAR_ECHO_CANCELLER.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
                 SettingRow.CALL_ECHO_TEST.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.CALL_OWN_FOCUS.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
                 SettingRow.NARROW_BAND_CALLS.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
             )),
             SettingsGroup("buffer", listOf(SettingRow.MUSIC_BUFFER)),
-            SettingsGroup("microphone", listOf(SettingRow.MICROPHONE, SettingRow.SIRI_MIC_PCM, SettingRow.CALL_ECHO_SUPPRESSION, SettingRow.MIC_RECORDING)),
+            SettingsGroup("microphone", listOfNotNull(
+                SettingRow.MICROPHONE,
+                SettingRow.SIRI_MIC_PCM,
+                SettingRow.SIRI_CAR_MIC.takeIf { env.generation == Mg4FirmwareProfile.Generation.SWI165 },
+                SettingRow.CALL_ECHO_SUPPRESSION,
+                SettingRow.MIC_RECORDING,
+            )),
             SettingsGroup("advanced", listOf(SettingRow.SOUND_ADVANCED)),
         )
         SettingsCategory.CAR -> listOfNotNull(

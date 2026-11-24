@@ -192,6 +192,10 @@
     <string name="car_phone_mode">Car phone mode for calls (test)</string>
     <string name="car_echo_canceller">Car echo canceller for calls (test)</string>
     <string name="call_echo_test">Test call echo</string>
+    <string name="call_own_focus">Calls get their own audio focus (test)</string>
+    <string name="settings_footer_call_own_focus">Calls get their own audio focus asks the car for the call ahead of music for the whole call, as the car’s own CarPlay does, so the car treats it as a phone call, not music. It applies after you reconnect; off by default and not yet tried on this car.</string>
+    <string name="siri_car_mic">Car microphone processing for Siri (test)</string>
+    <string name="settings_footer_siri_car_mic">Car microphone processing for Siri records Siri through the car’s own Siri microphone path and noise reduction, as the car’s own CarPlay does. If it gives no audio, Siri uses the normal microphone. Only used with Microphone (test) on Automatic. It applies after you reconnect; off by default and not yet tried on this car.</string>
     <string name="call_echo_test_running">Testing call echo… (about 20 seconds)</string>
     <string name="call_echo_test_disconnect">Disconnect CarPlay first, then run the echo test.</string>
     <string name="settings_footer_car_echo_canceller">Car echo canceller plays calls on the car’s own phone output and records from its phone microphone, as the car’s own CarPlay does, so the car removes the echo the other person hears. If that path doesn’t work, the call carries on the normal way. It applies after you reconnect; off by default and not yet tried on this car. Test call echo plays a test sound through both paths (no call needed) and shows how much came back; turn the volume up first.</string>
